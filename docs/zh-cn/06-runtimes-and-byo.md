@@ -1,4 +1,4 @@
-# 5. 把 Forge 迁入受治理的 Runtime
+# 6. 把 Forge 迁入受治理的 Runtime
 
 ## 一个令人不安的发现
 

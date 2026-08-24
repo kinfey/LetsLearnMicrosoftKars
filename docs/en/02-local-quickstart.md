@@ -165,8 +165,8 @@ Create a short evidence table:
 | Router event | `kars logs ... --service router` | Inference uses mediated path |
 | Failure output | Invalid provider test | Errors are explicit and observable |
 
-The next chapter replaces the generated development sandbox with resources the
-team can review in Git.
+The next chapter opens the generated sandbox and tests each isolation boundary
+before the team expresses it as resources reviewed in Git.
 
 ## Official references
 

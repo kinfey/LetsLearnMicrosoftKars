@@ -1,4 +1,4 @@
-# 3. Turning a Demo into a Kubernetes Contract
+# 4. Turning a Demo into a Kubernetes Contract
 
 ## The problem with a command transcript
 

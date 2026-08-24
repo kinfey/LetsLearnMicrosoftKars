@@ -1,4 +1,4 @@
-# 4. Giving Forge Useful—but Bounded—Power
+# 5. Giving Forge Useful—but Bounded—Power
 
 ## The first real product request
 

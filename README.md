@@ -21,12 +21,13 @@ chapter-for-chapter translation.
 | --- | --- | --- |
 | 1 | Mental model | Understand why agents need a mediated runtime |
 | 2 | Local quickstart | Run and connect to an agent locally |
-| 3 | Kubernetes API | Define sandboxes and inference policies |
-| 4 | Policies and tools | Govern inference, tools, MCP, and egress |
-| 5 | Runtimes and BYO | Select an adapter or integrate an image |
-| 6 | Security and operations | Inspect, audit, trace, and harden a sandbox |
-| 7 | AKS and multi-agent | Operate identity, mesh, A2A, and GitOps |
-| 8 | Applied project | Build a governed software development Agent |
+| 3 | Inside the sandbox | Understand process, filesystem, network, identity, and lifecycle boundaries |
+| 4 | Kubernetes API | Define sandboxes and inference policies |
+| 5 | Policies and tools | Govern inference, tools, MCP, and egress |
+| 6 | Runtimes and BYO | Select an adapter or integrate an image |
+| 7 | Security and operations | Inspect, audit, trace, and harden a sandbox |
+| 8 | AKS and multi-agent | Operate identity, mesh, A2A, and GitOps |
+| 9 | Applied project | Build a governed software development Agent |
 
 ## Language synchronization
 

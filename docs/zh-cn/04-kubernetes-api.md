@@ -1,4 +1,4 @@
-# 3. 把演示变成 Kubernetes 契约
+# 4. 把演示变成 Kubernetes 契约
 
 ## 命令记录的问题
 

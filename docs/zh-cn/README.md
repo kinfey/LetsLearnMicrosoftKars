@@ -1,6 +1,6 @@
 # 一起学习 Microsoft KARS
 
-本教程以一条连续故事贯穿八章：Contoso Engineering 团队把权限过大的 Forge
+本教程以一条连续故事贯穿九章：Contoso Engineering 团队把权限过大的 Forge
 编码原型，逐步改造成受治理的软件研发 Agent。每章都从产品决定、故障或动手
 排查引入 KARS。
 
@@ -8,12 +8,13 @@
 
 1. [一份改变架构的 README](01-why-kars.md)
 2. [在安全的本地实验室复现 Forge](02-local-quickstart.md)
-3. [把演示变成 Kubernetes 契约](03-kubernetes-api.md)
-4. [赋予 Forge 有用但受限的能力](04-policies-and-tools.md)
-5. [把 Forge 迁入受治理的 Runtime](05-runtimes-and-byo.md)
-6. [Forge 反复修复同一测试的那个夜晚](06-security-and-operations.md)
-7. [从一个沙箱到生产团队](07-aks-and-multi-agent.md)
-8. [交付受治理的研发 Agent](08-applied-project.md)
+3. [深入 Forge Sandbox](03-inside-the-sandbox.md)
+4. [把演示变成 Kubernetes 契约](04-kubernetes-api.md)
+5. [赋予 Forge 有用但受限的能力](05-policies-and-tools.md)
+6. [把 Forge 迁入受治理的 Runtime](06-runtimes-and-byo.md)
+7. [Forge 反复修复同一测试的那个夜晚](07-security-and-operations.md)
+8. [从一个沙箱到生产团队](08-aks-and-multi-agent.md)
+9. [交付受治理的研发 Agent](09-applied-project.md)
 
 ## 约定
 

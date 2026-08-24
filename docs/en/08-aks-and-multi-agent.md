@@ -1,4 +1,4 @@
-# 7. From One Sandbox to a Production Team
+# 8. From One Sandbox to a Production Team
 
 ## Why Forge becomes two Agents
 

@@ -1,4 +1,4 @@
-# 5. Moving Forge into a Governed Runtime
+# 6. Moving Forge into a Governed Runtime
 
 ## The uncomfortable discovery
 

@@ -1,4 +1,4 @@
-# 6. The Night Forge Kept Fixing the Same Test
+# 7. The Night Forge Kept Fixing the Same Test
 
 ## An incident without an attacker
 
