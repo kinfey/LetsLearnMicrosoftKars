@@ -1,30 +1,38 @@
-# 3. Kubernetes API 与核心概念
+# 3. 把演示变成 Kubernetes 契约
 
-## 使用协调，而不是脚本
+## 命令记录的问题
 
-KARS 通过自定义资源扩展 Kubernetes。你声明期望的 Agent 和策略，Controller
-持续协调所需的命名空间对象、Pod、Service、策略投影和状态。
+Atlas 已在 Maya 的本地集群运行，但没人能回答一个简单评审问题：“我们到底批准
+了什么？”
 
-两个基础资源是：
+终端历史包含命令、默认值、重试和实验，却无法描述稳定的期望状态。Ethan 要求
+团队将 Atlas 表达为可评审、可 Diff、可持续协调的 Kubernetes 资源。
 
-- `KarsSandbox`：运行时、镜像/配置、隔离和策略引用。
-- `InferencePolicy`：提供商、模型偏好、预算和推理控制。
+## 从两项职责开始
 
-推理策略是必需的，并且必须与沙箱位于同一命名空间。
+团队把工作负载与推理权限分开：
 
-## 最小 Manifest
+- `KarsSandbox` 描述 Atlas 如何运行。
+- `InferencePolicy` 描述 Atlas 可以使用的推理路径。
 
-将以下内容保存为 `hello.yaml`，并根据你的账号调整提供商和 Deployment：
+策略是必需的，并与沙箱位于同一命名空间，避免应用 Manifest 静默回退到不受
+限制的内联推理。
+
+## 编写第一份契约
+
+创建 `atlas.yaml`：
 
 ```yaml
 apiVersion: kars.azure.com/v1alpha1
 kind: InferencePolicy
 metadata:
-  name: hello-inference
+  name: atlas-inference
   namespace: kars-system
+  labels:
+    app.kubernetes.io/name: atlas
 spec:
   appliesTo:
-    sandboxName: hello
+    sandboxName: atlas
   modelPreference:
     primary:
       provider: azure-openai
@@ -33,8 +41,10 @@ spec:
 apiVersion: kars.azure.com/v1alpha1
 kind: KarsSandbox
 metadata:
-  name: hello
+  name: atlas
   namespace: kars-system
+  labels:
+    app.kubernetes.io/name: atlas
 spec:
   runtime:
     kind: OpenClaw
@@ -43,51 +53,109 @@ spec:
         agent:
           model: azure/gpt-4.1
   inferenceRef:
-    name: hello-inference
+    name: atlas-inference
 ```
 
-应用并观察：
+提供商和 Deployment 只是示例，Maya 会根据实际账号调整。
+
+应用前，团队检查：
+
+- 策略是否指向正确沙箱？
+- 沙箱是否引用正确策略？
+- 两者是否都位于 `kars-system`？
+- 当前 KARS 版本是否真正支持该 Runtime？
+
+然后执行：
 
 ```bash
-kubectl apply -f hello.yaml
-kubectl get karssandbox hello -n kars-system -w
-kubectl describe karssandbox hello -n kars-system
-kars status hello
+kubectl diff -f atlas.yaml
+kubectl apply -f atlas.yaml
+kubectl get karssandbox atlas -n kars-system -w
 ```
 
-调试生成的 Pod 之前，请先读取 `status.conditions`。Degraded 条件通常会更直接
-地说明无效运行时或无法解析的策略引用。
+## 把状态看作一场对话
 
-## 资源地图
+Kubernetes `spec` 是团队提出的请求，`status` 是 Controller 的回答。
 
-| 资源 | 用途 |
+```bash
+kubectl get karssandbox atlas -n kars-system -o yaml
+kubectl describe karssandbox atlas -n kars-system
+kars status atlas
+```
+
+`Ready=True` 表示 Controller 报告协调成功，并不表示所有 Atlas 任务都正确或安全。
+
+Lina 故意把 `inferenceRef.name` 改为 `missing-policy`，沙箱随即进入 Degraded。
+团队先读取 `status.conditions`，而不是直接查看 Pod 日志。Condition 指出了无法
+解析的依赖；他们恢复引用并观察协调自动恢复。
+
+这次实验形成了一条长期有效的调试规则：
+
+> 调试生成资源之前，先读取 Owner Resource 的 Conditions。
+
+## 只在需要时扩展资源
+
+设计评审中，团队把后续需求映射到 CRD：
+
+| Atlas 需求 | KARS 资源 |
 | --- | --- |
-| `KarsSandbox` | Agent 工作负载和运行时 |
-| `InferencePolicy` | 模型、预算和推理控制 |
-| `ToolPolicy` | 工具允许规则和速率限制 |
-| `McpServer` | MCP Endpoint 和身份验证元数据 |
-| `KarsMemory` | Memory 配置 |
-| `KarsEval` | 评估工作负载 |
-| `TrustGraph` | Mesh 信任关系 |
-| `EgressApproval` | 有时限的网络批准 |
-| `KarsSREAction` | 受治理的运维操作 |
-| `A2AAgent` | Agent 间暴露 |
+| 运行研究进程 | `KarsSandbox` |
+| 选择模型并限制推理 | `InferencePolicy` |
+| 只允许 `search` | `ToolPolicy` |
+| 注册搜索服务 | `McpServer` |
+| 保存允许的 Memory | `KarsMemory` |
+| 运行回归用例 | `KarsEval` |
+| 描述可信 Peer | `TrustGraph` |
+| 临时访问某个主机 | `EgressApproval` |
+| 治理运维操作 | `KarsSREAction` |
+| 暴露 Peer Endpoint | `A2AAgent` |
 
-`KarsAuthConfig` 和 `KarsPairing` 由基础设施管理。不同 CRD 的成熟度并不相同，
-请检查上游成熟度表。
+他们不会为了“完整”而创建所有资源。每项资源必须对应具体需求，高级功能还必须
+检查上游成熟度表。
 
-## 声明式工作流
+## 观察协调过程
 
-应用更改前使用 `kubectl diff -f hello.yaml`。在共享环境中，把 Manifest 存入
-Git，并由 Argo CD 或 Flux 协调。避免 CLI 命令和 GitOps 同时管理相同字段。
+团队在 Git 中修改模型 Deployment：
 
-## 练习
+```bash
+kubectl diff -f atlas.yaml
+kubectl apply -f atlas.yaml
+kubectl get karssandbox atlas -n kars-system -w
+```
 
-1. 部署 Manifest。
-2. 将 Deployment 名称改为无效值。
-3. 观察沙箱和路由器状态。
-4. 恢复有效值并确认协调完成。
-5. 使用 `kubectl delete -f hello.yaml` 删除资源。
+他们观察 Controller 更新生成配置和状态。没人直接修改生成的 ConfigMap，因为
+协调会覆盖这种修改，并隐藏真正的 Source of Truth。
+
+## 决定字段所有者
+
+本地实验使用 `kubectl apply` 即可。生产环境计划使用 Argo CD 或 Flux。团队提前
+建立一条规则：
+
+> 一个字段只有一个 Owner。
+
+如果 GitOps 管理推理策略，运维人员在正常操作中就不使用命令式 CLI 修改同一策略。
+紧急变更必须回写 Git，或被明确回滚。
+
+## 失败场景
+
+依次测试：
+
+1. 引用不存在的 `InferencePolicy`。
+2. 将策略和沙箱放入不同命名空间。
+3. 使用当前版本未实现的 Runtime。
+4. 使用无效的提供商 Deployment。
+
+每次记录：
+
+- `KarsSandbox` Condition；
+- 是否创建 Pod；
+- 路由器或 Controller 错误；
+- 恢复 Ready 所需的最小 Manifest 修改。
+
+## 本章结果
+
+Atlas 不再是“Maya 周一输入过的那些命令”，而是一份可版本化的契约。下一次评审
+讨论的是 Diff，而不是某个人的记忆。
 
 ## 官方参考
 

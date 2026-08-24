@@ -1,19 +1,20 @@
 # Let's Learn Microsoft KARS
 
-This eight-chapter course moves from the KARS security model to a
-production-oriented application. Work through the chapters in order if KARS
-or Kubernetes agent infrastructure is new to you.
+This eight-chapter course follows one continuous story: the Contoso Research
+team turns Atlas, an over-privileged prototype, into a governed research
+assistant. Each chapter introduces KARS through a product decision, failure,
+or hands-on investigation.
 
 ## Contents
 
-1. [Why KARS?](01-why-kars.md)
-2. [Local Quickstart](02-local-quickstart.md)
-3. [Kubernetes API and Core Concepts](03-kubernetes-api.md)
-4. [Inference, Tool, MCP, and Egress Policies](04-policies-and-tools.md)
-5. [Runtimes and Bring Your Own Agent](05-runtimes-and-byo.md)
-6. [Security, Observability, and Operations](06-security-and-operations.md)
-7. [AKS, Identity, and Multi-Agent Systems](07-aks-and-multi-agent.md)
-8. [Applied Project: Governed Research Assistant](08-applied-project.md)
+1. [The Email That Changed the Architecture](01-why-kars.md)
+2. [Reproducing Atlas in a Safe Local Lab](02-local-quickstart.md)
+3. [Turning a Demo into a Kubernetes Contract](03-kubernetes-api.md)
+4. [Giving Atlas Useful—but Bounded—Power](04-policies-and-tools.md)
+5. [Moving Atlas into a Governed Runtime](05-runtimes-and-byo.md)
+6. [The Night Atlas Started Looping](06-security-and-operations.md)
+7. [From One Sandbox to a Production Team](07-aks-and-multi-agent.md)
+8. [Ship the Governed Research Assistant](08-applied-project.md)
 
 ## Conventions
 

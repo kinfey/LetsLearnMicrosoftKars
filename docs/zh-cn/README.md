@@ -1,18 +1,18 @@
 # 一起学习 Microsoft KARS
 
-本教程共八章，从 KARS 的安全模型逐步讲到面向生产的综合应用。如果你刚接触
-KARS 或 Kubernetes Agent 基础设施，建议按顺序学习。
+本教程以一条连续故事贯穿八章：Contoso Research 团队把权限过大的 Atlas 原型，
+逐步改造成受治理的研究助手。每章都从产品决定、故障或动手排查引入 KARS。
 
 ## 目录
 
-1. [为什么需要 KARS？](01-why-kars.md)
-2. [本地快速入门](02-local-quickstart.md)
-3. [Kubernetes API 与核心概念](03-kubernetes-api.md)
-4. [推理、工具、MCP 与出口策略](04-policies-and-tools.md)
-5. [运行时与自带 Agent](05-runtimes-and-byo.md)
-6. [安全、可观测性与运维](06-security-and-operations.md)
-7. [AKS、身份与多 Agent 系统](07-aks-and-multi-agent.md)
-8. [综合项目：受治理的研究助手](08-applied-project.md)
+1. [一封改变架构的邮件](01-why-kars.md)
+2. [在安全的本地实验室复现 Atlas](02-local-quickstart.md)
+3. [把演示变成 Kubernetes 契约](03-kubernetes-api.md)
+4. [赋予 Atlas 有用但受限的能力](04-policies-and-tools.md)
+5. [把 Atlas 迁入受治理的 Runtime](05-runtimes-and-byo.md)
+6. [Atlas 开始循环的那个夜晚](06-security-and-operations.md)
+7. [从一个沙箱到生产团队](07-aks-and-multi-agent.md)
+8. [交付受治理的研究助手](08-applied-project.md)
 
 ## 约定
 
