@@ -33,7 +33,7 @@
     button.type = "button";
     button.textContent = "Copy";
     button.addEventListener("click", async () => {
-      await navigator.clipboard.writeText(pre.innerText);
+      await navigator.clipboard.writeText(pre.querySelector("code")?.innerText || "");
       button.textContent = "Copied";
       window.setTimeout(() => {
         button.textContent = "Copy";
@@ -85,4 +85,24 @@
   scrollTop?.addEventListener("click", () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
+
+  const tocLinks = [...document.querySelectorAll(".article-toc-link")];
+  const headings = tocLinks
+    .map((link) => document.querySelector(link.getAttribute("href")))
+    .filter(Boolean);
+  if (headings.length) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (!visible) return;
+        tocLinks.forEach((link) => {
+          link.classList.toggle("active", link.getAttribute("href") === `#${visible.target.id}`);
+        });
+      },
+      { rootMargin: "-72px 0px -72% 0px", threshold: 0 }
+    );
+    headings.forEach((heading) => observer.observe(heading));
+  }
 })();

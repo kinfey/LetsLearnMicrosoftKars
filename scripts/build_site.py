@@ -29,6 +29,8 @@ LANGUAGES = {
         "github": "GitHub repository",
         "theme": "Toggle color theme",
         "menu": "Toggle navigation",
+        "documentation": "Documentation",
+        "in_this_article": "In this article",
         "description": "Learn KARS through a bilingual AI startup engineering story.",
     },
     "zh-cn": {
@@ -43,6 +45,8 @@ LANGUAGES = {
         "github": "GitHub 仓库",
         "theme": "切换颜色主题",
         "menu": "切换导航",
+        "documentation": "文档",
+        "in_this_article": "本文内容",
         "description": "通过双语 AI 创业研发故事学习 KARS。",
     },
 }
@@ -194,6 +198,23 @@ def page_navigation(language: str, pages: list[dict], index: int) -> str:
     )
 
 
+def article_toc(rendered: str, label: str) -> str:
+    entries = []
+    for anchor, heading in re.findall(r'<h2 id="([^"]+)">(.*?)</h2>', rendered, re.DOTALL):
+        title = plain_text(heading).removesuffix("¶").strip()
+        entries.append(
+            f'<a class="article-toc-link" href="#{html.escape(anchor)}">'
+            f"{html.escape(title)}</a>"
+        )
+    if not entries:
+        return ""
+    return (
+        '<aside class="article-toc">'
+        f'<div class="article-toc-title">{html.escape(label)}</div>'
+        f'<nav>{"".join(entries)}</nav></aside>'
+    )
+
+
 def html_document(
     language: str,
     page: dict,
@@ -209,6 +230,7 @@ def html_document(
     asset_base = f"{BASE_PATH}/assets"
     sidebar_html = sidebar(language, pages, page["filename"])
     navigation = page_navigation(language, pages, index)
+    toc_html = article_toc(page["content"], labels["in_this_article"])
     search_json = json.dumps(search_index, ensure_ascii=False).replace("</", "<\\/")
 
     return f"""<!doctype html>
@@ -260,14 +282,22 @@ def html_document(
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
   <aside class="sidebar" id="sidebar">{sidebar_html}</aside>
   <div class="docs-layout">
-    <main class="main-content">
-      <article class="article">{page["content"]}</article>
-      {navigation}
-      <footer class="site-footer">
-        <span>MIT License · KARS v0.1.25 tutorial</span>
-        <a href="https://github.com/Azure/kars" target="_blank" rel="noopener noreferrer">Azure/KARS ↗</a>
-      </footer>
-    </main>
+    <div class="content-shell">
+      <main class="main-content" id="main">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <a href="{BASE_PATH}/{language}/">{html.escape(labels["documentation"])}</a>
+          <span>/</span>
+          <span>{html.escape(page["title"])}</span>
+        </nav>
+        <article class="article">{page["content"]}</article>
+        {navigation}
+        <footer class="site-footer">
+          <span>MIT License · KARS v0.1.25 tutorial</span>
+          <a href="https://github.com/Azure/kars" target="_blank" rel="noopener noreferrer">Azure/KARS ↗</a>
+        </footer>
+      </main>
+      {toc_html}
+    </div>
   </div>
   <button class="scroll-top" id="scroll-top" aria-label="Scroll to top">↑</button>
   <script>window.SEARCH_INDEX = {search_json};</script>
