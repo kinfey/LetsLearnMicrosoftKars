@@ -1,8 +1,14 @@
-# 7. The Night Forge Kept Fixing the Same Test
+# 7. Testing: Stop Forge from Fixing the Same Test Forever
+
+> **Delivery stage:** Test and release qualification
+> **New problem:** A patch can compile and still be unsafe, wasteful, or based
+> on fabricated test evidence. What must the startup test before deployment?
+> **Deliverable:** A layered MAF test suite plus KARS policy and security tests.
 
 ## An incident without an attacker
 
-At 02:13, staging Forge receives a flaky integration test. It changes a timeout,
+The MAF candidate passes its first unit tests, so ByteCraft enables overnight
+staging evaluation. At 02:13, Forge receives a flaky integration test. It changes a timeout,
 runs the test, sees another failure, and changes the timeout again. The repair
 cycle repeats.
 
@@ -134,6 +140,25 @@ The suite checks:
 - the unknown-host test is denied;
 - a normal bug still produces a minimal patch with passing targeted tests.
 
+## Build the startup's testing pyramid
+
+The team separates failures by layer:
+
+| Layer | What ByteCraft tests | Example |
+| --- | --- | --- |
+| MAF unit tests | State transitions and pure decision logic | Third equivalent failure returns `needs_human` |
+| Tool contract tests | Inputs, outputs, timeouts, and redaction | `run_tests` returns exit code and bounded logs |
+| Sandbox integration | Router path, UID, mounts, and denied egress | Direct package-host request fails |
+| Policy tests | Token, rate, tool, and host decisions | 32k request cap returns a clear denial |
+| `KarsEval` regression | End-to-end behavior on a fixed corpus | Issue #482 yields the minimal patch |
+| Security tests | Repository prompt injection and exfiltration | Hostile README cannot upload source |
+| Deployment smoke tests | AKS identity and loaded policy digest | One known task succeeds after rollout |
+
+OpenClaw and MAF receive the same high-level corpus during the migration, but
+MAF also has direct unit tests for workflow transitions. This additional test
+surface is the reason for the framework decision, not simply a language
+preference.
+
 ## Production hardening review
 
 - Pin KARS, workload images, and policy artifacts.
@@ -151,6 +176,13 @@ The suite checks:
 The 02:13 incident ends without data loss or uncontrolled spend. More
 importantly, the team can explain why. Forge has moved from "a clever process"
 to an operable service.
+
+## Definition of done
+
+Testing is complete when normal, ambiguous, hostile, over-budget, tool-outage,
+and flaky-test cases all produce expected bounded outcomes; no test relies only
+on the Agent's natural-language claim that it passed; and the release records
+the corpus, model, prompt, image, policy, and KARS versions.
 
 ## Official references
 

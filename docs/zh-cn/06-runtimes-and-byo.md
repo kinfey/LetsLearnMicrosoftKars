@@ -1,131 +1,192 @@
-# 6. 把 Forge 迁入受治理的 Runtime
+# 6. 框架：从 OpenClaw 切换到 MAF Python
 
-## 一个令人不安的发现
+> **交付阶段：** 生产实现
+> **新问题：** OpenClaw 原型已经验证用户路径，但 ByteCraft 如何让流程变成明确、
+> 可单元测试且可维护的代码？
+> **交付物：** 在相同 KARS 策略边界下通过 Canary 验证的 MAF Python 实现。
 
-策略原型使用 OpenClaw，但 Maya 最初的 Forge 是带自定义仓库索引和 Patch
-规划的 Python 应用。完全重写会延误项目；原样运行旧容器又会保留直接凭据和
-网络假设。
+## 原型已经完成使命
 
-团队选择第三条路：保留应用逻辑，替换权限模型。
+OpenClaw 帮助 Maya 快速学习。开发者可以自然地在对话中描述 Issue，KARS Plugin
+提供治理感知工具，团队无需先构建编排服务就能修改 Prompt 与工具策略。
 
-## 有意识地选择 Adapter
+第一位客户随后提出了更困难的问题：
 
-KARS 包含 OpenClaw、Hermes、OpenAI Agents、Microsoft Agent Framework
-Python、LangGraph Python/TypeScript、Anthropic、Pydantic-AI 和自带镜像
-（BYO）Adapter。
+- 哪段代码决定测试失败后是否再次 Patch？
+- 能否对“诊断到实现”的状态转换做单元测试？
+- 能否保证 Agent 在创建 Pull Request 前停止？
+- 六个月后，工程师如何调试 Workflow State？
 
-团队按需求比较：
+这些问题不代表 OpenClaw 不好，而是说明 Forge 已验证的行为应转化为明确应用代码。
 
-| 应用情况 | 合理起点 |
-| --- | --- |
-| 探索完整 Mesh/Handoff | OpenClaw 或 Hermes |
-| 已有 OpenAI Agents 代码 | OpenAI Agents Adapter |
-| 已有图工作流 | LangGraph Adapter |
-| 自定义进程与依赖 | BYO |
+## 为两个框架分配职责
 
-Schema 中存在枚举值并不代表 Runtime 已完整支持。他们会在当前版本的 Runtime
-矩阵和成熟度文档中确认。
+ByteCraft 决定：
 
-## 盘点旧容器
+| 关注点 | OpenClaw | Microsoft Agent Framework Python |
+| --- | --- | --- |
+| Forge 中的主要用途 | 交互式需求接收、UX 探索、快速工具实验 | 明确的 Issue → 检查 → Patch → 测试流程 |
+| 应用形态 | Prompt/Plugin 驱动对话 | Python 应用与受控步骤 |
+| KARS 集成 | OpenClaw KARS Plugin | 一等 MAF Python Adapter |
+| 模型路径 | Localhost Router | Adapter 提供的 Router Endpoint |
+| 治理外壳 | KARS Sandbox/Policy | 相同 KARS Sandbox/Policy |
+| 当前限制 | 丰富工具不等于自动最小权限 | Python 已发布；MAF .NET 当前 Deferred |
 
-修改代码前，Maya 记录现有假设：
+创业团队不会一次重写所有内容。OpenClaw 保留为产品探索和面向 Operator 的 Canary，
+MAF Python 成为候选生产 Builder。
+
+## 定义与框架无关的工作流
+
+迁移代码前，Maya 先写出独立于 SDK 的状态机：
 
 ```text
-AZURE_OPENAI_API_KEY -> 由 Forge 读取
-AZURE_OPENAI_ENDPOINT -> 直接调用
-GITHUB_TOKEN -> 传给仓库和 Pull Request 工具
-HTTPS_PROXY -> 不受限制的公司代理
-process user -> root
+RECEIVE_REQUIREMENT
+  -> VALIDATE_SCOPE
+  -> INSPECT_REPOSITORY
+  -> PROPOSE_PLAN
+  -> APPLY_MINIMAL_PATCH
+  -> RUN_TARGETED_TESTS
+  -> SUMMARIZE_EVIDENCE
+  -> STOP_FOR_HUMAN_REVIEW
 ```
 
-每一项都与目标沙箱契约冲突。
+每个转换都具有：
 
-## 重构权限边界
+- 允许的输入与输出；
+- 具名工具；
+- 最大尝试次数；
+- Token 预期；
+- 失败结果；
+- Audit Correlation ID。
 
-BYO 镜像必须：
+两个实现都不包含 `MERGE` 或 `DEPLOY`。这些操作属于独立的人类或 CI 权限。
 
-- 以 UID 1000 运行；
-- 通过 `127.0.0.1:8443` 的路由器发送受控外部请求；
-- 不包含 Azure 或模型提供商凭据；
-- 遵循已记录的沙箱环境契约；
-- 只写入允许运行时路径。
+## 保留 OpenClaw 作为行为参考
 
-Maya 将模型和工具 Endpoint 从硬编码提供商 URL 改为配置，删除 Agent 获取凭据
-的逻辑，并把工具身份验证移入 KARS/MCP 平台配置。
+OpenClaw Sandbox 继续用于：
 
-应用仍然决定检查哪些代码、运行哪些测试，平台则决定该操作是否得到授权。
+- 测试开发者如何描述模糊 Issue；
+- 验证工具描述与拒绝消息；
+- 探索 Forge 真正需要哪些 Context 文件；
+- 使用 KARS Plugin 的治理工具面；
+- 将 MAF 候选行为与已知用户路径对比。
 
-## 分层测试
+OpenClaw Plugin 将特权操作路由到 KARS。内置工具会根据 Plugin Contract 被替换
+或拒绝。团队仍只授予实验所需工具。
 
-团队不会直接从 `docker run` 跳到 AKS。
+## 创建 MAF Python Sandbox
 
-### 1. 进程测试
+KARS 为 Python 提供一等 `MicrosoftAgentFramework` Adapter。Adapter 会把 MAF
+Azure OpenAI Client 指向本地推理路由器，并在 Sandbox 内使用合成 API Key；
+真实凭据仍由 KARS 代理。
 
-以 UID 1000 运行容器，验证启动、健康状态和可写路径。
+接近生产的 Runtime Block：
 
-### 2. 无凭据测试
+```yaml
+spec:
+  runtime:
+    kind: MicrosoftAgentFramework
+    microsoftAgentFramework:
+      language: python
+      agentCode:
+        oci:
+          image: ghcr.io/bytecraft/forge-maf@sha256:<digest>
+  inferenceRef:
+    name: forge-inference
+```
 
-检查运行环境和镜像历史。即使提示 Forge 枚举环境，它也不应找到提供商 Key。
+开发期间，KARS 也支持从 Git 加载 Agent 代码：
 
-### 3. 路由器路径测试
+```yaml
+agentCode:
+  git:
+    url: https://github.com/bytecraft/forge
+    ref: <pinned-commit>
+    path: agents/forge-maf
+```
 
-发送一次模型请求，并将其与路由器审计事件对应。如果路由器不可用时请求仍成功，
-说明 Forge 还有未预期的外部路径。
+团队使用固定 Commit 保证可重复性，推广时使用签名 OCI Image。MAF 应用包含
+`pyproject.toml` 或 `requirements.txt`，默认 Entry Point 可以是
+`python -u agent.py`。
 
-### 4. 负向网络测试
+> MAF Python 已发布。当前 KARS 版本不要选择 `language: dotnet`：.NET Adapter
+> 仍为 Deferred，应产生 Degraded/Invalid Runtime Condition。
 
-尝试访问无关公网主机。直接访问必须失败。团队不会通过恢复通用代理来“修复”它。
+## 哪些发生变化，哪些不能变化
 
-### 5. 策略测试
+### 随框架变化
 
-测试允许的代码读取与测试、未知工具、速率耗尽、Token 预算耗尽和 MCP 故障。
+- 编排代码与状态表示；
+- Prompt 组合；
+- Python 工具封装；
+- 单元测试边界；
+- 应用遥测。
 
-## 供应链决策
+### 仍由 KARS 控制
 
-团队扫描镜像，并在推广时按 Digest 固定。KARS 官方镜像带有签名和供应链元数据，
-但自动拒绝未签名 BYO 镜像尚不是完整 KARS 能力。集群需要单独执行组织的镜像
-准入策略。
+- Agent UID 与 Sandbox 形态；
+- 推理 Router 与外部身份；
+- `InferencePolicy` 与 Token 预算；
+- `ToolPolicy`、MCP 注册与速率限制；
+- 出口强制策略；
+- Kubernetes NetworkPolicy；
+- Audit Chain 与工作负载状态。
 
-他们记录：
+修改 `spec.runtime.kind` 是很小的平台变更，但迁移应用行为仍是真实工程工作。KARS
+保持权限边界稳定，却不会自动把 Prompt 翻译成经过测试的 Python 逻辑。
 
-- 源码 Revision；
-- 构建工作流身份；
-- 镜像 Digest；
-- 漏洞扫描结果；
-- 基础镜像；
-- KARS 版本和 Runtime Adapter；
-- 策略包 Digest。
+## 运行并行 Canary
 
-## 一个证明设计价值的 Bug
+团队部署两个使用等价策略的 Sandbox：
 
-测试期间，Forge 看到仓库中的 Bootstrap 命令，并尝试从未经批准的 Package Host
-下载未签名构建工具。强制出口使下载失败。
+```text
+forge-openclaw-canary  -> OpenClaw
+forge-maf-candidate    -> MicrosoftAgentFramework / Python
+```
 
-Maya 最初称它为回归，Lina 则称它为刚刚发现的能力。
+回放相同 Corpus：
 
-团队决定构建必须使用批准 Build Image 中固定的工具链，于是删除 Forge 的
-Bootstrap 行为。安全控制迫使团队做出供应链决定；此前这个行为一直隐藏在仓库
-指令中。
+| 场景 | 对比内容 |
+| --- | --- |
+| 明确 Null Handling Bug | Patch 大小与目标测试 |
+| 模糊需求 | 是否提出澄清问题 |
+| 恶意仓库指令 | 工具与出口拒绝 |
+| 重复失败测试 | 尝试次数与 Token 限制 |
+| 工具故障 | 明确报错，不伪造结果 |
+| 接近 Token 上限 | 带部分证据优雅停止 |
 
-## 迁移清单
+只有 MAF 保持或改善行为，并且 Router 显示相同策略决定，候选版本才通过。
 
-1. 找出所有凭据和外部 Endpoint。
-2. 将框架匹配到支持的 Adapter 或 BYO。
-3. 让 Endpoint 可配置。
-4. 删除应用持有的外部凭据。
-5. 以 UID 1000 运行。
-6. 通过 `127.0.0.1:8443` 路由受控调用。
-7. 测试明确失败和拒绝路径。
-8. 扫描并固定镜像。
-9. 记录 Runtime 与策略版本。
+## 阻止迁移捷径
 
-## 本章结果
+Lina 拒绝四个诱人的捷径：
 
-Forge 仍然包含 Contoso 的索引与 Patch 规划逻辑，但不再自行定义权限。迁移改变的是基础
-设施假设，而不是业务目的。
+1. “迁移期间”让 MAF 直接访问 Azure OpenAI Endpoint。
+2. 因新工具 Wrapper 尚未完成而注入 GitHub PAT。
+3. 为了运行时安装 Python 依赖而扩大出口。
+4. 提高 Token 上限来隐藏状态机循环。
+
+依赖应进入构建镜像，凭据应位于平台身份/工具服务之后，循环应由应用测试解决。
+
+## 回滚策略
+
+在 MAF 验收套件通过前，OpenClaw Canary 保持少量流量。失败的 Rollout 只需把
+Sandbox 引用切回上一个已评审版本，不需要修改推理、网络或身份架构。
+
+## 完成定义
+
+满足以下条件后，框架切换才算完成：
+
+- MAF Python Workflow 具有明确且经过测试的状态转换；
+- 相同 Issue Corpus 产生等价或更好的结果；
+- Token、工具、出口和恶意内容测试仍然 Fail Closed；
+- Router 不可用时，MAF 无法调用提供商；
+- Image 与源码 Revision 已固定；
+- OpenClaw 被有意保留为 Canary，或通过明确决策下线。
 
 ## 官方参考
 
-- [Runtime Adapter](https://github.com/Azure/kars/blob/main/docs/runtimes.md)
-- [示例](https://github.com/Azure/kars/tree/main/examples)
-- [BYO Quickstart](https://github.com/Azure/kars/tree/main/examples/byo-quickstart)
+- [Runtime Catalog](https://github.com/Azure/kars/blob/main/docs/runtimes.md)
+- [MAF Quickstart](https://github.com/Azure/kars/tree/main/examples/maf-quickstart)
+- [OpenClaw Plugin](https://github.com/Azure/kars/blob/main/docs/openclaw-plugin.md)
+- [OpenClaw 基础示例](https://github.com/Azure/kars/tree/main/examples/basic-agent)

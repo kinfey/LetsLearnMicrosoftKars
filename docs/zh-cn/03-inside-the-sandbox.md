@@ -1,8 +1,15 @@
-# 3. 深入 Forge Sandbox
+# 3. 开发：保护客户代码仓库
+
+> **交付阶段：** 开发环境
+> **新问题：** Forge 如何执行客户代码，却看不到无关源码、开发者凭据或不受限制
+> 的网络？
+> **交付物：** 经过测试的 Sandbox 边界与一次性 Workspace 设计。
 
 ## “Sandbox”背后的问题
 
-完成本地实验后，Maya 告诉团队：“Forge 现在已经运行在 Sandbox 中。”
+ByteCraft 的 Design Partner 愿意提供一个小型私有仓库，但前提是团队解释源码
+存放位置和访问主体。完成本地实验后，Maya 说：“Forge 现在已经运行在 Sandbox
+中。”
 
 Lina 提出了一个看似简单的问题：
 
@@ -200,6 +207,12 @@ Agent 中的凭据：无
 ```
 
 下一章会把已经理解的 Runtime 边界转化为可评审的 Kubernetes 契约。
+
+## 完成定义
+
+只有固定 Revision 的一次性 Checkout 被挂载到 Forge、Agent 不持有可复用 Git
+或模型凭据、直接访问未知目标失败、UID 隔离清晰可见，并且 Workspace 清理后审计
+证据仍保留时，开发环境才算 Ready。
 
 ## 官方参考
 

@@ -1,7 +1,8 @@
 # Let's Learn Microsoft KARS
 
-A bilingual, hands-on guide to [Azure KARS](https://github.com/Azure/kars), the
-Agent Reference Stack for Kubernetes.
+A bilingual, story-driven guide to [Azure KARS](https://github.com/Azure/kars),
+the Agent Reference Stack for Kubernetes. Follow a startup AI team from product
+requirements through development, testing, and production deployment.
 
 English is the canonical edition. The Chinese edition is maintained as a
 chapter-for-chapter translation.
@@ -17,17 +18,17 @@ chapter-for-chapter translation.
 
 ## Learning path
 
-| Chapter | Topic | Outcome |
-| --- | --- | --- |
-| 1 | Mental model | Understand why agents need a mediated runtime |
-| 2 | Local quickstart | Run and connect to an agent locally |
-| 3 | Inside the sandbox | Understand process, filesystem, network, identity, and lifecycle boundaries |
-| 4 | Kubernetes API | Define sandboxes and inference policies |
-| 5 | Policies and tools | Govern inference, tools, MCP, and egress |
-| 6 | Runtimes and BYO | Select an adapter or integrate an image |
-| 7 | Security and operations | Inspect, audit, trace, and harden a sandbox |
-| 8 | AKS and multi-agent | Operate identity, mesh, A2A, and GitOps |
-| 9 | Applied project | Build a governed software development Agent |
+| Chapter | Delivery stage | New problem solved | Runtime focus |
+| --- | --- | --- | --- |
+| 1 | Requirements | Bound an issue-to-PR product before writing code | Architecture |
+| 2 | Prototype | Prove the user journey locally in one day | OpenClaw |
+| 3 | Development environment | Protect customer source and credentials | Shared sandbox |
+| 4 | Platform contract | Make every environment reproducible and reviewable | Both |
+| 5 | Cost and authority | Control tokens, tools, dependencies, and egress | Both |
+| 6 | Framework decision | Move from conversational prototype to coded workflow | OpenClaw → MAF Python |
+| 7 | Testing | Test behavior, policy, security, and regressions | MAF + `KarsEval` |
+| 8 | Deployment | Promote safely through CI/CD to AKS | MAF production, OpenClaw canary |
+| 9 | Release | Deliver one requirement from issue to reviewed patch | End to end |
 
 ## Language synchronization
 

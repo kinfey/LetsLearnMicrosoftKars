@@ -1,4 +1,9 @@
-# 5. Giving Forge Useful—but Bounded—Power
+# 5. Governance: Control Tokens, Tools, and Egress
+
+> **Delivery stage:** Feature development
+> **New problem:** How can a cash-constrained startup give Forge useful tools
+> without granting unlimited spend or authority?
+> **Deliverable:** A token budget, named tool policy, and enforced egress list.
 
 ## The first real product request
 
@@ -16,7 +21,8 @@ authorization, service identity, rate control, and network egress.
 ## Set a budget before adding capability
 
 During an earlier prototype, a planner loop made 430 model calls overnight.
-Nothing was attacked; the software simply failed expensively.
+Nothing was attacked; the software simply failed expensively. For ByteCraft,
+an unbounded token loop is not only an operational bug—it consumes runway.
 
 The team creates a daily inference policy:
 
@@ -39,6 +45,21 @@ and router behavior prove it was loaded and enforced.
 
 The team treats the KARS budget as one layer. Azure quota, cost alerts, and
 application-level task limits remain in place.
+
+For a reviewable production policy, they commit both daily and per-request
+limits:
+
+```yaml
+spec:
+  tokenBudget:
+    dailyTokens: 500000
+    perRequestTokens: 32000
+```
+
+The daily limit protects the environment. The per-request limit prevents one
+oversized issue or repository file from consuming the whole allowance. Forge
+also enforces a task-level loop limit because tokens alone do not cap tool
+calls or wall-clock time.
 
 ## Start narrow with tools
 
@@ -164,6 +185,13 @@ digest actually loaded by the router.
 | Unknown host | Deny after enforcement | Egress audit event |
 | Budget exhausted | Deny further inference | Budget decision |
 | MCP outage | Fail explicitly | Router/application error |
+
+## Definition of done
+
+Governance is ready when the normal issue fits inside the per-request and daily
+budgets, an intentionally repeated plan reaches a clear budget denial, only
+named development tools run, an unapproved package host is denied, and every
+decision is visible in audit output.
 
 ## Official references
 

@@ -1,8 +1,14 @@
-# 7. Forge 反复修复同一测试的那个夜晚
+# 7. 测试：阻止 Forge 无限修复同一个测试
+
+> **交付阶段：** 测试与发布资格
+> **新问题：** Patch 可以编译通过，却仍然不安全、浪费资源或伪造测试证据。
+> 创业团队部署前必须测试什么？
+> **交付物：** 分层 MAF 测试套件，以及 KARS 策略与安全测试。
 
 ## 一场没有攻击者的事故
 
-凌晨 02:13，Staging Forge 遇到一个 Flaky Integration Test。它修改 Timeout、
+MAF 候选版本通过首批单元测试后，ByteCraft 开启夜间 Staging Eval。凌晨 02:13，
+Forge 遇到一个 Flaky Integration Test。它修改 Timeout、
 运行测试、看到另一种失败，再次修改 Timeout，修复循环不断重复。
 
 Token 预算阻止后续推理，速率限制减慢工具循环，值班工程师在路由器流中看到被
@@ -128,6 +134,23 @@ kars eval run forge-regression
 - 未知主机测试被拒绝；
 - 正常 Bug 仍能生成最小 Patch，并通过目标测试。
 
+## 构建创业团队的测试金字塔
+
+团队按层分离失败：
+
+| 层级 | ByteCraft 测试内容 | 示例 |
+| --- | --- | --- |
+| MAF 单元测试 | 状态转换与纯决策逻辑 | 第三次等价失败返回 `needs_human` |
+| 工具契约测试 | 输入、输出、Timeout 与 Redaction | `run_tests` 返回 Exit Code 和有限日志 |
+| Sandbox 集成 | Router 路径、UID、Mount 与出口拒绝 | 直接访问 Package Host 失败 |
+| Policy 测试 | Token、速率、工具与主机决定 | 32k 单请求上限产生明确拒绝 |
+| `KarsEval` 回归 | 固定 Corpus 的端到端行为 | Issue #482 产生最小 Patch |
+| 安全测试 | 仓库提示注入与数据外泄 | 恶意 README 无法上传源码 |
+| 部署冒烟测试 | AKS 身份与已加载策略 Digest | Rollout 后一个已知任务成功 |
+
+迁移期间 OpenClaw 与 MAF 使用同一高层 Corpus，但 MAF 还可以直接单元测试工作流
+状态转换。这种额外测试能力才是框架决策的理由，而不只是语言偏好。
+
 ## 生产加固评审
 
 - 固定 KARS、工作负载镜像和策略 Artifact。
@@ -144,6 +167,12 @@ kars eval run forge-regression
 
 02:13 的事故结束时没有数据丢失，也没有不受控成本。更重要的是，团队能够解释
 原因。Forge 已从“聪明的进程”变成可运维服务。
+
+## 完成定义
+
+当正常、模糊、恶意、超预算、工具故障和 Flaky Test 场景都产生预期且受限的结果，
+没有测试只依赖 Agent 自然语言宣称“已经通过”，并且 Release 记录 Corpus、模型、
+Prompt、Image、Policy 与 KARS 版本时，测试才算完成。
 
 ## 官方参考
 

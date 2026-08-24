@@ -1,9 +1,14 @@
-# 9. Ship the Governed Development Agent
+# 9. Release: Deliver an Issue-to-PR Workflow
+
+> **Delivery stage:** Customer release
+> **New problem:** Can someone outside the founding team reproduce the entire
+> requirement-to-deployment path and prove its controls?
+> **Deliverable:** A releasable Forge pilot and an evidence-backed runbook.
 
 ## The final assignment
 
-Six weeks after the first repository prompt-injection test, Contoso Engineering is ready for
-a limited production launch. The team must demonstrate more than a good demo.
+Six weeks after the first repository prompt-injection test, ByteCraft AI is
+ready for a limited design-partner launch. The team must demonstrate more than a good demo.
 Another operator must be able to deploy Forge, explain every permission,
 observe every denied path, and roll the system back.
 
@@ -21,15 +26,15 @@ and explain any remaining uncertainty.
 
 The expected journey is:
 
-1. The Builder receives the issue and a pinned source revision.
-2. It calls only approved repository, patch, and test tools.
-3. Tool traffic reaches only the approved development MCP host.
-4. Model requests pass through the router under a token budget.
-5. The Builder produces a minimal diff and test evidence.
-6. The Reviewer receives the diff without receiving Builder write authority.
-7. The Reviewer approves, rejects, or requests another patch.
-8. Audit evidence connects the user task, tool calls, inference, handoff, and
-   final decision.
+1. The founder and customer agree on acceptance criteria.
+2. OpenClaw Intake clarifies ambiguity without repository write access.
+3. The approved requirement and pinned revision enter the MAF Builder.
+4. It calls only approved repository, patch, and test tools.
+5. Model requests pass through the router under per-request and daily budgets.
+6. The Builder produces a minimal diff and machine-verifiable test evidence.
+7. The Reviewer receives the diff without receiving Builder write authority.
+8. A human approves the pull request; CI, not the Agent, deploys it.
+9. Audit evidence connects requirement, tools, inference, review, and release.
 
 ## Acceptance requirements
 
@@ -44,6 +49,14 @@ Forge must:
 - emit audit records for inference, tools, egress, and review;
 - fail explicitly when source, test, MCP, or inference is unavailable;
 - pass regression and negative-policy tests before promotion.
+
+The pilot also has startup-level business limits:
+
+- a task concurrency cap;
+- a daily environment token ceiling;
+- a per-customer usage report;
+- a kill switch that disables new work without deleting evidence;
+- a support owner for every production hour.
 
 ## Phase 1: Recreate the lab
 
@@ -77,6 +90,10 @@ Create version-controlled manifests for:
 - identity and namespace boundaries;
 - egress baseline and temporary approval process;
 - evaluation scenarios.
+
+Declare separate OpenClaw Intake and MAF Builder resources. Reuse equivalent
+inference, tool, and egress intent where appropriate, but do not pretend the
+application behavior is identical: validate each runtime independently.
 
 Beside each permission, add a review note answering:
 
@@ -156,11 +173,16 @@ Ask an operator who did not build Forge to:
 Forge is ready only if the operator succeeds without private knowledge from
 Maya or Ethan.
 
+The customer signs off only after one real issue moves from requirement to
+reviewed patch while a hostile README, an unknown package host, a repeated-test
+loop, and an over-budget request all fail in the expected way.
+
 ## Epilogue
 
-The original prototype was impressive because it could edit code. The production
-design is trustworthy because the team can explain **where it may act, under
-which identity, within what budget, and with what evidence**.
+The original OpenClaw prototype was impressive because it could edit code.
+The MAF production workflow is trustworthy because the team can explain
+**which requirement it implements, where it may act, under which identity,
+within what token budget, which tests it passed, and with what evidence**.
 
 That is the practical value of KARS: not making development Agents infallible, but making
 their authority bounded, observable, and operable.

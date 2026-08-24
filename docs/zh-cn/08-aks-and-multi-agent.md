@@ -1,13 +1,26 @@
-# 8. 从一个沙箱到生产团队
+# 8. 部署：把 Forge 推广到 AKS
+
+> **交付阶段：** CI/CD 与生产部署
+> **新问题：** 小型创业团队如何频繁部署，却不允许 Agent 批准、Merge 并发布
+> 自己的工作？
+> **交付物：** GitOps 推广路径、分离身份与回滚方案。
 
 ## 为什么 Forge 变成两个 Agent
 
-开发者喜欢 Forge 的 Patch，但研发规范不允许同一个 Agent 既编写变更又批准合并。
+Design Partner 接受了 MAF 候选版本。开发者喜欢 Forge 的 Patch，但研发规范
+不允许同一个 Agent 既编写变更又批准合并。
 
-团队拆分工作流：
+团队拆分部署后的工作流：
 
-- **Forge Builder** 读取 Issue、编辑 Workspace 并运行目标测试。
+- **Forge Intake（OpenClaw Canary）** 接收模糊开发需求并帮助完善验收条件，但
+  不能修改生产仓库。
+- **Forge Builder（MAF Python）** 读取批准的 Issue、编辑临时 Workspace 并
+  运行目标测试。
 - **Forge Reviewer** 检查 Diff 与测试证据，再批准或拒绝拟议 Pull Request。
+
+创业团队不会假设当前版本的 OpenClaw 与 MAF 具有完全相同的 Mesh 能力。除非
+所选 Runtime 路径有明确文档且经过测试，否则 Workflow Handoff 使用已评审的
+Service/API 边界。Runtime 宣传不能取代端到端测试。
 
 只有同时分离身份、工具、数据传递与审计证据，这种职责拆分才有意义。
 
@@ -99,6 +112,20 @@ Kata/SEV-SNP 支持的机密沙箱隔离。
 7. 验证沙箱 Ready 和路由器已加载策略 Digest。
 8. 运行部署后的拒绝路径测试。
 
+CI Pipeline 具有四类独立 Gate：
+
+```text
+构建 MAF Image
+  -> 扫描/签名/固定 Digest
+  -> 运行单元测试 + KarsEval + Policy 测试
+  -> 更新已评审的 KarsSandbox Manifest
+  -> GitOps 协调到 AKS
+  -> Smoke + Denial 测试
+```
+
+Forge 可以建议应用修改，却不能更改 Pipeline、批准 Manifest Pull Request 或
+创建生产身份。
+
 团队避免命令式修改 GitOps 管理的字段。紧急变更必须立即提交，或明确回滚。
 
 ## 多租户边界
@@ -123,6 +150,12 @@ Kata/SEV-SNP 支持的机密沙箱隔离。
 
 Forge 现在是由多个身份协作的系统，而不是两个 Prompt 互相聊天。架构从 Kubernetes
 资源到 Runtime 策略与审计，全程保持职责分离。
+
+## 完成定义
+
+当 Artifact 已签名并固定、MAF Production 与 OpenClaw Canary 使用独立 Policy
+和身份、GitOps 管理生产字段、Builder 无法自我批准、回滚已经演练，并且部署后
+测试证明一条允许路径和一条拒绝路径时，部署才算 Ready。
 
 ## 官方参考
 

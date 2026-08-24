@@ -1,8 +1,15 @@
-# 3. Inside the Forge Sandbox
+# 3. Development: Protect the Customer Repository
+
+> **Delivery stage:** Development environment
+> **New problem:** How can Forge execute customer code without seeing unrelated
+> source, developer credentials, or an unrestricted network?
+> **Deliverable:** A tested Sandbox boundary and disposable workspace design.
 
 ## The question behind the word
 
-After the local lab, Maya tells the team, "Forge runs in a sandbox now."
+ByteCraft's design partner is willing to provide a small private repository,
+but only after the team explains where the code will live and who can access
+it. After the local lab, Maya says, "Forge runs in a sandbox now."
 
 Lina asks a deceptively simple question:
 
@@ -226,6 +233,13 @@ Cleanup: workspace removed after evidence and patch export
 
 The next chapter turns this understood runtime boundary into a reviewable
 Kubernetes contract.
+
+## Definition of done
+
+The development environment is ready when a disposable checkout at a pinned
+revision is the only source mounted into Forge, the Agent has no reusable Git
+or model credential, direct unknown egress fails, UID separation is visible,
+and audit evidence survives workspace cleanup.
 
 ## Official references
 

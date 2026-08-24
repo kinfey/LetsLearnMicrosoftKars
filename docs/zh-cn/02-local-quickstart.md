@@ -1,8 +1,12 @@
-# 2. 在安全的本地实验室复现 Forge
+# 2. 原型：用 OpenClaw 构建第一条垂直链路
+
+> **交付阶段：** 原型
+> **新问题：** 创业团队能否在一天内验证 Issue 到 Patch 的用户路径？
+> **Runtime 重点：** OpenClaw，因为其 Plugin 与工具面适合快速对话式迭代。
 
 ## 周一早晨
 
-Maya 想立刻把 Forge 连接到生产 Monorepo，但 Ethan 阻止了她。
+Maya 想立刻把 Forge 连接到客户的生产 Monorepo，但 Ethan 阻止了她。
 
 “首先要有可重复的环境。如果本地看不到路由器、Pod 和策略边界，我们就会同时
 调试应用和平台。”
@@ -28,6 +32,10 @@ kubectl version --client
 - 带 `models:read` 权限的 GitHub Models Token。
 
 第一次本地运行选择 Copilot，因为无需把 Azure 服务凭据放入实验环境。
+
+原型阶段选择 KARS 默认的 **OpenClaw** Runtime。OpenClaw 的 KARS Plugin 提供
+治理感知工具，适合观察开发者如何描述任务。这是产品学习选择，并不代表生产实现
+必须一直使用 OpenClaw。
 
 ## 安装已知版本的 CLI
 
@@ -79,6 +87,16 @@ kars connect dev-agent
 你是 Forge 研发 Agent。请解释为什么读取不可信仓库内容的 Agent 不应持有
 GitHub 或模型凭据。不要调用任何工具。
 ```
+
+接着，她为 Forge 提供一个一次性仓库和小型 Issue：
+
+```text
+add_note 函数在 note 为 null 时崩溃。只检查分配的 Workspace，
+提出最小 Patch，并说明应运行哪个目标测试。不要 Merge，也不要访问外部主机。
+```
+
+这条垂直链路有意保持不完整：对话、代码检查、Patch 建议和一个测试建议。创建 PR
+和 Merge 仍在原型边界之外。
 
 请求运行时，Ethan 观察路由器：
 
@@ -157,6 +175,11 @@ kars dev down
 
 下一章会打开自动生成的 Sandbox，逐一测试隔离边界，然后再把它表达为可在 Git
 中评审的资源。
+
+## 完成定义
+
+当开发者能够提交一个受限 Issue、通过 Router 观察 OpenClaw 请求、收到最小 Patch
+建议，并在移除提供商身份后看到明确失败时，原型才算完成。
 
 ## 官方参考
 

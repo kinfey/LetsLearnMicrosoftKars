@@ -1,8 +1,13 @@
-# 4. 把演示变成 Kubernetes 契约
+# 4. 平台：把演示变成 Kubernetes 契约
+
+> **交付阶段：** 共享开发平台
+> **新问题：** 每位工程师和 CI Job 如何复现相同的 Forge 环境？
+> **交付物：** 可评审的 `KarsSandbox` 与 `InferencePolicy` Manifest。
 
 ## 命令记录的问题
 
-Forge 已在 Maya 的本地集群运行，但没人能回答一个简单评审问题：“我们到底批准
+创业团队招聘了第一位新工程师。Forge 已在 Maya 的本地集群运行，但没人能回答
+一个简单评审问题：“我们到底批准
 了什么？”
 
 终端历史包含命令、默认值、重试和实验，却无法描述稳定的期望状态。Ethan 要求
@@ -157,6 +162,15 @@ kubectl get karssandbox forge -n kars-system -w
 
 Forge 不再是“Maya 周一输入过的那些命令”，而是一份可版本化的契约。下一次评审
 讨论的是 Diff，而不是某个人的记忆。
+
+同一契约今天可以选择 OpenClaw，之后可以选择 MAF Python。Runtime 代码发生变化，
+但必需的推理引用、Sandbox 控制、Router 和状态模型仍属于平台职责。
+
+## 完成定义
+
+当全新集群能够协调 Manifest、缺失 Policy 会产生有用的 Degraded Condition、
+`kubectl diff` 能显示每项权限变化，并且 CI 而非创始人的 Shell History 能复现
+环境时，平台契约才算 Ready。
 
 ## 官方参考
 

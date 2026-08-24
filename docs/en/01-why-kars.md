@@ -1,12 +1,16 @@
-# 1. The README That Changed the Architecture
+# 1. Requirement: Bound the Product Before the Demo
+
+> **Delivery stage:** Product requirements
+> **New problem:** What may an issue-to-PR Agent do without human approval?
+> **Deliverable:** A bounded user story, threat model, and release boundary.
 
 ## The story begins
 
-Contoso Engineering is building **Forge**, an internal development Agent that
-reads GitHub issues and source code, runs targeted tests, and proposes patches
-for developers to review.
+ByteCraft AI has six months of runway and one design partner. The customer
+wants **Forge**, a development Agent that reads GitHub issues and source code,
+runs targeted tests, and proposes patches for developers to review.
 
-Maya, the AI engineer, creates the first prototype on her laptop. Forge has a
+Maya, the co-founder and AI engineer, creates the first prototype on her laptop. Forge has a
 model API key and GitHub token in environment variables, a shell tool, and
 unrestricted internet access. The demo is impressive: it diagnoses a null
 pointer bug, edits the code, and runs the correct test in three minutes.
@@ -40,6 +44,18 @@ The team writes five questions on a whiteboard:
 
 A prompt rule such as "never reveal secrets" answers none of them. Prompt rules
 influence model behavior; they do not create a security boundary.
+
+Arun turns the whiteboard into the startup's first bounded user story:
+
+```text
+Given one approved issue and one pinned repository revision,
+Forge may inspect the assigned workspace, propose a minimal patch,
+and run named tests. It may not merge, publish, change CI,
+read unrelated repositories, or create new credentials.
+```
+
+The negative clauses matter as much as the happy path. They keep "AI developer"
+from becoming an undefined promise that expands during implementation.
 
 KARS—Agent Reference Stack for Kubernetes—offers a reference architecture built
 around a stronger invariant:
@@ -133,6 +149,18 @@ At the end of the architecture review, the team approves this statement:
 > network path, or policy that define its authority.
 
 That is the mental model for every chapter that follows.
+
+## Definition of done
+
+The requirement is ready only when product, platform, and security can name:
+
+- the input: issue, repository, revision, and acceptance tests;
+- the output: patch, test evidence, and explanation;
+- actions that always require a human: PR approval, merge, release, and
+  production access;
+- a maximum token/cost envelope for one task;
+- source, credential, and network boundaries;
+- evidence required to reconstruct the task.
 
 ## Try it yourself
 

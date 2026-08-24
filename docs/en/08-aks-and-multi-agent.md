@@ -1,15 +1,29 @@
-# 8. From One Sandbox to a Production Team
+# 8. Deployment: Promote Forge to AKS
+
+> **Delivery stage:** CI/CD and production deployment
+> **New problem:** How can a small startup deploy frequently without letting an
+> Agent approve, merge, and release its own work?
+> **Deliverable:** A GitOps promotion path, separated identities, and rollback.
 
 ## Why Forge becomes two Agents
 
-Developers like Forge's patches, but engineering policy will not allow the same
+The design partner accepts the MAF candidate. Developers like Forge's patches,
+but engineering policy will not allow the same
 Agent to write a change and approve its merge.
 
-The team splits the workflow:
+The team splits the deployed workflow:
 
-- **Forge Builder** reads the issue, edits a workspace, and runs targeted tests.
+- **Forge Intake (OpenClaw canary)** captures ambiguous developer requests and
+  helps refine acceptance criteria; it cannot modify production repositories.
+- **Forge Builder (MAF Python)** reads the approved issue, edits an ephemeral
+  workspace, and runs targeted tests.
 - **Forge Reviewer** inspects the diff and evidence, then approves or rejects
   the proposed pull request.
+
+The startup does not assume OpenClaw and MAF have identical mesh capabilities
+in this release. Workflow handoff uses a reviewed service/API boundary unless
+the selected runtime path is explicitly documented and tested. Runtime
+marketing claims never replace an end-to-end test.
 
 The separation is useful only if identity, tools, data transfer, and audit
 evidence are also separated.
@@ -105,6 +119,20 @@ The production sequence is:
 7. Verify sandbox readiness and router-loaded policy digests.
 8. Run post-deployment denied-path tests.
 
+The CI pipeline has four independent gates:
+
+```text
+build MAF image
+  -> scan/sign/pin digest
+  -> run unit + KarsEval + policy tests
+  -> update reviewed KarsSandbox manifest
+  -> GitOps reconcile to AKS
+  -> smoke + denial tests
+```
+
+Forge can propose the application change, but it cannot alter the pipeline,
+approve the manifest pull request, or mint production identity.
+
 The team avoids imperative edits to GitOps-owned fields. An emergency change is
 either committed immediately or explicitly rolled back.
 
@@ -132,6 +160,13 @@ Before launch, the team rehearses:
 Forge is now a system of cooperating identities, not two prompts talking to
 each other. The architecture preserves separation of duties from Kubernetes
 resources through runtime policy and audit.
+
+## Definition of done
+
+Deployment is ready when artifacts are signed and pinned, MAF production and
+OpenClaw canary have separate policies and identities, GitOps owns production
+fields, Builder cannot self-approve, rollback is rehearsed, and post-deployment
+tests prove both an allowed task and a denied path.
 
 ## Official references
 

@@ -1,11 +1,16 @@
-# 1. 一份改变架构的 README
+# 1. 需求：演示之前先约束产品
+
+> **交付阶段：** 产品需求
+> **新问题：** Issue 到 PR 的 Agent 在没有人工批准时可以做什么？
+> **交付物：** 有边界的用户故事、威胁模型与发布边界。
 
 ## 故事开始
 
-Contoso Engineering 正在构建内部研发 Agent **Forge**。它会读取 GitHub Issue
-和源代码、运行目标测试，并生成供开发者审查的补丁。
+ByteCraft AI 只剩六个月现金流，并刚获得第一位 Design Partner。客户希望得到
+研发 Agent **Forge**：它会读取 GitHub Issue 和源码、运行目标测试，并生成供
+开发者审查的补丁。
 
-AI 工程师 Maya 在笔记本上完成了第一个原型。Forge 的环境变量里保存着模型
+联合创始人兼 AI 工程师 Maya 在笔记本上完成了第一个原型。Forge 的环境变量里保存着模型
 API Key 和 GitHub Token，同时拥有 Shell 工具和不受限制的网络。演示效果令人
 惊艳：它在三分钟内定位 Null Pointer Bug、修改代码并运行了正确测试。
 
@@ -34,6 +39,17 @@ Forge 也许不会在对话中直接说出模型服务的 Secret，但其 Shell 
 
 “永远不要泄露 Secret”这样的提示词无法真正回答这些问题。提示词可以影响模型
 行为，却不能形成安全边界。
+
+Arun 把白板内容整理成创业团队第一条有边界的用户故事：
+
+```text
+给定一个批准的 Issue 和一个固定仓库 Revision，
+Forge 可以检查分配的 Workspace、提出最小 Patch，并运行具名测试。
+它不得 Merge、发布、修改 CI、读取无关仓库或创建新凭据。
+```
+
+负向约束与成功路径同样重要。它避免“AI Developer”在实现过程中变成不断扩张、
+无法验收的承诺。
 
 KARS（Agent Reference Stack for Kubernetes）提供了一种围绕更强原则构建的
 参考架构：
@@ -121,6 +137,17 @@ KARS 是开源 alpha 参考实现，不是 Microsoft 托管服务。其 API 为
 > 网络路径和策略。
 
 这是后续每一章的核心思维模型。
+
+## 完成定义
+
+只有当产品、平台和安全都能明确以下内容时，需求才算 Ready：
+
+- 输入：Issue、仓库、Revision 与验收测试；
+- 输出：Patch、测试证据与解释；
+- 始终需要人工执行的操作：PR 批准、Merge、Release 与生产访问；
+- 单任务最大 Token/成本范围；
+- 源码、凭据与网络边界；
+- 还原任务所需的证据。
 
 ## 亲自尝试
 

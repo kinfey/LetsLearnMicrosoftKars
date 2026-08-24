@@ -1,8 +1,13 @@
-# 2. Reproducing Forge in a Safe Local Lab
+# 2. Prototype: Build the First OpenClaw Vertical Slice
+
+> **Delivery stage:** Prototype
+> **New problem:** Can the startup prove the issue-to-patch journey in one day?
+> **Runtime focus:** OpenClaw, because its plugin and tool surface support fast
+> conversational iteration.
 
 ## Monday morning
 
-Maya wants to connect Forge to the production monorepo immediately. Ethan stops
+Maya wants to connect Forge to the customer's production monorepo immediately. Ethan stops
 her.
 
 "First we need a repeatable environment. If we cannot see the router, pod, and
@@ -31,6 +36,11 @@ The team also needs one inference option:
 
 They choose Copilot for the first local run because it avoids placing an Azure
 service credential in the lab.
+
+For the prototype, they choose KARS's default **OpenClaw** runtime. OpenClaw's
+KARS plugin exposes governance-aware tools and is well suited to discovering
+how developers will phrase tasks. This is a product-learning choice, not a
+promise that the production implementation must stay in OpenClaw.
 
 ## Install a known CLI version
 
@@ -83,6 +93,18 @@ She asks:
 You are Forge, a development Agent. Explain why an Agent that reads untrusted
 repository content should not own GitHub or model credentials. Do not call a tool.
 ```
+
+Next she gives Forge a disposable repository and a tiny issue:
+
+```text
+The add_note function crashes when note is null. Inspect only the assigned
+workspace, propose the smallest patch, and tell me which targeted test to run.
+Do not merge or contact external hosts.
+```
+
+The vertical slice is deliberately incomplete: conversation, code inspection,
+patch proposal, and one test recommendation. Pull-request creation and merge
+remain outside the prototype boundary.
 
 While the request runs, Ethan watches the router:
 
@@ -167,6 +189,12 @@ Create a short evidence table:
 
 The next chapter opens the generated sandbox and tests each isolation boundary
 before the team expresses it as resources reviewed in Git.
+
+## Definition of done
+
+The prototype is complete when a developer can submit one bounded issue,
+observe the OpenClaw request through the router, receive a minimal patch
+proposal, and see an explicit failure when provider authentication is removed.
 
 ## Official references
 

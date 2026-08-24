@@ -1,146 +1,205 @@
-# 6. Moving Forge into a Governed Runtime
+# 6. Framework: Move from OpenClaw to MAF Python
 
-## The uncomfortable discovery
+> **Delivery stage:** Production implementation
+> **New problem:** The OpenClaw prototype proved the user journey, but how does
+> ByteCraft make the workflow explicit, unit-testable, and maintainable?
+> **Deliverable:** A canary-tested MAF Python implementation under the same
+> KARS policy envelope.
 
-The policy prototype uses OpenClaw, but Maya's original Forge is a Python
-application with custom repository indexing and patch planning. Rewriting it
-would delay the project.
-Running the old container unchanged would preserve its direct credential and
-network assumptions.
+## The prototype has done its job
 
-The team chooses a third path: keep the application logic, replace the
-authority model.
+OpenClaw helped Maya learn quickly. Developers naturally describe issues in
+chat, the KARS plugin supplies governance-aware tools, and the team could change
+the prompt and tool policy without building an orchestration service.
 
-## Choose an adapter intentionally
+The first customer now asks harder questions:
 
-KARS includes adapters for OpenClaw, Hermes, OpenAI Agents, Microsoft Agent
-Framework Python, LangGraph Python and TypeScript, Anthropic, Pydantic-AI, and
-bring-your-own (BYO) images.
+- Which code decides whether a test failure triggers another patch?
+- Can we unit-test the transition from diagnosis to implementation?
+- Can we guarantee the Agent stops before creating a pull request?
+- How will an engineer debug workflow state six months from now?
 
-The team compares needs:
+These are not reasons to reject OpenClaw. They indicate that Forge's validated
+behavior should become explicit application code.
 
-| Application situation | Reasonable starting point |
-| --- | --- |
-| Exploring broad mesh/handoff support | OpenClaw or Hermes |
-| Existing OpenAI Agents code | OpenAI Agents adapter |
-| Existing graph workflow | LangGraph adapter |
-| Custom process and dependencies | BYO |
+## Give each framework a job
 
-An enum value in a schema is not proof of full runtime support. They verify the
-adapter in the release-specific runtime matrix and maturity documentation.
+ByteCraft chooses:
 
-## Inventory the old container
+| Concern | OpenClaw | Microsoft Agent Framework Python |
+| --- | --- | --- |
+| Best use in Forge | Interactive intake, UX discovery, rapid tool experiments | Explicit issue → inspect → patch → test workflow |
+| Application style | Prompt/plugin-driven conversation | Python application and controlled steps |
+| KARS integration | OpenClaw KARS plugin | First-class MAF Python adapter |
+| Model path | Router on localhost | Router through adapter-provided endpoint |
+| Governance shell | KARS Sandbox/policies | The same KARS Sandbox/policies |
+| Current caveat | Do not confuse rich tools with automatic least privilege | Python ships; MAF .NET is currently deferred |
 
-Before editing code, Maya documents the existing assumptions:
+The startup does not rewrite everything at once. OpenClaw remains the product
+discovery and operator-facing canary. MAF Python becomes the candidate
+production Builder.
+
+## Define a framework-neutral workflow
+
+Before moving code, Maya writes the state machine independently of either SDK:
 
 ```text
-AZURE_OPENAI_API_KEY -> read by Forge
-AZURE_OPENAI_ENDPOINT -> called directly
-GITHUB_TOKEN -> passed to repository and pull-request tools
-HTTPS_PROXY -> unrestricted company proxy
-process user -> root
+RECEIVE_REQUIREMENT
+  -> VALIDATE_SCOPE
+  -> INSPECT_REPOSITORY
+  -> PROPOSE_PLAN
+  -> APPLY_MINIMAL_PATCH
+  -> RUN_TARGETED_TESTS
+  -> SUMMARIZE_EVIDENCE
+  -> STOP_FOR_HUMAN_REVIEW
 ```
 
-Every line conflicts with the intended sandbox contract.
+Every transition has:
 
-## Refactor the authority boundary
+- allowed input and output;
+- named tools;
+- maximum attempts;
+- token expectation;
+- failure result;
+- audit correlation ID.
 
-The BYO image must:
+Neither implementation includes `MERGE` or `DEPLOY`. Those remain separate
+human/CI authorities.
 
-- run as UID 1000;
-- send controlled external requests through the router at
-  `127.0.0.1:8443`;
-- contain no Azure or model-provider credential;
-- follow the documented sandbox environment contract;
-- write only to permitted runtime locations.
+## Keep the OpenClaw version as a behavioral reference
 
-Maya changes model and tool endpoints from hard-coded provider URLs to
-configuration. She removes credential acquisition from the Agent. Tool
-authentication moves into the KARS/MCP platform configuration.
+The OpenClaw Sandbox remains useful for:
 
-The application still decides *which code to inspect and which test to run*.
-The platform decides whether that action is authorized.
+- testing how developers phrase ambiguous issues;
+- validating tool descriptions and denial messages;
+- exploring which context files Forge really needs;
+- exercising the KARS plugin's governed tool surface;
+- comparing candidate MAF behavior against a known user journey.
 
-## Test in layers
+OpenClaw's plugin routes privileged operations through KARS. Built-in tools are
+replaced or denied according to the plugin contract. The team still grants only
+the tools required for the experiment.
 
-The team does not jump from `docker run` to AKS.
+## Create the MAF Python Sandbox
 
-### 1. Process test
+KARS ships a first-class `MicrosoftAgentFramework` adapter for Python. The
+adapter points the MAF Azure OpenAI client at the local inference router and
+uses a synthetic API-key value inside the Sandbox; the real credential remains
+brokered by KARS.
 
-Run the container as UID 1000. Verify startup, health, and writable paths.
+The production-shaped runtime block is:
 
-### 2. Credential absence test
+```yaml
+spec:
+  runtime:
+    kind: MicrosoftAgentFramework
+    microsoftAgentFramework:
+      language: python
+      agentCode:
+        oci:
+          image: ghcr.io/bytecraft/forge-maf@sha256:<digest>
+  inferenceRef:
+    name: forge-inference
+```
 
-Inspect the runtime environment and image history. Forge must not find provider
-keys even when prompted to enumerate its environment.
+During development, KARS also supports loading Agent code from Git:
 
-### 3. Router-path test
+```yaml
+agentCode:
+  git:
+    url: https://github.com/bytecraft/forge
+    ref: <pinned-commit>
+    path: agents/forge-maf
+```
 
-Send one model request and correlate it with a router audit event. If the
-request succeeds with the router unavailable, Forge still has an unintended
-external path.
+The team uses a pinned commit for repeatability and a signed OCI image for
+promotion. The MAF application contains `pyproject.toml` or
+`requirements.txt`; its default entrypoint can be `python -u agent.py`.
 
-### 4. Negative network test
+> MAF Python is shipping. Do not select `language: dotnet` for this KARS
+> release: the .NET adapter is deferred and should surface a degraded/invalid
+> runtime condition.
 
-Attempt to reach an unrelated public host. Direct access must fail. The team
-does not "fix" this by restoring a general proxy.
+## What changes—and what must not
 
-### 5. Policy test
+### Changes with the framework
 
-Exercise allowed code reads and tests, an unknown tool, rate exhaustion,
-token-budget exhaustion, and MCP failure.
+- orchestration code and state representation;
+- prompt composition;
+- how tools are wrapped in Python;
+- unit-test seams;
+- application telemetry.
 
-## Supply-chain decisions
+### Remains controlled by KARS
 
-The team scans the image and pins it by digest for promotion. Published KARS
-images include signatures and supply-chain metadata, but automatic rejection
-of unsigned BYO images is not yet a complete KARS capability. The cluster must
-enforce the organization's image admission policy separately.
+- Agent UID and Sandbox shape;
+- inference Router and external identity;
+- `InferencePolicy` and token budgets;
+- `ToolPolicy`, MCP registration, and rate limits;
+- egress enforcement;
+- Kubernetes NetworkPolicy;
+- audit chain and workload status.
 
-They record:
+Changing `spec.runtime.kind` is a small platform change, but migrating
+application behavior is still real engineering work. KARS keeps the authority
+boundary stable; it does not translate prompts into tested Python logic.
 
-- source revision;
-- build workflow identity;
-- image digest;
-- vulnerability scan result;
-- base image;
-- KARS version and runtime adapter;
-- policy bundle digest.
+## Run a side-by-side canary
 
-## A bug that proves the design
+The team deploys two Sandboxes against equivalent policy:
 
-During testing, Forge sees a bootstrap command in the repository and tries to
-download an unsigned build tool from an unapproved package host. The download
-fails under enforced egress.
+```text
+forge-openclaw-canary  -> OpenClaw
+forge-maf-candidate    -> MicrosoftAgentFramework / Python
+```
 
-Maya initially calls this a regression. Lina calls it a newly discovered
-capability.
+They replay the same corpus:
 
-They decide builds must use the pinned toolchain in the approved build image,
-so they remove the bootstrap behavior from Forge. The security control forced
-a supply-chain decision that had previously been hidden inside repository
-instructions.
+| Scenario | Compare |
+| --- | --- |
+| Clear null-handling bug | Patch size and targeted test |
+| Ambiguous requirement | Clarifying question behavior |
+| Hostile repository instruction | Tool and egress denial |
+| Repeated failing test | Attempt and token limits |
+| Tool outage | Explicit error; no fabricated result |
+| Near token limit | Graceful stop with partial evidence |
 
-## Migration checklist
+The candidate passes only if MAF preserves or improves behavior **and** the
+router shows the same policy decisions.
 
-1. Identify every credential and external endpoint.
-2. Match the framework to a supported adapter or BYO.
-3. Make endpoints configurable.
-4. Remove application-owned external credentials.
-5. Run as UID 1000.
-6. Route controlled calls through `127.0.0.1:8443`.
-7. Test explicit failures and denied paths.
-8. Scan and pin the image.
-9. Record the runtime and policy versions.
+## Prevent migration shortcuts
 
-## Chapter outcome
+Lina rejects four tempting shortcuts:
 
-Forge still contains Contoso's indexing and patch-planning logic, but it no longer
-defines its own authority. The migration changed infrastructure assumptions,
-not the business purpose.
+1. Giving MAF a direct Azure OpenAI endpoint "just during migration."
+2. Injecting a GitHub PAT because the new tool wrapper is unfinished.
+3. Broadening egress to make Python dependency installation work at runtime.
+4. Raising token limits to hide a state-machine loop.
+
+Dependencies belong in the built image, credentials belong behind platform
+identity/tool services, and loops belong in application tests.
+
+## Rollback strategy
+
+The OpenClaw canary stays deployed at low traffic until the MAF acceptance
+suite passes. A failed rollout changes the Sandbox reference back to the
+previous reviewed version; it does not require changing inference, network, or
+identity architecture.
+
+## Definition of done
+
+The framework switch is complete when:
+
+- the MAF Python workflow exposes explicit, tested transitions;
+- the same issue corpus produces equivalent or better results;
+- token, tool, egress, and hostile-content tests still fail closed;
+- MAF cannot call a provider when the router is unavailable;
+- images and source revisions are pinned;
+- OpenClaw remains a deliberate canary or is retired by decision, not neglect.
 
 ## Official references
 
-- [Runtime adapters](https://github.com/Azure/kars/blob/main/docs/runtimes.md)
-- [Examples](https://github.com/Azure/kars/tree/main/examples)
-- [BYO quickstart](https://github.com/Azure/kars/tree/main/examples/byo-quickstart)
+- [Runtime catalog](https://github.com/Azure/kars/blob/main/docs/runtimes.md)
+- [MAF quickstart](https://github.com/Azure/kars/tree/main/examples/maf-quickstart)
+- [OpenClaw plugin](https://github.com/Azure/kars/blob/main/docs/openclaw-plugin.md)
+- [Basic OpenClaw example](https://github.com/Azure/kars/tree/main/examples/basic-agent)

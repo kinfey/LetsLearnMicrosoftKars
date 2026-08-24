@@ -1,8 +1,14 @@
-# 4. Turning a Demo into a Kubernetes Contract
+# 4. Platform: Turn the Demo into a Kubernetes Contract
+
+> **Delivery stage:** Shared development platform
+> **New problem:** How can every engineer and CI job reproduce the same Forge
+> environment?
+> **Deliverable:** Reviewable `KarsSandbox` and `InferencePolicy` manifests.
 
 ## The problem with a command transcript
 
-Forge now works in Maya's local cluster, but nobody can answer a simple review
+The startup adds its first engineer. Forge works in Maya's local cluster, but
+nobody can answer a simple review
 question: "What exactly did we approve?"
 
 A terminal history contains commands, defaults, retries, and experiments. It
@@ -164,6 +170,16 @@ For each test, record:
 
 Forge is no longer "whatever Maya typed on Monday." It is a versionable
 contract. The next review can discuss a diff rather than a memory.
+
+The same contract can select OpenClaw today and MAF Python later. Runtime code
+changes, but the required inference reference, Sandbox controls, router, and
+status model remain platform concerns.
+
+## Definition of done
+
+The platform contract is ready when a clean cluster can reconcile it, a missing
+policy produces a useful Degraded condition, `kubectl diff` shows every
+authority change, and CI—not a founder's shell history—can reproduce it.
 
 ## Official references
 
