@@ -260,7 +260,8 @@ def html_document(
       <div class="header-left">
         <button class="icon-button menu-toggle" id="menu-toggle" aria-label="{labels["menu"]}">☰</button>
         <a class="brand" href="{BASE_PATH}/{language}/">
-          <span class="brand-mark">K</span>
+          <img class="brand-logo" src="https://github.com/Azure/kars/raw/main/docs/assets/logo.png"
+               alt="KARS logo" width="32" height="32">
           <span><strong>Let's Learn KARS</strong><small>Agent Reference Stack for Kubernetes</small></span>
         </a>
       </div>

@@ -71,15 +71,10 @@ input {
   text-decoration: none;
 }
 
-.brand-mark {
-  display: grid;
-  width: 30px;
-  height: 30px;
-  place-items: center;
-  background: var(--cp-accent);
-  color: var(--cp-accent-fg);
-  font-size: 17px;
-  font-weight: 700;
+.brand-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
 }
 
 .brand strong,
@@ -147,7 +142,7 @@ input {
 
 .search-shell:focus-within {
   border-color: var(--cp-link);
-  outline: 2px solid var(--cp-accent-soft);
+  outline: 2px solid var(--cp-border);
 }
 
 .search-shell input {
@@ -189,7 +184,7 @@ input {
 }
 
 .search-results a:hover {
-  background: var(--cp-accent-soft);
+  background: var(--cp-surface-soft);
   text-decoration: none;
 }
 
@@ -236,8 +231,8 @@ input {
 }
 
 .sidebar-link.active {
-  border-left-color: var(--cp-accent);
-  background: var(--cp-accent-soft);
+  border-left-color: var(--cp-link);
+  background: var(--cp-surface-soft);
   color: var(--cp-text);
   font-weight: 600;
 }
@@ -341,7 +336,7 @@ input {
   margin: 20px 0;
   padding: 14px 16px;
   border: 1px solid var(--cp-border);
-  border-left: 4px solid var(--cp-accent);
+  border-left: 4px solid var(--cp-link);
   background: var(--cp-surface-soft);
 }
 
