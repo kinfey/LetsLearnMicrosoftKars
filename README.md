@@ -13,6 +13,7 @@ chapter-for-chapter translation.
 
 ## Read the tutorial
 
+- [GitHub Pages website](https://kinfey.github.io/LetsLearnMicrosoftKars/)
 - [English (default)](docs/en/README.md)
 - [简体中文](docs/zh-cn/README.md)
 
