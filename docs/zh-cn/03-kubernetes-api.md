@@ -2,37 +2,37 @@
 
 ## 命令记录的问题
 
-Atlas 已在 Maya 的本地集群运行，但没人能回答一个简单评审问题：“我们到底批准
+Forge 已在 Maya 的本地集群运行，但没人能回答一个简单评审问题：“我们到底批准
 了什么？”
 
 终端历史包含命令、默认值、重试和实验，却无法描述稳定的期望状态。Ethan 要求
-团队将 Atlas 表达为可评审、可 Diff、可持续协调的 Kubernetes 资源。
+团队将 Forge 表达为可评审、可 Diff、可持续协调的 Kubernetes 资源。
 
 ## 从两项职责开始
 
 团队把工作负载与推理权限分开：
 
-- `KarsSandbox` 描述 Atlas 如何运行。
-- `InferencePolicy` 描述 Atlas 可以使用的推理路径。
+- `KarsSandbox` 描述 Forge 如何运行。
+- `InferencePolicy` 描述 Forge 可以使用的推理路径。
 
 策略是必需的，并与沙箱位于同一命名空间，避免应用 Manifest 静默回退到不受
 限制的内联推理。
 
 ## 编写第一份契约
 
-创建 `atlas.yaml`：
+创建 `forge.yaml`：
 
 ```yaml
 apiVersion: kars.azure.com/v1alpha1
 kind: InferencePolicy
 metadata:
-  name: atlas-inference
+  name: forge-inference
   namespace: kars-system
   labels:
-    app.kubernetes.io/name: atlas
+    app.kubernetes.io/name: forge
 spec:
   appliesTo:
-    sandboxName: atlas
+    sandboxName: forge
   modelPreference:
     primary:
       provider: azure-openai
@@ -41,10 +41,10 @@ spec:
 apiVersion: kars.azure.com/v1alpha1
 kind: KarsSandbox
 metadata:
-  name: atlas
+  name: forge
   namespace: kars-system
   labels:
-    app.kubernetes.io/name: atlas
+    app.kubernetes.io/name: forge
 spec:
   runtime:
     kind: OpenClaw
@@ -53,7 +53,7 @@ spec:
         agent:
           model: azure/gpt-4.1
   inferenceRef:
-    name: atlas-inference
+    name: forge-inference
 ```
 
 提供商和 Deployment 只是示例，Maya 会根据实际账号调整。
@@ -68,9 +68,9 @@ spec:
 然后执行：
 
 ```bash
-kubectl diff -f atlas.yaml
-kubectl apply -f atlas.yaml
-kubectl get karssandbox atlas -n kars-system -w
+kubectl diff -f forge.yaml
+kubectl apply -f forge.yaml
+kubectl get karssandbox forge -n kars-system -w
 ```
 
 ## 把状态看作一场对话
@@ -78,12 +78,13 @@ kubectl get karssandbox atlas -n kars-system -w
 Kubernetes `spec` 是团队提出的请求，`status` 是 Controller 的回答。
 
 ```bash
-kubectl get karssandbox atlas -n kars-system -o yaml
-kubectl describe karssandbox atlas -n kars-system
-kars status atlas
+kubectl get karssandbox forge -n kars-system -o yaml
+kubectl describe karssandbox forge -n kars-system
+kars status forge
 ```
 
-`Ready=True` 表示 Controller 报告协调成功，并不表示所有 Atlas 任务都正确或安全。
+`Ready=True` 表示 Controller 报告协调成功，并不表示所有 Forge 代码修改都正确
+或安全。
 
 Lina 故意把 `inferenceRef.name` 改为 `missing-policy`，沙箱随即进入 Degraded。
 团队先读取 `status.conditions`，而不是直接查看 Pod 日志。Condition 指出了无法
@@ -97,12 +98,12 @@ Lina 故意把 `inferenceRef.name` 改为 `missing-policy`，沙箱随即进入 
 
 设计评审中，团队把后续需求映射到 CRD：
 
-| Atlas 需求 | KARS 资源 |
+| Forge 需求 | KARS 资源 |
 | --- | --- |
-| 运行研究进程 | `KarsSandbox` |
+| 运行研发进程 | `KarsSandbox` |
 | 选择模型并限制推理 | `InferencePolicy` |
-| 只允许 `search` | `ToolPolicy` |
-| 注册搜索服务 | `McpServer` |
+| 只允许读取、Patch 与测试工具 | `ToolPolicy` |
+| 注册源码与研发工具服务 | `McpServer` |
 | 保存允许的 Memory | `KarsMemory` |
 | 运行回归用例 | `KarsEval` |
 | 描述可信 Peer | `TrustGraph` |
@@ -118,9 +119,9 @@ Lina 故意把 `inferenceRef.name` 改为 `missing-policy`，沙箱随即进入 
 团队在 Git 中修改模型 Deployment：
 
 ```bash
-kubectl diff -f atlas.yaml
-kubectl apply -f atlas.yaml
-kubectl get karssandbox atlas -n kars-system -w
+kubectl diff -f forge.yaml
+kubectl apply -f forge.yaml
+kubectl get karssandbox forge -n kars-system -w
 ```
 
 他们观察 Controller 更新生成配置和状态。没人直接修改生成的 ConfigMap，因为
@@ -154,7 +155,7 @@ kubectl get karssandbox atlas -n kars-system -w
 
 ## 本章结果
 
-Atlas 不再是“Maya 周一输入过的那些命令”，而是一份可版本化的契约。下一次评审
+Forge 不再是“Maya 周一输入过的那些命令”，而是一份可版本化的契约。下一次评审
 讨论的是 Diff，而不是某个人的记忆。
 
 ## 官方参考

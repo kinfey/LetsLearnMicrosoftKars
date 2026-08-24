@@ -1,8 +1,9 @@
-# 2. Reproducing Atlas in a Safe Local Lab
+# 2. Reproducing Forge in a Safe Local Lab
 
 ## Monday morning
 
-Maya wants to rewrite Atlas immediately. Ethan stops her.
+Maya wants to connect Forge to the production monorepo immediately. Ethan stops
+her.
 
 "First we need a repeatable environment. If we cannot see the router, pod, and
 policy boundary locally, we will debug the application and the platform at the
@@ -66,7 +67,7 @@ They look for three facts:
 
 1. The sandbox reaches `Ready`.
 2. Agent and router run as separate containers in the Kubernetes pod shape.
-3. Network policy exists; the router is not just a library imported by Atlas.
+3. Network policy exists; the router is not just a library imported by Forge.
 
 ## Follow the first conversation
 
@@ -79,8 +80,8 @@ kars connect dev-agent
 She asks:
 
 ```text
-You are Atlas, a research assistant. Summarize why an agent should not own
-its external credentials. Do not call any tool.
+You are Forge, a development Agent. Explain why an Agent that reads untrusted
+repository content should not own GitHub or model credentials. Do not call a tool.
 ```
 
 While the request runs, Ethan watches the router:
@@ -137,8 +138,8 @@ The response looks similar, but the deployment does not provide the same
 container separation or Kubernetes NetworkPolicy. Maya writes in the test
 report:
 
-> Docker mode proves that the happy path starts. It does not prove production
-> isolation.
+> Docker mode proves that the development prompt starts. It does not prove
+> source-code or production isolation.
 
 They return to local Kubernetes for the rest of the course.
 

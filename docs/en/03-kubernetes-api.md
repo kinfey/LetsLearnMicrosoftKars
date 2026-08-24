@@ -2,19 +2,19 @@
 
 ## The problem with a command transcript
 
-Atlas now works in Maya's local cluster, but nobody can answer a simple review
+Forge now works in Maya's local cluster, but nobody can answer a simple review
 question: "What exactly did we approve?"
 
 A terminal history contains commands, defaults, retries, and experiments. It
-does not describe a stable desired state. Ethan asks the team to express Atlas
+does not describe a stable desired state. Ethan asks the team to express Forge
 as Kubernetes resources that can be reviewed, diffed, and reconciled.
 
 ## Start with two responsibilities
 
 The team separates the workload from its inference authority:
 
-- `KarsSandbox` says how Atlas runs.
-- `InferencePolicy` says which inference path Atlas may use.
+- `KarsSandbox` says how Forge runs.
+- `InferencePolicy` says which inference path Forge may use.
 
 The policy is mandatory and lives in the same namespace as the sandbox. This
 prevents an application manifest from silently falling back to unrestricted
@@ -22,19 +22,19 @@ inline inference.
 
 ## Write the first contract
 
-Create `atlas.yaml`:
+Create `forge.yaml`:
 
 ```yaml
 apiVersion: kars.azure.com/v1alpha1
 kind: InferencePolicy
 metadata:
-  name: atlas-inference
+  name: forge-inference
   namespace: kars-system
   labels:
-    app.kubernetes.io/name: atlas
+    app.kubernetes.io/name: forge
 spec:
   appliesTo:
-    sandboxName: atlas
+    sandboxName: forge
   modelPreference:
     primary:
       provider: azure-openai
@@ -43,10 +43,10 @@ spec:
 apiVersion: kars.azure.com/v1alpha1
 kind: KarsSandbox
 metadata:
-  name: atlas
+  name: forge
   namespace: kars-system
   labels:
-    app.kubernetes.io/name: atlas
+    app.kubernetes.io/name: forge
 spec:
   runtime:
     kind: OpenClaw
@@ -55,7 +55,7 @@ spec:
         agent:
           model: azure/gpt-4.1
   inferenceRef:
-    name: atlas-inference
+    name: forge-inference
 ```
 
 The provider and deployment are examples; Maya changes them to match the
@@ -71,9 +71,9 @@ Before applying, the team asks:
 Then they apply:
 
 ```bash
-kubectl diff -f atlas.yaml
-kubectl apply -f atlas.yaml
-kubectl get karssandbox atlas -n kars-system -w
+kubectl diff -f forge.yaml
+kubectl apply -f forge.yaml
+kubectl get karssandbox forge -n kars-system -w
 ```
 
 ## Read status as a conversation
@@ -81,13 +81,13 @@ kubectl get karssandbox atlas -n kars-system -w
 Kubernetes `spec` is the team's request. `status` is the controller's answer.
 
 ```bash
-kubectl get karssandbox atlas -n kars-system -o yaml
-kubectl describe karssandbox atlas -n kars-system
-kars status atlas
+kubectl get karssandbox forge -n kars-system -o yaml
+kubectl describe karssandbox forge -n kars-system
+kars status forge
 ```
 
 When `Ready=True`, the controller is reporting successful reconciliation—not
-that every possible Atlas task is correct or secure.
+that every possible Forge code change is correct or secure.
 
 Lina intentionally changes `inferenceRef.name` to `missing-policy`. The
 sandbox becomes degraded. The team reads `status.conditions` before opening pod
@@ -102,12 +102,12 @@ This experiment teaches a durable debugging rule:
 
 During design review, the team maps future requirements to CRDs:
 
-| Atlas requirement | KARS resource |
+| Forge requirement | KARS resource |
 | --- | --- |
-| Run the research process | `KarsSandbox` |
+| Run the development process | `KarsSandbox` |
 | Select model and cap inference | `InferencePolicy` |
-| Allow only `search` | `ToolPolicy` |
-| Register the search service | `McpServer` |
+| Allow repository read, patch, and test tools | `ToolPolicy` |
+| Register the source-control/tool service | `McpServer` |
 | Persist approved memory | `KarsMemory` |
 | Run regression cases | `KarsEval` |
 | Model trusted peers | `TrustGraph` |
@@ -124,9 +124,9 @@ upstream maturity table.
 The team changes the model deployment in Git:
 
 ```bash
-kubectl diff -f atlas.yaml
-kubectl apply -f atlas.yaml
-kubectl get karssandbox atlas -n kars-system -w
+kubectl diff -f forge.yaml
+kubectl apply -f forge.yaml
+kubectl get karssandbox forge -n kars-system -w
 ```
 
 They observe the controller update the generated configuration and status. No
@@ -162,7 +162,7 @@ For each test, record:
 
 ## Chapter outcome
 
-Atlas is no longer "whatever Maya typed on Monday." It is a versionable
+Forge is no longer "whatever Maya typed on Monday." It is a versionable
 contract. The next review can discuss a diff rather than a memory.
 
 ## Official references

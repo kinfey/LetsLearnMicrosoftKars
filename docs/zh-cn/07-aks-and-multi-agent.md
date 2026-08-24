@@ -1,13 +1,13 @@
 # 7. 从一个沙箱到生产团队
 
-## 为什么 Atlas 变成两个 Agent
+## 为什么 Forge 变成两个 Agent
 
-分析师喜欢研究晨报，但合规团队不允许同一个 Agent 既收集证据又批准发布。
+开发者喜欢 Forge 的 Patch，但研发规范不允许同一个 Agent 既编写变更又批准合并。
 
 团队拆分工作流：
 
-- **Atlas Researcher** 搜索批准来源并生成带引用的草稿。
-- **Atlas Reviewer** 检查来源覆盖并批准或拒绝发布。
+- **Forge Builder** 读取 Issue、编辑 Workspace 并运行目标测试。
+- **Forge Reviewer** 检查 Diff 与测试证据，再批准或拒绝拟议 Pull Request。
 
 只有同时分离身份、工具、数据传递与审计证据，这种职责拆分才有意义。
 
@@ -20,7 +20,7 @@ Ethan 检查 Azure CLI、Helm 3.14+、订阅权限、区域模型可用性、配
 az login
 az account set --subscription <subscription-id>
 kars up \
-  --name atlas \
+  --name forge \
   --region swedencentral \
   --release v0.1.25
 ```
@@ -30,7 +30,7 @@ Agent ID 与已验证 Mesh 身份：
 
 ```bash
 kars up \
-  --name atlas \
+  --name forge \
   --region swedencentral \
   --release v0.1.25 \
   --mesh-trust=entra
@@ -43,17 +43,17 @@ Entra 选项需要额外租户权限。区域选择是 AKS、模型 Deployment�
 
 部署前，团队建立表格：
 
-| 控制 | Researcher | Reviewer |
+| 控制 | Builder | Reviewer |
 | --- | --- | --- |
-| 身份 | 研究 Workload Identity | 评审 Workload Identity |
-| 工具 | 仅 Search | 读取草稿、批准/拒绝 |
-| 出口 | 模型 + 批准 MCP | 模型 + 内部评审服务 |
-| 写入权限 | 仅草稿存储 | 仅发布状态 |
-| Token 预算 | 较高研究预算 | 较小评审预算 |
-| 人员访问 | 分析师 | 合规组 |
+| 身份 | 构建 Workload Identity | 评审 Workload Identity |
+| 工具 | 读取、Patch、目标测试 | 读取 Diff/证据、批准/拒绝 |
+| 出口 | 模型 + 批准研发 MCP | 模型 + 内部评审服务 |
+| 写入权限 | 临时 Workspace/Branch | 仅 Pull Request Review 状态 |
+| Token 预算 | 较高实现预算 | 较小评审预算 |
+| 人员访问 | 仓库开发者 | Maintainer |
 
-Agent 间传递文本不会转移权限。Reviewer 永远不会得到 Researcher 的身份或搜索
-凭据。
+Agent 间传递 Diff 不会转移权限。Reviewer 永远不会得到 Builder 的 Workspace
+或写入身份。
 
 ## 谨慎 Pairing 与通信
 
@@ -75,7 +75,7 @@ Pairing 受有效期和预算约束。消息只包含草稿、引用和任务元
 
 ## 是否需要机密隔离
 
-未来 Atlas 可能处理受禁运的并购材料。针对该威胁模型，团队评估由
+未来 Forge 可能修改尚未发布的产品源码。针对该威胁模型，团队评估由
 Kata/SEV-SNP 支持的机密沙箱隔离。
 
 机密执行可以加强工作负载隔离，但不能取代：
@@ -111,17 +111,17 @@ Kata/SEV-SNP 支持的机密沙箱隔离。
 
 上线前，团队演练：
 
-1. Researcher 提交有效的带引用草稿。
-2. Reviewer 批准草稿。
+1. Builder 提交最小 Patch 与通过目标测试的证据。
+2. Reviewer 批准拟议 Pull Request。
 3. 未 Pairing 的 Agent 提交并被拒绝。
 4. 过期 Pairing Token 被拒绝。
-5. Researcher 尝试直接发布并被拒绝。
-6. Reviewer 尝试搜索并被拒绝。
+5. Builder 尝试批准自己的变更并被拒绝。
+6. Reviewer 尝试修改源码并被拒绝。
 7. 运维人员从导出证据还原整个工作流。
 
 ## 本章结果
 
-Atlas 现在是由多个身份协作的系统，而不是两个 Prompt 互相聊天。架构从 Kubernetes
+Forge 现在是由多个身份协作的系统，而不是两个 Prompt 互相聊天。架构从 Kubernetes
 资源到 Runtime 策略与审计，全程保持职责分离。
 
 ## 官方参考

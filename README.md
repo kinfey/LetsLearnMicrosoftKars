@@ -26,7 +26,7 @@ chapter-for-chapter translation.
 | 5 | Runtimes and BYO | Select an adapter or integrate an image |
 | 6 | Security and operations | Inspect, audit, trace, and harden a sandbox |
 | 7 | AKS and multi-agent | Operate identity, mesh, A2A, and GitOps |
-| 8 | Applied project | Build a governed research assistant |
+| 8 | Applied project | Build a governed software development Agent |
 
 ## Language synchronization
 

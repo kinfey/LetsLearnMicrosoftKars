@@ -1,14 +1,15 @@
 # 7. From One Sandbox to a Production Team
 
-## Why Atlas becomes two Agents
+## Why Forge becomes two Agents
 
-Analysts like the research briefs, but compliance will not allow the same Agent
-to collect evidence and approve publication.
+Developers like Forge's patches, but engineering policy will not allow the same
+Agent to write a change and approve its merge.
 
 The team splits the workflow:
 
-- **Atlas Researcher** searches approved sources and drafts a cited brief.
-- **Atlas Reviewer** checks source coverage and approves or rejects release.
+- **Forge Builder** reads the issue, edits a workspace, and runs targeted tests.
+- **Forge Reviewer** inspects the diff and evidence, then approves or rejects
+  the proposed pull request.
 
 The separation is useful only if identity, tools, data transfer, and audit
 evidence are also separated.
@@ -22,7 +23,7 @@ availability, quota, and any confidential-compute requirements.
 az login
 az account set --subscription <subscription-id>
 kars up \
-  --name atlas \
+  --name forge \
   --region swedencentral \
   --release v0.1.25
 ```
@@ -32,7 +33,7 @@ registration. For per-sandbox Entra Agent ID and verified mesh identity:
 
 ```bash
 kars up \
-  --name atlas \
+  --name forge \
   --region swedencentral \
   --release v0.1.25 \
   --mesh-trust=entra
@@ -46,17 +47,17 @@ compute—not simply the nearest region.
 
 The team creates a table before deploying:
 
-| Control | Researcher | Reviewer |
+| Control | Builder | Reviewer |
 | --- | --- | --- |
-| Identity | Research workload identity | Review workload identity |
-| Tools | Search only | Read draft, approve/reject |
-| Egress | Model + approved MCP | Model + internal review service |
-| Write access | Draft store only | Publication status only |
-| Token budget | Higher research budget | Smaller review budget |
-| Human access | Analysts | Compliance group |
+| Identity | Build workload identity | Review workload identity |
+| Tools | Read, patch, targeted tests | Read diff/evidence, approve/reject |
+| Egress | Model + approved dev-tool MCP | Model + internal review service |
+| Write access | Ephemeral workspace/branch | Pull-request review status only |
+| Token budget | Higher implementation budget | Smaller review budget |
+| Human access | Repository developers | Maintainers |
 
-Passing a text document between Agents does not transfer authority. The
-Reviewer never receives the Researcher's identity or search credential.
+Passing a diff between Agents does not transfer authority. The Reviewer never
+receives the Builder's workspace or write identity.
 
 ## Pair and communicate carefully
 
@@ -79,9 +80,8 @@ and adds compensating controls before relying on them.
 
 ## Decide whether confidential isolation is needed
 
-A future Atlas workload may process embargoed acquisition material. For that
-threat model, the team evaluates confidential sandbox isolation backed by
-Kata/SEV-SNP.
+A future Forge workload may modify unreleased product source. For that threat
+model, the team evaluates confidential sandbox isolation backed by Kata/SEV-SNP.
 
 Confidential execution can strengthen workload isolation, but it does not
 replace:
@@ -119,17 +119,17 @@ modify another tenant's governance resources.
 
 Before launch, the team rehearses:
 
-1. The Researcher submits a valid cited draft.
-2. The Reviewer approves it.
+1. The Builder submits a minimal patch and passing targeted-test evidence.
+2. The Reviewer approves the proposed pull request.
 3. An unpaired Agent attempts submission and is rejected.
 4. An expired pairing token is rejected.
-5. The Researcher attempts publication directly and is denied.
-6. The Reviewer attempts search and is denied.
+5. The Builder attempts to approve its own change and is denied.
+6. The Reviewer attempts to modify source and is denied.
 7. Operators reconstruct the entire workflow from exported evidence.
 
 ## Chapter outcome
 
-Atlas is now a system of cooperating identities, not two prompts talking to
+Forge is now a system of cooperating identities, not two prompts talking to
 each other. The architecture preserves separation of duties from Kubernetes
 resources through runtime policy and audit.
 

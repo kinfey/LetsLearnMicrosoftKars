@@ -1,10 +1,10 @@
-# 6. The Night Atlas Started Looping
+# 6. The Night Forge Kept Fixing the Same Test
 
 ## An incident without an attacker
 
-At 02:13, the staging Atlas receives a malformed report. Its parser returns an
-empty result, the planner asks the search tool for another copy, and the cycle
-repeats.
+At 02:13, staging Forge receives a flaky integration test. It changes a timeout,
+runs the test, sees another failure, and changes the timeout again. The repair
+cycle repeats.
 
 The token budget stops further inference. The rate limit slows the tool loop.
 The on-call engineer sees denied decisions in the router stream.
@@ -17,23 +17,23 @@ also limit ordinary software failure.
 The on-call engineer begins with the owner resource:
 
 ```bash
-kars status atlas
-kars inspect atlas
+kars status forge
+kars inspect forge
 kubectl get events -n kars-system --sort-by=.lastTimestamp
 ```
 
 Then follows the mediated path:
 
 ```bash
-kars logs atlas --service router
-kars audit tail atlas --decision deny
-kars trace atlas --network
+kars logs forge --service router
+kars audit tail forge --decision deny
+kars trace forge --network
 ```
 
 The evidence shows:
 
-1. repeated `search` calls from one task;
-2. tool throttling;
+1. repeated `apply_patch` and `run_tests` calls from one task;
+2. test-tool throttling;
 3. increasing inference token use;
 4. budget denial;
 5. no successful unknown-host egress.
@@ -76,14 +76,14 @@ still roadmap work.
 
 ## Fix the product, not only the threshold
 
-Arun suggests doubling the budget so the morning brief can finish. Maya rejects
+Arun suggests doubling the budget so the pull request can finish. Maya rejects
 that as the only fix. The loop needs:
 
-- a maximum number of search attempts per source;
-- explicit handling for empty parser output;
+- a maximum number of repair attempts per failing test;
+- explicit detection of repeated equivalent patches;
 - a task deadline;
 - idempotent retry behavior;
-- a regression case using the malformed report.
+- a regression case using the flaky test.
 
 Platform budgets contain the failure; application logic removes its cause.
 
@@ -103,7 +103,7 @@ The dashboard and alerts track:
 - allowed and denied tool calls;
 - token usage versus budget;
 - unknown or denied egress;
-- MCP availability;
+- repository and test-tool availability;
 - loaded image and policy digests.
 
 The team avoids alerting on every denial. A denial can mean a control worked.
@@ -119,11 +119,11 @@ provider rather than assuming identical safety telemetry.
 
 ## Turn the incident into an evaluation
 
-The malformed report becomes a `KarsEval` regression scenario. Before a model,
+The flaky test becomes a `KarsEval` regression scenario. Before a model,
 prompt, runtime, or policy change is promoted, the team runs:
 
 ```bash
-kars eval run atlas-regression
+kars eval run forge-regression
 ```
 
 The suite checks:
@@ -132,7 +132,7 @@ The suite checks:
 - no unsupported claim is generated;
 - tool calls remain under the threshold;
 - the unknown-host test is denied;
-- the normal report still produces a cited brief.
+- a normal bug still produces a minimal patch with passing targeted tests.
 
 ## Production hardening review
 
@@ -149,7 +149,7 @@ The suite checks:
 ## Chapter outcome
 
 The 02:13 incident ends without data loss or uncontrolled spend. More
-importantly, the team can explain why. Atlas has moved from "a clever process"
+importantly, the team can explain why. Forge has moved from "a clever process"
 to an operable service.
 
 ## Official references

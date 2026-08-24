@@ -1,9 +1,10 @@
-# 5. Moving Atlas into a Governed Runtime
+# 5. Moving Forge into a Governed Runtime
 
 ## The uncomfortable discovery
 
-The policy prototype uses OpenClaw, but Maya's original Atlas is a Python
-application with custom report parsing. Rewriting it would delay the project.
+The policy prototype uses OpenClaw, but Maya's original Forge is a Python
+application with custom repository indexing and patch planning. Rewriting it
+would delay the project.
 Running the old container unchanged would preserve its direct credential and
 network assumptions.
 
@@ -33,9 +34,9 @@ adapter in the release-specific runtime matrix and maturity documentation.
 Before editing code, Maya documents the existing assumptions:
 
 ```text
-AZURE_OPENAI_API_KEY -> read by Atlas
+AZURE_OPENAI_API_KEY -> read by Forge
 AZURE_OPENAI_ENDPOINT -> called directly
-SEARCH_TOKEN -> passed to a Python tool
+GITHUB_TOKEN -> passed to repository and pull-request tools
 HTTPS_PROXY -> unrestricted company proxy
 process user -> root
 ```
@@ -57,8 +58,8 @@ Maya changes model and tool endpoints from hard-coded provider URLs to
 configuration. She removes credential acquisition from the Agent. Tool
 authentication moves into the KARS/MCP platform configuration.
 
-The application still decides *when* research is needed. The platform decides
-whether that action is authorized.
+The application still decides *which code to inspect and which test to run*.
+The platform decides whether that action is authorized.
 
 ## Test in layers
 
@@ -70,13 +71,13 @@ Run the container as UID 1000. Verify startup, health, and writable paths.
 
 ### 2. Credential absence test
 
-Inspect the runtime environment and image history. Atlas must not find provider
+Inspect the runtime environment and image history. Forge must not find provider
 keys even when prompted to enumerate its environment.
 
 ### 3. Router-path test
 
 Send one model request and correlate it with a router audit event. If the
-request succeeds with the router unavailable, Atlas still has an unintended
+request succeeds with the router unavailable, Forge still has an unintended
 external path.
 
 ### 4. Negative network test
@@ -86,8 +87,8 @@ does not "fix" this by restoring a general proxy.
 
 ### 5. Policy test
 
-Exercise an allowed search, an unknown tool, rate exhaustion, token-budget
-exhaustion, and MCP failure.
+Exercise allowed code reads and tests, an unknown tool, rate exhaustion,
+token-budget exhaustion, and MCP failure.
 
 ## Supply-chain decisions
 
@@ -108,15 +109,17 @@ They record:
 
 ## A bug that proves the design
 
-During testing, Atlas tries to download a chart image from a URL embedded in a
-report. The download fails under enforced egress.
+During testing, Forge sees a bootstrap command in the repository and tries to
+download an unsigned build tool from an unapproved package host. The download
+fails under enforced egress.
 
 Maya initially calls this a regression. Lina calls it a newly discovered
 capability.
 
-They decide the image is not required for the text brief, so they change Atlas
-to cite the image URL without fetching it. The security control forced a
-product decision that had previously been hidden inside library behavior.
+They decide builds must use the pinned toolchain in the approved build image,
+so they remove the bootstrap behavior from Forge. The security control forced
+a supply-chain decision that had previously been hidden inside repository
+instructions.
 
 ## Migration checklist
 
@@ -132,7 +135,7 @@ product decision that had previously been hidden inside library behavior.
 
 ## Chapter outcome
 
-Atlas still contains Contoso's parsing and research logic, but it no longer
+Forge still contains Contoso's indexing and patch-planning logic, but it no longer
 defines its own authority. The migration changed infrastructure assumptions,
 not the business purpose.
 

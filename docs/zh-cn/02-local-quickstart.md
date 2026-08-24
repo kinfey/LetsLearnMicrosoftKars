@@ -1,8 +1,8 @@
-# 2. 在安全的本地实验室复现 Atlas
+# 2. 在安全的本地实验室复现 Forge
 
 ## 周一早晨
 
-Maya 想立刻重写 Atlas，但 Ethan 阻止了她。
+Maya 想立刻把 Forge 连接到生产 Monorepo，但 Ethan 阻止了她。
 
 “首先要有可重复的环境。如果本地看不到路由器、Pod 和策略边界，我们就会同时
 调试应用和平台。”
@@ -63,7 +63,7 @@ kars inspect dev-agent
 
 1. 沙箱达到 `Ready`。
 2. Agent 与路由器在 Kubernetes Pod 形态中作为不同容器运行。
-3. NetworkPolicy 确实存在；路由器不是 Atlas 引入的普通代码库。
+3. NetworkPolicy 确实存在；路由器不是 Forge 引入的普通代码库。
 
 ## 跟踪第一次对话
 
@@ -76,8 +76,8 @@ kars connect dev-agent
 她输入：
 
 ```text
-你是 Atlas 研究助手。请总结为什么 Agent 不应持有外部凭据。
-不要调用任何工具。
+你是 Forge 研发 Agent。请解释为什么读取不可信仓库内容的 Agent 不应持有
+GitHub 或模型凭据。不要调用任何工具。
 ```
 
 请求运行时，Ethan 观察路由器：
@@ -130,7 +130,7 @@ kars dev --release v0.1.25
 响应看起来相似，但部署不具备同等容器隔离或 Kubernetes NetworkPolicy。Maya
 在测试报告中写道：
 
-> Docker 模式证明成功路径可以启动，但不能证明生产隔离。
+> Docker 模式证明研发 Prompt 可以启动，但不能证明源码或生产隔离。
 
 后续课程继续使用本地 Kubernetes。
 

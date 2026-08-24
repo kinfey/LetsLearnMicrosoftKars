@@ -1,47 +1,48 @@
-# 8. Ship the Governed Research Assistant
+# 8. Ship the Governed Development Agent
 
 ## The final assignment
 
-Six weeks after the first prompt-injection test, Contoso Research is ready for
+Six weeks after the first repository prompt-injection test, Contoso Engineering is ready for
 a limited production launch. The team must demonstrate more than a good demo.
-Another operator must be able to deploy Atlas, explain every permission,
+Another operator must be able to deploy Forge, explain every permission,
 observe every denied path, and roll the system back.
 
 Your task is to reproduce that outcome.
 
 ## Product story
 
-An analyst asks:
+A developer assigns an issue:
 
 ```text
-Compare the latest two public reports for Fabrikam. Identify changes in
-revenue guidance, cite every source, and mark uncertain claims.
+Fix issue #482 in the Fabrikam Orders API: requests without an optional
+customer note return 500. Make the smallest safe change, run targeted tests,
+and explain any remaining uncertainty.
 ```
 
 The expected journey is:
 
-1. The Researcher receives the task.
-2. It calls only the approved MCP `search` tool.
-3. Search traffic reaches only the approved MCP host.
+1. The Builder receives the issue and a pinned source revision.
+2. It calls only approved repository, patch, and test tools.
+3. Tool traffic reaches only the approved development MCP host.
 4. Model requests pass through the router under a token budget.
-5. The Researcher produces a draft with citations.
-6. The Reviewer receives the draft without receiving Researcher authority.
-7. The Reviewer approves, rejects, or requests a new draft.
+5. The Builder produces a minimal diff and test evidence.
+6. The Reviewer receives the diff without receiving Builder write authority.
+7. The Reviewer approves, rejects, or requests another patch.
 8. Audit evidence connects the user task, tool calls, inference, handoff, and
    final decision.
 
 ## Acceptance requirements
 
-Atlas must:
+Forge must:
 
 - run in one or more `KarsSandbox` resources;
 - reference separate `InferencePolicy` resources;
 - use daily and per-request budgets;
 - allow only named tools;
-- reach only model, MCP, and required internal destinations;
+- reach only model, development MCP, and required internal destinations;
 - run as non-root without provider credentials;
 - emit audit records for inference, tools, egress, and review;
-- fail explicitly when MCP or inference is unavailable;
+- fail explicitly when source, test, MCP, or inference is unavailable;
 - pass regression and negative-policy tests before promotion.
 
 ## Phase 1: Recreate the lab
@@ -69,7 +70,7 @@ assume that an example's development defaults are production policy.
 
 Create version-controlled manifests for:
 
-- Researcher and Reviewer sandboxes;
+- Builder and Reviewer sandboxes;
 - an inference policy for each role;
 - named tool policies;
 - the MCP server and authentication metadata;
@@ -92,15 +93,15 @@ If the team cannot answer, remove the permission.
 
 | Scenario | Expected result |
 | --- | --- |
-| Normal cited research | Search, draft, review succeed |
+| Normal bug fix | Inspect, patch, test, and review succeed |
 | Request for shell or unknown tool | Denied |
 | Document requests upload to unknown host | Denied and audited |
 | Tool call burst | Throttled |
 | Repeated inference loop | Budget stops further calls |
-| MCP service unavailable | Explicit failure, no fabricated source |
+| MCP/test service unavailable | Explicit failure, no fabricated passing test |
 | Provider unavailable | Explicit failure and bounded retry |
-| Researcher tries to publish | Denied |
-| Reviewer tries to search | Denied |
+| Builder tries to self-approve | Denied |
+| Reviewer tries to modify source | Denied |
 | Expired/untrusted peer submits draft | Rejected |
 
 Run the complete intended workflow in egress learning mode. Review every
@@ -126,7 +127,7 @@ Define dashboards and alerts for:
 - token use against budget;
 - allowed, denied, and throttled tools;
 - unknown egress attempts;
-- MCP availability;
+- repository, test runner, and MCP availability;
 - image and policy digest drift.
 
 Add an incident procedure that preserves evidence before deletion or
@@ -143,7 +144,7 @@ application story and the negative controls to work together.
 
 ## Definition of done
 
-Ask an operator who did not build Atlas to:
+Ask an operator who did not build Forge to:
 
 1. Deploy it from the repository.
 2. Explain every approved destination and tool.
@@ -152,16 +153,16 @@ Ask an operator who did not build Atlas to:
 5. Identify the model, image, KARS, and policy versions.
 6. Roll back to the previous release.
 
-Atlas is ready only if the operator succeeds without private knowledge from
+Forge is ready only if the operator succeeds without private knowledge from
 Maya or Ethan.
 
 ## Epilogue
 
-The original prototype was impressive because it could act. The production
+The original prototype was impressive because it could edit code. The production
 design is trustworthy because the team can explain **where it may act, under
 which identity, within what budget, and with what evidence**.
 
-That is the practical value of KARS: not making Agents infallible, but making
+That is the practical value of KARS: not making development Agents infallible, but making
 their authority bounded, observable, and operable.
 
 ## Continue learning

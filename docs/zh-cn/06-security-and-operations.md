@@ -1,9 +1,9 @@
-# 6. Atlas 开始循环的那个夜晚
+# 6. Forge 反复修复同一测试的那个夜晚
 
 ## 一场没有攻击者的事故
 
-凌晨 02:13，Staging Atlas 收到一份格式异常的报告。Parser 返回空结果，Planner
-要求搜索工具获取另一份副本，流程不断重复。
+凌晨 02:13，Staging Forge 遇到一个 Flaky Integration Test。它修改 Timeout、
+运行测试、看到另一种失败，再次修改 Timeout，修复循环不断重复。
 
 Token 预算阻止后续推理，速率限制减慢工具循环，值班工程师在路由器流中看到被
 拒绝的决定。
@@ -15,23 +15,23 @@ Token 预算阻止后续推理，速率限制减慢工具循环，值班工程�
 值班工程师从 Owner Resource 开始：
 
 ```bash
-kars status atlas
-kars inspect atlas
+kars status forge
+kars inspect forge
 kubectl get events -n kars-system --sort-by=.lastTimestamp
 ```
 
 然后沿代理路径排查：
 
 ```bash
-kars logs atlas --service router
-kars audit tail atlas --decision deny
-kars trace atlas --network
+kars logs forge --service router
+kars audit tail forge --decision deny
+kars trace forge --network
 ```
 
 证据显示：
 
-1. 一个任务反复调用 `search`；
-2. 工具被限流；
+1. 一个任务反复调用 `apply_patch` 和 `run_tests`；
+2. 测试工具被限流；
 3. 推理 Token 使用持续增加；
 4. 预算拒绝后续请求；
 5. 没有未知主机出口成功。
@@ -72,13 +72,14 @@ kars trace atlas --network
 
 ## 修复产品，而不只提高阈值
 
-Arun 建议将预算翻倍，让晨报能够完成。Maya 拒绝把它作为唯一修复。循环还需要：
+Arun 建议将预算翻倍，让 Pull Request 能够完成。Maya 拒绝把它作为唯一修复。
+循环还需要：
 
-- 每个来源的最大搜索次数；
-- 对空 Parser 输出的明确处理；
+- 每个失败测试的最大修复次数；
+- 检测重复等价 Patch；
 - 任务 Deadline；
 - 幂等重试行为；
-- 使用异常报告的回归用例。
+- 使用 Flaky Test 的回归用例。
 
 平台预算负责限制故障，应用逻辑负责消除根因。
 
@@ -98,7 +99,7 @@ Dashboard 与警报跟踪：
 - 允许和拒绝的工具调用；
 - Token 使用与预算对比；
 - 未知或被拒绝的出口；
-- MCP 可用性；
+- 仓库与测试工具可用性；
 - 已加载的镜像与策略 Digest。
 
 团队不会对每次 Deny 都发警报。Deny 可能表示控制成功。他们关注模式：重复拒绝、
@@ -112,11 +113,11 @@ Azure AI Foundry 可以返回详细 Prompt Filter 结果。Copilot 与 GitHub Mo
 
 ## 把事故变成评估
 
-异常报告成为 `KarsEval` 回归场景。模型、Prompt、Runtime 或策略推广前，团队
+Flaky Test 成为 `KarsEval` 回归场景。模型、Prompt、Runtime 或策略推广前，团队
 执行：
 
 ```bash
-kars eval run atlas-regression
+kars eval run forge-regression
 ```
 
 测试确认：
@@ -125,7 +126,7 @@ kars eval run atlas-regression
 - 不生成无来源支持的结论；
 - 工具调用保持在阈值内；
 - 未知主机测试被拒绝；
-- 正常报告仍能生成带引用的晨报。
+- 正常 Bug 仍能生成最小 Patch，并通过目标测试。
 
 ## 生产加固评审
 
@@ -142,7 +143,7 @@ kars eval run atlas-regression
 ## 本章结果
 
 02:13 的事故结束时没有数据丢失，也没有不受控成本。更重要的是，团队能够解释
-原因。Atlas 已从“聪明的进程”变成可运维服务。
+原因。Forge 已从“聪明的进程”变成可运维服务。
 
 ## 官方参考
 
