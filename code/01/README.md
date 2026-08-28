@@ -25,13 +25,14 @@ Responses API.
 
 This example was developed and validated on **macOS arm64 (Apple Silicon)** with
 Docker Desktop and Homebrew Node.js 22. The scripts also support **amd64
-(x86_64)** hosts:
+(x86_64)** hosts, including Windows amd64 through WSL2:
 
 | Host | Node.js 22 default | Container platform |
 |------|--------------------|--------------------|
 | macOS arm64 | `/opt/homebrew/opt/node@22/bin` | `linux/arm64` |
 | macOS amd64 | `/usr/local/opt/node@22/bin` | `linux/amd64` |
 | Linux amd64 | Node.js 22 found on `PATH` | `linux/amd64` |
+| Windows amd64 with WSL2 | Node.js 22 found inside WSL2 | `linux/amd64` |
 
 `scripts/platform-env.sh` detects these values from the host. To override them,
 set:
@@ -53,6 +54,34 @@ export CONTAINER_PLATFORM=linux/amd64
 For Linux amd64, install Node.js 22 with the system's supported package or
 version manager, ensure `node --version` reports `v22`, and set `NODE22_BIN`
 only if Node.js 22 is not the first `node` on `PATH`.
+
+For Windows amd64, use an Ubuntu WSL2 environment. Native PowerShell and CMD are
+not supported because the automation uses Bash and Linux containers. From an
+elevated PowerShell terminal:
+
+```powershell
+wsl --install -d Ubuntu
+```
+
+Install Docker Desktop for Windows, enable the WSL 2 engine and Ubuntu
+integration, then run the remaining commands inside the Ubuntu shell. Install
+Node.js 22, kind, kubectl, Helm, Git, Rust, and Make inside WSL2. Keep the
+repository in the WSL filesystem, such as `~/src/LetsLearnMicrosoftKars`,
+rather than under `/mnt/c`, for better filesystem and container-build
+performance.
+
+Inside WSL2, verify and select the amd64 image platform:
+
+```bash
+node --version
+uname -m                    # x86_64
+docker version
+export CONTAINER_PLATFORM=linux/amd64
+```
+
+The platform script sees WSL2 as Linux `x86_64`, so no code change is required.
+Set `NODE22_BIN` only when Node.js 22 is not the first `node` on the WSL2
+`PATH`.
 
 Do not force `linux/amd64` on Apple Silicon unless emulation is intentional:
 native `linux/arm64` images are faster and match the validated configuration.
@@ -95,7 +124,7 @@ Issue, source excerpts, proposed edits, and test evidence over the AGT mesh.
 
 ## Prerequisites
 
-- macOS arm64 (validated), macOS amd64, or Linux amd64
+- macOS arm64 (validated), macOS amd64, Linux amd64, or Windows amd64 with WSL2
 - Docker Desktop with at least 8 GB assigned
 - kind, kubectl, Helm, Git, Rust, and Node.js 22
 - An active GitHub Copilot seat

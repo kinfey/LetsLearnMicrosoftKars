@@ -23,13 +23,14 @@ GPT-5.6-Sol 仅支持 Responses API。源码构建适配会将 OpenClaw 主运�
 
 本示例在使用 Docker Desktop 和 Homebrew Node.js 22 的 **macOS arm64
 （Apple Silicon）** 环境中开发并完成验证。脚本同时支持 **amd64（x86_64）**
-主机：
+主机，包括通过 WSL2 运行的 Windows amd64：
 
 | 主机 | Node.js 22 默认路径 | 容器平台 |
 |------|---------------------|----------|
 | macOS arm64 | `/opt/homebrew/opt/node@22/bin` | `linux/arm64` |
 | macOS amd64 | `/usr/local/opt/node@22/bin` | `linux/amd64` |
 | Linux amd64 | 从 `PATH` 查找 Node.js 22 | `linux/amd64` |
+| Windows amd64 + WSL2 | 从 WSL2 内部查找 Node.js 22 | `linux/amd64` |
 
 `scripts/platform-env.sh` 会根据主机自动检测这些值。如需覆盖，请设置：
 
@@ -49,6 +50,30 @@ export CONTAINER_PLATFORM=linux/amd64
 在 Linux amd64 上，请使用系统支持的包管理器或版本管理器安装 Node.js 22，确认
 `node --version` 返回 `v22`。只有当 `PATH` 中的第一个 `node` 不是 Node.js 22 时，
 才需要显式设置 `NODE22_BIN`。
+
+Windows amd64 必须使用 Ubuntu WSL2 环境。由于自动化依赖 Bash 与 Linux 容器，
+目前不支持直接从原生 PowerShell 或 CMD 运行。请先在管理员 PowerShell 中执行：
+
+```powershell
+wsl --install -d Ubuntu
+```
+
+安装 Windows 版 Docker Desktop，启用 WSL 2 Engine 与 Ubuntu Integration，然后在
+Ubuntu Shell 中执行本示例的其余命令。在 WSL2 内安装 Node.js 22、kind、kubectl、
+Helm、Git、Rust 和 Make。为了获得更好的文件系统与容器构建性能，建议把仓库放在
+WSL 文件系统中，例如 `~/src/LetsLearnMicrosoftKars`，不要放在 `/mnt/c` 下。
+
+在 WSL2 内检查环境并选择 amd64 镜像平台：
+
+```bash
+node --version
+uname -m                    # x86_64
+docker version
+export CONTAINER_PLATFORM=linux/amd64
+```
+
+平台脚本会把 WSL2 识别为 Linux `x86_64`，因此不需要修改代码。只有当 WSL2
+`PATH` 中的第一个 `node` 不是 Node.js 22 时，才需要设置 `NODE22_BIN`。
 
 除非明确需要模拟 amd64，否则不要在 Apple Silicon 上强制使用 `linux/amd64`：
 原生 `linux/arm64` 镜像速度更快，也与已经验证的配置一致。
@@ -91,7 +116,7 @@ Specialist Agent 之间不共享文件系统。Forge 只通过 AGT Mesh 传输�
 
 ## 前置条件
 
-- macOS arm64（已验证）、macOS amd64 或 Linux amd64
+- macOS arm64（已验证）、macOS amd64、Linux amd64 或 Windows amd64 + WSL2
 - Docker Desktop，至少分配 8 GB 内存
 - kind、kubectl、Helm、Git、Rust 和 Node.js 22
 - 有效的 GitHub Copilot 许可

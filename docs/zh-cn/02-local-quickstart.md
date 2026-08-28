@@ -115,7 +115,7 @@ OpenClaw 必须把它视为不可信数据，而不是更高优先级的指令�
 ## 准备工作站
 
 已经验证的配置是 macOS arm64（Apple Silicon）与本地 kind 集群。脚本也会检测
-macOS amd64 和 Linux amd64。请检查：
+macOS amd64、Linux amd64，以及通过 WSL2 运行的 Windows amd64。请检查：
 
 ```bash
 node --version              # Node.js 22
@@ -132,6 +132,17 @@ rustc --version
 `/opt/homebrew/opt/node@22/bin`，OpenClaw 镜像使用 `linux/arm64`。macOS amd64
 应使用 `/usr/local/opt/node@22/bin` 与 `linux/amd64`；Linux amd64 从 `PATH`
 查找 Node.js 22，并使用 `linux/amd64`。
+
+在 Windows amd64 上，请先安装 Ubuntu WSL2，并启用 Docker Desktop 的 WSL 2
+Engine 与 Ubuntu Integration：
+
+```powershell
+wsl --install -d Ubuntu
+```
+
+后续命令全部在 Ubuntu 中运行，不要直接使用原生 PowerShell 或 CMD。在 WSL2 内
+安装所需工具，把仓库放在 WSL 文件系统而不是 `/mnt/c` 下，并使用
+`linux/amd64`。WSL2 会报告 `x86_64`，因此平台脚本会复用 Linux amd64 路径。
 
 共享脚本 `scripts/platform-env.sh` 会检测这些默认值。如果本机安装位置不同，可覆盖：
 

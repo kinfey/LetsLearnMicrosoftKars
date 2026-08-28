@@ -121,7 +121,8 @@ These are enforceable controls, not prompt suggestions.
 ## Prepare the workstation
 
 The validated configuration is macOS arm64 (Apple Silicon) with a local kind
-cluster. The scripts also detect macOS amd64 and Linux amd64. Verify:
+cluster. The scripts also detect macOS amd64, Linux amd64, and Windows amd64
+running through WSL2. Verify:
 
 ```bash
 node --version              # Node.js 22
@@ -138,6 +139,18 @@ On macOS arm64, Homebrew normally installs Node.js 22 under
 `/opt/homebrew/opt/node@22/bin` and the OpenClaw image uses `linux/arm64`. On
 macOS amd64, use `/usr/local/opt/node@22/bin` and `linux/amd64`. Linux amd64
 uses Node.js 22 from `PATH` and `linux/amd64`.
+
+On Windows amd64, first install Ubuntu WSL2 and enable Docker Desktop's WSL 2
+engine and Ubuntu integration:
+
+```powershell
+wsl --install -d Ubuntu
+```
+
+Run all remaining commands inside Ubuntu, not native PowerShell or CMD. Install
+the prerequisites inside WSL2, keep the repository under the WSL filesystem
+rather than `/mnt/c`, and use `linux/amd64`. WSL2 reports `x86_64`, so the
+platform script handles it through the same path as Linux amd64.
 
 The shared `scripts/platform-env.sh` detects these defaults. Override them when
 your installation differs:
