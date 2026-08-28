@@ -82,7 +82,7 @@ NetworkPolicy、Controller 与 CRD 模型。AKS 则增加生产身份和可选�
 ## 目录
 
 1. [需求：演示之前先约束产品](01-why-kars.md)
-2. [原型：用 OpenClaw 构建第一条垂直链路](02-local-quickstart.md)
+2. [原型：一切从 OpenClaw 开始](02-local-quickstart.md)
 3. [开发：保护客户代码仓库](03-inside-the-sandbox.md)
 4. [平台：把演示变成 Kubernetes 契约](04-kubernetes-api.md)
 5. [治理：控制 Token、工具和出口](05-policies-and-tools.md)

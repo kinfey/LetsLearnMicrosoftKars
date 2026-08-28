@@ -90,7 +90,7 @@ and [Runtime catalog](https://github.com/Azure/kars/blob/main/docs/runtimes.md).
 ## Contents
 
 1. [Requirement: Bound the Product Before the Demo](01-why-kars.md)
-2. [Prototype: Build the First OpenClaw Vertical Slice](02-local-quickstart.md)
+2. [Prototype: Start with OpenClaw](02-local-quickstart.md)
 3. [Development: Protect the Customer Repository](03-inside-the-sandbox.md)
 4. [Platform: Turn the Demo into a Kubernetes Contract](04-kubernetes-api.md)
 5. [Governance: Control Tokens, Tools, and Egress](05-policies-and-tools.md)
