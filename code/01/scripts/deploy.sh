@@ -2,12 +2,11 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-NODE22_BIN="/opt/homebrew/opt/node@22/bin"
 AGT_DIR="${ROOT_DIR}/.cache/upstream/agent-governance-toolkit"
 KARS_DIR="${ROOT_DIR}/.cache/upstream/kars"
 GENERATED_DIR="${ROOT_DIR}/.generated"
 
-export PATH="${NODE22_BIN}:${PATH}"
+source "${ROOT_DIR}/scripts/platform-env.sh"
 export npm_config_registry="https://packagefeedproxy.microsoft.io/npm/"
 export pnpm_config_registry="https://packagefeedproxy.microsoft.io/npm/"
 export npm_config_replace_registry_host="registry.npmjs.org"
@@ -17,10 +16,6 @@ export npm_config_package_lock="false"
 export PIP_INDEX_URL="https://packagefeedproxy.microsoft.io/pypi/simple/"
 export NUGET_CONFIG_FILE="${ROOT_DIR}/NuGet.Config"
 
-if [[ ! -x "${NODE22_BIN}/node" ]]; then
-  echo "Node.js 22 is unavailable. Run make build-kars after installing node@22." >&2
-  exit 1
-fi
 if ! command -v kars >/dev/null 2>&1; then
   echo "KARS CLI is not linked. Run make build-kars first." >&2
   exit 1

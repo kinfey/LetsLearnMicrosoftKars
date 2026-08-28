@@ -19,6 +19,40 @@ GPT-5.6-Sol 仅支持 Responses API。源码构建适配会将 OpenClaw 主运�
 `unsupported_api_for_model` 错误，从而将 specialist task loop 的 Chat Completions
 请求透明转换为 Responses API 请求。
 
+## 平台支持
+
+本示例在使用 Docker Desktop 和 Homebrew Node.js 22 的 **macOS arm64
+（Apple Silicon）** 环境中开发并完成验证。脚本同时支持 **amd64（x86_64）**
+主机：
+
+| 主机 | Node.js 22 默认路径 | 容器平台 |
+|------|---------------------|----------|
+| macOS arm64 | `/opt/homebrew/opt/node@22/bin` | `linux/arm64` |
+| macOS amd64 | `/usr/local/opt/node@22/bin` | `linux/amd64` |
+| Linux amd64 | 从 `PATH` 查找 Node.js 22 | `linux/amd64` |
+
+`scripts/platform-env.sh` 会根据主机自动检测这些值。如需覆盖，请设置：
+
+```bash
+export NODE22_BIN=/path/to/node-22/bin
+export CONTAINER_PLATFORM=linux/amd64
+```
+
+在 amd64 Mac 上，请先通过 Intel Homebrew 安装 Node.js 22：
+
+```bash
+brew install node@22
+export NODE22_BIN=/usr/local/opt/node@22/bin
+export CONTAINER_PLATFORM=linux/amd64
+```
+
+在 Linux amd64 上，请使用系统支持的包管理器或版本管理器安装 Node.js 22，确认
+`node --version` 返回 `v22`。只有当 `PATH` 中的第一个 `node` 不是 Node.js 22 时，
+才需要显式设置 `NODE22_BIN`。
+
+除非明确需要模拟 amd64，否则不要在 Apple Silicon 上强制使用 `linux/amd64`：
+原生 `linux/arm64` 镜像速度更快，也与已经验证的配置一致。
+
 ## 架构
 
 ```text
@@ -57,8 +91,9 @@ Specialist Agent 之间不共享文件系统。Forge 只通过 AGT Mesh 传输�
 
 ## 前置条件
 
+- macOS arm64（已验证）、macOS amd64 或 Linux amd64
 - Docker Desktop，至少分配 8 GB 内存
-- kind、kubectl、Helm、Git、Rust 和通过 Homebrew 安装的 Node.js 22
+- kind、kubectl、Helm、Git、Rust 和 Node.js 22
 - 有效的 GitHub Copilot 许可
 
 所有依赖恢复均固定使用 Microsoft Package Feed Proxy：

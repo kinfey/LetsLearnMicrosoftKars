@@ -2,8 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-NODE22_BIN="/opt/homebrew/opt/node@22/bin"
-export PATH="${NODE22_BIN}:${PATH}"
+source "${ROOT_DIR}/scripts/platform-env.sh"
 
 cd "${ROOT_DIR}/workspace-mcp"
 npm test

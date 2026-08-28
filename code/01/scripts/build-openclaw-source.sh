@@ -6,6 +6,8 @@ OPENCLAW_DIR="${ROOT_DIR}/.cache/upstream/openclaw"
 OPENCLAW_TAG="v2026.5.27"
 OPENCLAW_COMMIT="27ae826f65256c7fbd1d78475fca87b674a53e7b"
 
+source "${ROOT_DIR}/scripts/platform-env.sh"
+
 if docker image inspect openclaw-source:dev >/dev/null 2>&1; then
   exit 0
 fi
@@ -24,7 +26,7 @@ fi
 "${ROOT_DIR}/scripts/verify-npm-source.sh"
 
 docker build \
-  --platform linux/arm64 \
+  --platform "${CONTAINER_PLATFORM}" \
   --target build \
   --build-arg OPENCLAW_EXTENSIONS="" \
   -t openclaw-source:dev \

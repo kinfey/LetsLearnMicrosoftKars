@@ -114,16 +114,30 @@ OpenClaw 必须把它视为不可信数据，而不是更高优先级的指令�
 
 ## 准备工作站
 
-示例面向 Apple Silicon macOS 和本地 kind 集群，要求：
+已经验证的配置是 macOS arm64（Apple Silicon）与本地 kind 集群。脚本也会检测
+macOS amd64 和 Linux amd64。请检查：
 
 ```bash
-/opt/homebrew/opt/node@22/bin/node --version
+node --version              # Node.js 22
+uname -m                    # arm64/aarch64 或 x86_64
 docker version
 kind version
 kubectl version --client
 helm version
 git --version
 rustc --version
+```
+
+在 macOS arm64 上，Homebrew 通常把 Node.js 22 安装到
+`/opt/homebrew/opt/node@22/bin`，OpenClaw 镜像使用 `linux/arm64`。macOS amd64
+应使用 `/usr/local/opt/node@22/bin` 与 `linux/amd64`；Linux amd64 从 `PATH`
+查找 Node.js 22，并使用 `linux/amd64`。
+
+共享脚本 `scripts/platform-env.sh` 会检测这些默认值。如果本机安装位置不同，可覆盖：
+
+```bash
+export NODE22_BIN=/path/to/node-22/bin
+export CONTAINER_PLATFORM=linux/amd64
 ```
 
 Docker Desktop 至少分配 8 GB 内存，并准备有效的 GitHub Copilot 许可。脚本统一通过

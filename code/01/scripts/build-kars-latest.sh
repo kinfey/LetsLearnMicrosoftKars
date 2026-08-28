@@ -5,14 +5,8 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CACHE_DIR="${ROOT_DIR}/.cache/upstream"
 KARS_DIR="${CACHE_DIR}/kars"
 AGT_DIR="${CACHE_DIR}/agent-governance-toolkit"
-NODE22_BIN="/opt/homebrew/opt/node@22/bin"
 
-if [[ ! -x "${NODE22_BIN}/node" ]]; then
-  echo "Node.js 22 is required at ${NODE22_BIN}." >&2
-  exit 1
-fi
-
-export PATH="${NODE22_BIN}:${PATH}"
+source "${ROOT_DIR}/scripts/platform-env.sh"
 export npm_config_registry="https://packagefeedproxy.microsoft.io/npm/"
 export pnpm_config_registry="https://packagefeedproxy.microsoft.io/npm/"
 export npm_config_replace_registry_host="registry.npmjs.org"

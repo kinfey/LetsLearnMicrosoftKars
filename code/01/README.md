@@ -21,6 +21,42 @@ recognize GitHub Copilot's `unsupported_api_for_model` response, so the
 specialist task loop is transparently translated from Chat Completions to
 Responses API.
 
+## Platform support
+
+This example was developed and validated on **macOS arm64 (Apple Silicon)** with
+Docker Desktop and Homebrew Node.js 22. The scripts also support **amd64
+(x86_64)** hosts:
+
+| Host | Node.js 22 default | Container platform |
+|------|--------------------|--------------------|
+| macOS arm64 | `/opt/homebrew/opt/node@22/bin` | `linux/arm64` |
+| macOS amd64 | `/usr/local/opt/node@22/bin` | `linux/amd64` |
+| Linux amd64 | Node.js 22 found on `PATH` | `linux/amd64` |
+
+`scripts/platform-env.sh` detects these values from the host. To override them,
+set:
+
+```bash
+export NODE22_BIN=/path/to/node-22/bin
+export CONTAINER_PLATFORM=linux/amd64
+```
+
+For an amd64 Mac, install the Intel Homebrew Node.js package before running the
+demo:
+
+```bash
+brew install node@22
+export NODE22_BIN=/usr/local/opt/node@22/bin
+export CONTAINER_PLATFORM=linux/amd64
+```
+
+For Linux amd64, install Node.js 22 with the system's supported package or
+version manager, ensure `node --version` reports `v22`, and set `NODE22_BIN`
+only if Node.js 22 is not the first `node` on `PATH`.
+
+Do not force `linux/amd64` on Apple Silicon unless emulation is intentional:
+native `linux/arm64` images are faster and match the validated configuration.
+
 ## Architecture
 
 ```text
@@ -59,8 +95,9 @@ Issue, source excerpts, proposed edits, and test evidence over the AGT mesh.
 
 ## Prerequisites
 
+- macOS arm64 (validated), macOS amd64, or Linux amd64
 - Docker Desktop with at least 8 GB assigned
-- kind, kubectl, Helm, Git, Rust, and Homebrew Node.js 22
+- kind, kubectl, Helm, Git, Rust, and Node.js 22
 - An active GitHub Copilot seat
 
 Package restore is pinned to Microsoft's proxy:

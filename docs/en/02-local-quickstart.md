@@ -120,17 +120,31 @@ These are enforceable controls, not prompt suggestions.
 
 ## Prepare the workstation
 
-The example targets macOS with Apple Silicon and a local kind cluster. It
-expects:
+The validated configuration is macOS arm64 (Apple Silicon) with a local kind
+cluster. The scripts also detect macOS amd64 and Linux amd64. Verify:
 
 ```bash
-/opt/homebrew/opt/node@22/bin/node --version
+node --version              # Node.js 22
+uname -m                    # arm64/aarch64 or x86_64
 docker version
 kind version
 kubectl version --client
 helm version
 git --version
 rustc --version
+```
+
+On macOS arm64, Homebrew normally installs Node.js 22 under
+`/opt/homebrew/opt/node@22/bin` and the OpenClaw image uses `linux/arm64`. On
+macOS amd64, use `/usr/local/opt/node@22/bin` and `linux/amd64`. Linux amd64
+uses Node.js 22 from `PATH` and `linux/amd64`.
+
+The shared `scripts/platform-env.sh` detects these defaults. Override them when
+your installation differs:
+
+```bash
+export NODE22_BIN=/path/to/node-22/bin
+export CONTAINER_PLATFORM=linux/amd64
 ```
 
 Use Docker Desktop with at least 8 GB of memory and an active GitHub Copilot
