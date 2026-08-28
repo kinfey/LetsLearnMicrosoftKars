@@ -129,7 +129,7 @@ kubectl get events -n kars-system --sort-by=.lastTimestamp
 | 找不到 `kars` | npm 全局二进制目录与 `PATH` |
 | kind 集群失败 | 容器引擎是否可用 |
 | Pod 持续 Pending | Kubernetes 事件与调度消息 |
-| 沙箱 Degraded | `KarsSandbox.status.conditions` |
+| 沙箱 Degraded | `karsSandbox.status.conditions` |
 | 推理返回 401/403 | 提供商身份、Endpoint 与 Deployment |
 | 路由器不可用 | 路由器容器日志与 Readiness |
 | 文档参数失败 | 安装版本与命令级 Help |

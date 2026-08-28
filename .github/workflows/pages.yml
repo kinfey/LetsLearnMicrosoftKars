@@ -27,7 +27,7 @@ jobs:
       - run: pip install -r requirements-site.txt
       - name: Build site
         env:
-          BASE_PATH: /LetsLearnMicrosoftKars
+          BASE_PATH: /LetsLearnMicrosoftkars
         run: python scripts/build_site.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

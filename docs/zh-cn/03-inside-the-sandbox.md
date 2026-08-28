@@ -21,9 +21,9 @@ Sandbox 不是一个有魔力的标签。对 Forge 而言，它必须保护私�
 
 本章暂停功能开发，逐层打开 Sandbox。
 
-## `KarsSandbox` 是工作单元
+## `karsSandbox` 是工作单元
 
-在 KARS 中，一个 `KarsSandbox` 代表一个 Agent 工作负载。它连接：
+在 KARS 中，一个 `karsSandbox` 代表一个 Agent 工作负载。它连接：
 
 - OpenClaw、Hermes、其他 Adapter 或 BYO Runtime；
 - 必需的 `InferencePolicy`；
@@ -43,7 +43,7 @@ Sandbox 不是一个有魔力的标签。对 Forge 而言，它必须保护私�
 在本地 Kubernetes 与 AKS 中，关键 Pod 形态如下：
 
 ```text
-KarsSandbox: forge
+karsSandbox: forge
 └── Pod
     ├── init: egress-guard
     ├── agent             UID 1000
@@ -110,7 +110,7 @@ Agent ID。Forge 不会得到对应 Azure 凭据。
 
 ### 5. 生命周期与证据边界
 
-Controller 观察 `KarsSandbox`、创建或更新资源，并报告 Conditions。路由器记录
+Controller 观察 `karsSandbox`、创建或更新资源，并报告 Conditions。路由器记录
 请求期间的决定。任务结束后，可以删除 Workspace，同时把审计证据独立导出。
 
 临时执行可以降低持久化风险，但在导出证据前删除 Pod，也可能破坏重要事故上下文。
@@ -217,6 +217,6 @@ Agent 中的凭据：无
 ## 官方参考
 
 - [架构与部署模式](https://github.com/Azure/kars/blob/main/docs/architecture.md)
-- [KarsSandbox CRD 参考](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md#karssandbox--the-agent)
+- [karsSandbox CRD 参考](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md#karssandbox--the-agent)
 - [Runtime 契约](https://github.com/Azure/kars/blob/main/docs/runtimes.md)
 - [安全模型](https://github.com/Azure/kars/blob/main/docs/security.md)

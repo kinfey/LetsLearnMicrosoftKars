@@ -62,7 +62,7 @@ around a stronger invariant:
 
 > The agent has no independent path to external services or Azure credentials.
 
-Forge will run in a `KarsSandbox`. A dedicated router will broker inference,
+Forge will run in a `karsSandbox`. A dedicated router will broker inference,
 tool access, identity, budgets, egress decisions, and audit events. Kubernetes
 isolation and NetworkPolicy make that router the intended external path.
 
@@ -88,7 +88,7 @@ what a bad decision can do and makes the decision observable.
 
 | Team question | KARS component |
 | --- | --- |
-| "What should run?" — Maya | `KarsSandbox` and a runtime adapter |
+| "What should run?" — Maya | `karsSandbox` and a runtime adapter |
 | "What model and budget?" — Arun, product owner | `InferencePolicy` |
 | "Which tools?" — Lina | `ToolPolicy` and `McpServer` |
 | "Which destinations?" — Ethan, platform engineer | Egress policy and approvals |

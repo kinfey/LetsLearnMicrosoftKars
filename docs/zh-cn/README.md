@@ -21,7 +21,7 @@ KARS 把每个 Agent 视为受治理的 Kubernetes 工作负载。Agent 不拥�
 ```text
 开发者 / CI
       |
-      | 提交 KarsSandbox 与 Policy CRD
+      | 提交 karsSandbox 与 Policy CRD
       v
 Kubernetes API <------> KARS Controller
                             |
@@ -49,7 +49,7 @@ Kubernetes API <------> KARS Controller
 
 | 组件 | 负责什么 | 不负责什么 |
 | --- | --- | --- |
-| `KarsSandbox` | 声明一个 Agent Runtime、隔离、资源和 Policy 引用 | 不直接决定某次请求是否允许 |
+| `karsSandbox` | 声明一个 Agent Runtime、隔离、资源和 Policy 引用 | 不直接决定某次请求是否允许 |
 | KARS Controller | 监听 CRD，创建 Namespace、Pod、配置、身份资源与 NetworkPolicy | 不位于模型/工具请求数据路径中 |
 | Agent Container | 以 UID 1000 运行 OpenClaw、MAF Python 或其他支持的 Runtime | 不应持有生产提供商凭据或直接出口 |
 | Egress Guard | 安装规则，强制 Agent 流量进入本地 Router | 是 Safety Net，而不是语义策略引擎 |

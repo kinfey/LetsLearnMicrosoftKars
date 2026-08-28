@@ -37,7 +37,7 @@
 
 Forge 必须：
 
-- 运行在一个或多个 `KarsSandbox` 中；
+- 运行在一个或多个 `karsSandbox` 中；
 - 引用独立 `InferencePolicy`；
 - 使用每日和单请求预算；
 - 只允许具名工具；

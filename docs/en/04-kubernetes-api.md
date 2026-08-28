@@ -3,7 +3,7 @@
 > **Delivery stage:** Shared development platform
 > **New problem:** How can every engineer and CI job reproduce the same Forge
 > environment?
-> **Deliverable:** Reviewable `KarsSandbox` and `InferencePolicy` manifests.
+> **Deliverable:** Reviewable `karsSandbox` and `InferencePolicy` manifests.
 
 ## The problem with a command transcript
 
@@ -19,7 +19,7 @@ as Kubernetes resources that can be reviewed, diffed, and reconciled.
 
 The team separates the workload from its inference authority:
 
-- `KarsSandbox` says how Forge runs.
+- `karsSandbox` says how Forge runs.
 - `InferencePolicy` says which inference path Forge may use.
 
 The policy is mandatory and lives in the same namespace as the sandbox. This
@@ -47,7 +47,7 @@ spec:
       deployment: gpt-4.1
 ---
 apiVersion: kars.azure.com/v1alpha1
-kind: KarsSandbox
+kind: karsSandbox
 metadata:
   name: forge
   namespace: kars-system
@@ -110,15 +110,15 @@ During design review, the team maps future requirements to CRDs:
 
 | Forge requirement | KARS resource |
 | --- | --- |
-| Run the development process | `KarsSandbox` |
+| Run the development process | `karsSandbox` |
 | Select model and cap inference | `InferencePolicy` |
 | Allow repository read, patch, and test tools | `ToolPolicy` |
 | Register the source-control/tool service | `McpServer` |
-| Persist approved memory | `KarsMemory` |
-| Run regression cases | `KarsEval` |
+| Persist approved memory | `karsMemory` |
+| Run regression cases | `karsEval` |
 | Model trusted peers | `TrustGraph` |
 | Temporarily reach a host | `EgressApproval` |
-| Govern an operator action | `KarsSREAction` |
+| Govern an operator action | `karsSREAction` |
 | Expose a peer endpoint | `A2AAgent` |
 
 They do not create every resource "for completeness." Each resource must answer
@@ -161,7 +161,7 @@ Test these one at a time:
 
 For each test, record:
 
-- the `KarsSandbox` condition;
+- the `karsSandbox` condition;
 - whether a pod was created;
 - the router or controller error;
 - the smallest manifest change that restores readiness.

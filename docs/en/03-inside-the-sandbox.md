@@ -22,9 +22,9 @@ name those boundaries, it cannot test them.
 
 This chapter pauses the feature work and opens the sandbox layer by layer.
 
-## `KarsSandbox` is the unit of work
+## `karsSandbox` is the unit of work
 
-In KARS, one `KarsSandbox` represents one Agent workload. It connects:
+In KARS, one `karsSandbox` represents one Agent workload. It connects:
 
 - a runtime such as OpenClaw, Hermes, an adapter, or BYO;
 - a required `InferencePolicy`;
@@ -46,7 +46,7 @@ should share one long-lived workspace.
 In local Kubernetes and AKS, the important pod shape is:
 
 ```text
-KarsSandbox: forge
+karsSandbox: forge
 └── Pod
     ├── init: egress-guard
     ├── agent             UID 1000
@@ -125,7 +125,7 @@ not production identity.
 
 ### 5. Lifecycle and evidence boundary
 
-The controller observes the `KarsSandbox`, creates or updates resources, and
+The controller observes the `karsSandbox`, creates or updates resources, and
 reports conditions. The router records request-time decisions. When the task
 ends, the workspace can be discarded while audit evidence is exported
 independently.
@@ -244,6 +244,6 @@ and audit evidence survives workspace cleanup.
 ## Official references
 
 - [Architecture and deployment modes](https://github.com/Azure/kars/blob/main/docs/architecture.md)
-- [KarsSandbox CRD reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md#karssandbox--the-agent)
+- [karsSandbox CRD reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md#karssandbox--the-agent)
 - [Runtime contract](https://github.com/Azure/kars/blob/main/docs/runtimes.md)
 - [Security model](https://github.com/Azure/kars/blob/main/docs/security.md)

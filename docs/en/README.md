@@ -23,7 +23,7 @@ Instead, a sidecar Router evaluates each outbound action before forwarding it.
 ```text
 Developer / CI
       |
-      | applies KarsSandbox + policy CRDs
+      | applies karsSandbox + policy CRDs
       v
 Kubernetes API <------> KARS Controller
                             |
@@ -51,7 +51,7 @@ Task / source -->| Agent runtime, UID 1000              |
 
 | Component | What it does | What it does not do |
 | --- | --- | --- |
-| `KarsSandbox` | Declares one Agent runtime, isolation, resources, and policy references | Does not itself decide whether a request is allowed |
+| `karsSandbox` | Declares one Agent runtime, isolation, resources, and policy references | Does not itself decide whether a request is allowed |
 | KARS Controller | Watches CRDs and creates namespaces, pods, configuration, identity resources, and NetworkPolicies | Is not in the model/tool request data path |
 | Agent container | Runs OpenClaw, MAF Python, or another supported runtime as UID 1000 | Should not hold production provider credentials or direct egress |
 | Egress Guard | Installs rules that force the Agent toward the local Router | Is a safety net, not the semantic policy engine |

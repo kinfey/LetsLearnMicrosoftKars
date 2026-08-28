@@ -2,7 +2,7 @@
 
 > **交付阶段：** 共享开发平台
 > **新问题：** 每位工程师和 CI Job 如何复现相同的 Forge 环境？
-> **交付物：** 可评审的 `KarsSandbox` 与 `InferencePolicy` Manifest。
+> **交付物：** 可评审的 `karsSandbox` 与 `InferencePolicy` Manifest。
 
 ## 命令记录的问题
 
@@ -17,7 +17,7 @@
 
 团队把工作负载与推理权限分开：
 
-- `KarsSandbox` 描述 Forge 如何运行。
+- `karsSandbox` 描述 Forge 如何运行。
 - `InferencePolicy` 描述 Forge 可以使用的推理路径。
 
 策略是必需的，并与沙箱位于同一命名空间，避免应用 Manifest 静默回退到不受
@@ -44,7 +44,7 @@ spec:
       deployment: gpt-4.1
 ---
 apiVersion: kars.azure.com/v1alpha1
-kind: KarsSandbox
+kind: karsSandbox
 metadata:
   name: forge
   namespace: kars-system
@@ -105,15 +105,15 @@ Lina 故意把 `inferenceRef.name` 改为 `missing-policy`，沙箱随即进入 
 
 | Forge 需求 | KARS 资源 |
 | --- | --- |
-| 运行研发进程 | `KarsSandbox` |
+| 运行研发进程 | `karsSandbox` |
 | 选择模型并限制推理 | `InferencePolicy` |
 | 只允许读取、Patch 与测试工具 | `ToolPolicy` |
 | 注册源码与研发工具服务 | `McpServer` |
-| 保存允许的 Memory | `KarsMemory` |
-| 运行回归用例 | `KarsEval` |
+| 保存允许的 Memory | `karsMemory` |
+| 运行回归用例 | `karsEval` |
 | 描述可信 Peer | `TrustGraph` |
 | 临时访问某个主机 | `EgressApproval` |
-| 治理运维操作 | `KarsSREAction` |
+| 治理运维操作 | `karsSREAction` |
 | 暴露 Peer Endpoint | `A2AAgent` |
 
 他们不会为了“完整”而创建所有资源。每项资源必须对应具体需求，高级功能还必须
@@ -153,7 +153,7 @@ kubectl get karssandbox forge -n kars-system -w
 
 每次记录：
 
-- `KarsSandbox` Condition；
+- `karsSandbox` Condition；
 - 是否创建 Pod；
 - 路由器或 Controller 错误；
 - 恢复 Ready 所需的最小 Manifest 修改。

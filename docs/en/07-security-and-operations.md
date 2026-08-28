@@ -125,7 +125,7 @@ provider rather than assuming identical safety telemetry.
 
 ## Turn the incident into an evaluation
 
-The flaky test becomes a `KarsEval` regression scenario. Before a model,
+The flaky test becomes a `karsEval` regression scenario. Before a model,
 prompt, runtime, or policy change is promoted, the team runs:
 
 ```bash
@@ -150,7 +150,7 @@ The team separates failures by layer:
 | Tool contract tests | Inputs, outputs, timeouts, and redaction | `run_tests` returns exit code and bounded logs |
 | Sandbox integration | Router path, UID, mounts, and denied egress | Direct package-host request fails |
 | Policy tests | Token, rate, tool, and host decisions | 32k request cap returns a clear denial |
-| `KarsEval` regression | End-to-end behavior on a fixed corpus | Issue #482 yields the minimal patch |
+| `karsEval` regression | End-to-end behavior on a fixed corpus | Issue #482 yields the minimal patch |
 | Security tests | Repository prompt injection and exfiltration | Hostile README cannot upload source |
 | Deployment smoke tests | AKS identity and loaded policy digest | One known task succeeds after rollout |
 

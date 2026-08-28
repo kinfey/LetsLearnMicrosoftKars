@@ -117,8 +117,8 @@ CI Pipeline 具有四类独立 Gate：
 ```text
 构建 MAF Image
   -> 扫描/签名/固定 Digest
-  -> 运行单元测试 + KarsEval + Policy 测试
-  -> 更新已评审的 KarsSandbox Manifest
+  -> 运行单元测试 + karsEval + Policy 测试
+  -> 更新已评审的 karsSandbox Manifest
   -> GitOps 协调到 AKS
   -> Smoke + Denial 测试
 ```

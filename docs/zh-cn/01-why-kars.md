@@ -56,7 +56,7 @@ KARS（Agent Reference Stack for Kubernetes）提供了一种围绕更强原则�
 
 > Agent 不拥有访问外部服务或 Azure 凭据的独立路径。
 
-Forge 将运行在 `KarsSandbox` 中。专属路由器负责代理推理、工具访问、身份、
+Forge 将运行在 `karsSandbox` 中。专属路由器负责代理推理、工具访问、身份、
 预算、出口决定和审计事件。Kubernetes 隔离与 NetworkPolicy 使路由器成为预期
 的外部通道。
 
@@ -81,7 +81,7 @@ Forge 将运行在 `KarsSandbox` 中。专属路由器负责代理推理、工�
 
 | 团队问题 | KARS 组件 |
 | --- | --- |
-| “运行什么？”——Maya | `KarsSandbox` 与 Runtime Adapter |
+| “运行什么？”——Maya | `karsSandbox` 与 Runtime Adapter |
 | “使用什么模型和预算？”——产品负责人 Arun | `InferencePolicy` |
 | “可以调用哪些工具？”——Lina | `ToolPolicy` 与 `McpServer` |
 | “可以访问哪些目标？”——平台工程师 Ethan | 出口策略与 Approval |

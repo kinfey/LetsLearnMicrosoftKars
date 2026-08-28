@@ -13,7 +13,7 @@ chapter-for-chapter translation.
 
 ## Read the tutorial
 
-- [GitHub Pages website](https://kinfey.github.io/LetsLearnMicrosoftKars/)
+- [GitHub Pages website](https://kinfey.github.io/LetsLearnMicrosoftkars/)
 - [English (default)](docs/en/README.md)
 - [简体中文](docs/zh-cn/README.md)
 
@@ -27,7 +27,7 @@ chapter-for-chapter translation.
 | 4 | Platform contract | Make every environment reproducible and reviewable | Both |
 | 5 | Cost and authority | Control tokens, tools, dependencies, and egress | Both |
 | 6 | Framework decision | Move from conversational prototype to coded workflow | OpenClaw → MAF Python |
-| 7 | Testing | Test behavior, policy, security, and regressions | MAF + `KarsEval` |
+| 7 | Testing | Test behavior, policy, security, and regressions | MAF + `karsEval` |
 | 8 | Deployment | Promote safely through CI/CD to AKS | MAF production, OpenClaw canary |
 | 9 | Release | Deliver one requirement from issue to reviewed patch | End to end |
 

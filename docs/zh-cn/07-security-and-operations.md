@@ -119,7 +119,7 @@ Azure AI Foundry 可以返回详细 Prompt Filter 结果。Copilot 与 GitHub Mo
 
 ## 把事故变成评估
 
-Flaky Test 成为 `KarsEval` 回归场景。模型、Prompt、Runtime 或策略推广前，团队
+Flaky Test 成为 `karsEval` 回归场景。模型、Prompt、Runtime 或策略推广前，团队
 执行：
 
 ```bash
@@ -144,7 +144,7 @@ kars eval run forge-regression
 | 工具契约测试 | 输入、输出、Timeout 与 Redaction | `run_tests` 返回 Exit Code 和有限日志 |
 | Sandbox 集成 | Router 路径、UID、Mount 与出口拒绝 | 直接访问 Package Host 失败 |
 | Policy 测试 | Token、速率、工具与主机决定 | 32k 单请求上限产生明确拒绝 |
-| `KarsEval` 回归 | 固定 Corpus 的端到端行为 | Issue #482 产生最小 Patch |
+| `karsEval` 回归 | 固定 Corpus 的端到端行为 | Issue #482 产生最小 Patch |
 | 安全测试 | 仓库提示注入与数据外泄 | 恶意 README 无法上传源码 |
 | 部署冒烟测试 | AKS 身份与已加载策略 Digest | Rollout 后一个已知任务成功 |
 

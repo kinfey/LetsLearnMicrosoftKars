@@ -40,7 +40,7 @@ The expected journey is:
 
 Forge must:
 
-- run in one or more `KarsSandbox` resources;
+- run in one or more `karsSandbox` resources;
 - reference separate `InferencePolicy` resources;
 - use daily and per-request budgets;
 - allow only named tools;

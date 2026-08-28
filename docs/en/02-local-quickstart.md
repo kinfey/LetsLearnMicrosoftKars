@@ -139,7 +139,7 @@ The team uses this triage order:
 | `kars` not found | npm global binary location and `PATH` |
 | kind cluster fails | Container engine availability |
 | Pod stays Pending | Kubernetes events and scheduling messages |
-| Sandbox is Degraded | `KarsSandbox.status.conditions` |
+| Sandbox is Degraded | `karsSandbox.status.conditions` |
 | Inference returns 401/403 | Provider identity, endpoint, and deployment |
 | Router is unavailable | Router container logs and readiness |
 | Documented flag fails | Installed version and command-specific help |

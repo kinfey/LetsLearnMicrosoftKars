@@ -124,8 +124,8 @@ The CI pipeline has four independent gates:
 ```text
 build MAF image
   -> scan/sign/pin digest
-  -> run unit + KarsEval + policy tests
-  -> update reviewed KarsSandbox manifest
+  -> run unit + karsEval + policy tests
+  -> update reviewed karsSandbox manifest
   -> GitOps reconcile to AKS
   -> smoke + denial tests
 ```
