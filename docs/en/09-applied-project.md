@@ -1,202 +1,251 @@
-# 9. Release: Deliver an Issue-to-PR Workflow
+# 9. Applied Project: Release an Issue-to-PR Pilot on AKS
 
 > **Delivery stage:** Customer release
-> **New problem:** Can someone outside the founding team reproduce the entire
-> requirement-to-deployment path and prove its controls?
-> **Deliverable:** A releasable Forge pilot and an evidence-backed runbook.
+> **Starting point:** OpenClaw Intake, the Chapter 6 BYO runtime, Chapter 7
+> controls, and the Chapter 8 AKS environment
+> **Executable project:** [`code/08`](../../code/08/)
 
-## The final assignment
+## Everything starts with OpenClaw
 
-Six weeks after the first repository prompt-injection test, ByteCraft AI is
-ready for a limited design-partner launch. The team must demonstrate more than a good demo.
-Another operator must be able to deploy Forge, explain every permission,
-observe every denied path, and roll the system back.
-
-Your task is to reproduce that outcome.
-
-## Product story
-
-A developer assigns an issue:
+The applied project begins with the same Fabrikam requirement:
 
 ```text
-Fix issue #482 in the Fabrikam Orders API: requests without an optional
-customer note return 500. Make the smallest safe change, run targeted tests,
-and explain any remaining uncertainty.
+Fix FAB-482: requests without an optional customer note return 500.
+Make the smallest safe change, run targeted tests, and stop for human review.
 ```
 
-The expected journey is:
+OpenClaw Intake has no source-write authority. It validates the issue,
+acceptance criteria, customer, and pinned revision before Builder work begins:
 
-1. The founder and customer agree on acceptance criteria.
-2. OpenClaw Intake clarifies ambiguity without repository write access.
-3. The approved requirement and pinned revision enter the MAF Builder.
-4. It calls only approved repository, patch, and test tools.
-5. Model requests pass through the router under per-request and daily budgets.
-6. The Builder produces a minimal diff and machine-verifiable test evidence.
-7. The Reviewer receives the diff without receiving Builder write authority.
-8. A human approves the pull request; CI, not the Agent, deploys it.
-9. Audit evidence connects requirement, tools, inference, review, and release.
+```text
+OPENCLAW_INTAKE
+  -> PIN_REQUIREMENT_AND_REVISION
+  -> MAF_BUILDER_INSPECT
+  -> PROPOSE_MINIMAL_PATCH
+  -> RUN_TARGETED_TESTS
+  -> CREATE_DIGEST_PINNED_HANDOFF
+  -> INDEPENDENT_REVIEW
+  -> STOP_FOR_HUMAN_PR_APPROVAL
+```
 
-## Acceptance requirements
+The Pilot never merges or deploys source code. It produces a patch, targeted
+test evidence, and a digest-pinned handoff for independent review.
 
-Forge must:
+## What `code/08` adds
 
-- run in one or more `karsSandbox` resources;
-- reference separate `InferencePolicy` resources;
-- use daily and per-request budgets;
-- allow only named tools;
-- reach only model, development MCP, and required internal destinations;
-- run as non-root without provider credentials;
-- emit audit records for inference, tools, egress, and review;
-- fail explicitly when source, test, MCP, or inference is unavailable;
-- pass regression and negative-policy tests before promotion.
+The project combines the earlier labs into one operable release unit:
 
-The pilot also has startup-level business limits:
+- a non-root BYO Runtime that calls GPT-5.6-Sol only through the KARS Router;
+- a separate `InferencePolicy` with per-request and daily Token budgets;
+- a named-tool `ToolPolicy` that excludes shell, merge, and deployment;
+- strict egress and the Chapter 7 BYO exec guard;
+- task concurrency and daily task limits;
+- per-customer usage reporting;
+- application and Router tamper-evident audit checks;
+- a `spec.suspended` Kill Switch that preserves the CR and exported evidence;
+- digest-based rollback;
+- an internal development MCP declaration and a KARS Eval declaration.
 
-- a task concurrency cap;
-- a daily environment token ceiling;
-- a per-customer usage report;
-- a kill switch that disables new work without deleting evidence;
-- a support owner for every production hour.
+The GitHub Copilot provider credential remains in the Router path. The Agent
+contract check confirms that no Copilot or GitHub Token/Key environment
+variable reaches the Agent container.
 
-## Phase 1: Recreate the lab
+## Azure parameters remain optional
+
+Copy the example only when overriding defaults:
 
 ```bash
-kars dev --release v0.1.25 --target local-k8s
+cd code/08
+cp config/azure.env.example config/azure.env
 ```
 
-Capture the installed version, sandbox status, pod shape, and NetworkPolicy.
-These become the first rows in the delivery evidence.
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `AZURE_RESOURCE_GROUP` | `rg-kinfey` | Existing Azure resource group |
+| `AKS_NAME` | `aks-kars-demo` | Existing AKS cluster |
+| `KARS_ACR_NAME` | `akskarsdemo449845` | Existing ACR |
+| `AZURE_LOCATION` | empty | Verify against the existing AKS location |
+| `KARS_SANDBOX_NAME` | `fabrikam-release-pilot` | New Pilot Sandbox |
+| `GITHUB_COPILOT_MODEL` | `gpt-5.6-sol` | Required model |
+| `SUPPORT_OWNER` | `forge-operations` | Operational owner |
+| `TASK_CONCURRENCY_LIMIT` | `2` | Concurrent task cap |
+| `DAILY_TASK_LIMIT` | `20` | Application daily task cap |
+| `DEPLOY_AZURE` | `false` | Explicit Azure change gate |
 
-## Phase 2: Build from known examples
+`rg-kinfey` is a resource-group name, not a region. The deployment reuses the
+existing cluster location, `swedencentral`, and refuses a conflicting optional
+`AZURE_LOCATION`.
 
-Use these upstream examples as references:
+## Run the safe validation
 
-- `examples/basic-agent`
-- `examples/playwright-mcp`
-- `examples/byo-quickstart`
-- `examples/full-stack-demo`
+```bash
+cd code/08
+make test
+```
 
-Copy only fields supported by the installed CRDs. Do not copy credentials or
-assume that an example's development defaults are production policy.
+This installs Python packages from Microsoft Package Feed Proxy, runs the
+control tests, renders the KARS resources, and validates them against the live
+CRDs with Server-side Dry-run. It does not change Azure.
 
-## Phase 3: Declare the system
-
-Create version-controlled manifests for:
-
-- Builder and Reviewer sandboxes;
-- an inference policy for each role;
-- named tool policies;
-- the MCP server and authentication metadata;
-- identity and namespace boundaries;
-- egress baseline and temporary approval process;
-- evaluation scenarios.
-
-Declare separate OpenClaw Intake and MAF Builder resources. Reuse equivalent
-inference, tool, and egress intent where appropriate, but do not pretend the
-application behavior is identical: validate each runtime independently.
-
-Beside each permission, add a review note answering:
+Microsoft sources are committed for all three ecosystems:
 
 ```text
-Which user story requires this?
-What data can cross this boundary?
-What evidence shows use or denial?
-Who can change the permission?
+npm   https://packagefeedproxy.microsoft.io/npm/
+PyPI  https://packagefeedproxy.microsoft.io/pypi/simple/
+NuGet https://packagefeedproxy.microsoft.io/nuget/v3/index.json
 ```
 
-If the team cannot answer, remove the permission.
+## Deploy to the existing AKS environment
 
-## Phase 4: Test the story and its failures
+Set the explicit gate in the ignored configuration:
+
+```text
+DEPLOY_AZURE=true
+```
+
+Then run:
+
+```bash
+make deploy
+```
+
+The script does not recreate AKS. It:
+
+1. verifies that the selected AKS and KARS Controller are Ready;
+2. builds `pilot_agent` in ACR Tasks with `--platform linux/amd64`;
+3. resolves the SHA-256 image digest;
+4. renders and Server-side validates the resources;
+5. deploys the Pilot, MCP metadata, and Eval declaration;
+6. runs one real success path and three denied paths.
+
+## Invoke the Azure Pilot
+
+The Pilot deliberately has no public endpoint. Create an authenticated tunnel:
+
+```bash
+kubectl -n kars-fabrikam-release-pilot port-forward \
+  deployment/fabrikam-release-pilot 18088:8080
+```
+
+OpenClaw Intake:
+
+```bash
+curl -sS -H 'content-type: application/json' \
+  --data '{
+    "issue_id":"FAB-482",
+    "customer":"fabrikam",
+    "requirement":"Missing optional customer note must not return 500"
+  }' \
+  http://127.0.0.1:18088/intake | jq
+```
+
+Run the governed Builder:
+
+```bash
+curl -sS -H 'content-type: application/json' \
+  --data '{
+    "issue_id":"FAB-482",
+    "customer":"fabrikam",
+    "scenario":"normal"
+  }' \
+  http://127.0.0.1:18088/run | jq
+```
+
+The verified response contains:
+
+```text
+KARS_APPLIED_PROJECT_GPT_5_6_SOL_OK FAB-482 READY_FOR_HUMAN_REVIEW
+```
+
+It also contains independent SHA-256 digests for the patch, targeted tests,
+and handoff envelope.
+
+## Exercise negative controls
+
+`make verify` executes:
 
 | Scenario | Expected result |
 | --- | --- |
-| Normal bug fix | Inspect, patch, test, and review succeed |
-| Request for shell or unknown tool | Denied |
-| Document requests upload to unknown host | Denied and audited |
-| Tool call burst | Throttled |
-| Repeated inference loop | Budget stops further calls |
-| MCP/test service unavailable | Explicit failure, no fabricated passing test |
-| Provider unavailable | Explicit failure and bounded retry |
-| Builder tries to self-approve | Denied |
-| Reviewer tries to modify source | Denied |
-| Expired/untrusted peer submits draft | Rejected |
+| Normal FAB-482 workflow | GPT-5.6-Sol patch evidence; stop for human review |
+| `unknown_tool` | HTTP 403; shell is not approved |
+| `unknown_host` | HTTP 403; unknown package host is denied |
+| `builder_self_approve` | HTTP 403; separation of duties enforced |
 
-Run the complete intended workflow in egress learning mode. Review every
-learned host manually, approve only necessary destinations, enable enforcement,
-and repeat all negative tests.
+The runtime also defines explicit failure responses for repeated repair loops,
+unavailable development MCP, Reviewer source modification, and untrusted Peer
+drafts.
 
-## Phase 5: Make it operable
+## Verified Azure result
 
-Create a runbook that starts with:
+The real run completed on the existing `aks-kars-demo` cluster:
+
+- `fabrikam-release-pilot` is `Running` on the amd64 `clawpool`;
+- the ACR image is pinned by SHA-256 digest;
+- GPT-5.6-Sol returned the expected release marker;
+- the application audit chain and Router audit chain are valid;
+- the Agent contains no provider credential environment variable;
+- one Fabrikam task appears in the per-customer usage report;
+- InferencePolicy Compiled and Loaded Digests match and the Router reports
+  `RouterEnforcing`;
+- OpenClaw Intake, one allowed workflow, and three denied workflows passed;
+- suspension, evidence preservation, resume, and post-resume verification
+  passed.
+
+## Kill Switch and rollback
+
+Stop new work without deleting the KARS resource:
 
 ```bash
-kars status <sandbox>
-kars inspect <sandbox>
-kars logs <sandbox> --service router
-kars audit tail <sandbox>
-kars trace <sandbox> --network
+make suspend
 ```
 
-Define dashboards and alerts for:
+Resume:
 
-- readiness and restarts;
-- inference error rate and latency;
-- token use against budget;
-- allowed, denied, and throttled tools;
-- unknown egress attempts;
-- repository, test runner, and MCP availability;
-- image and policy digest drift.
+```bash
+make resume
+make verify
+```
 
-Add an incident procedure that preserves evidence before deletion or
-redeployment.
+Rollback requires an explicitly approved previous ACR digest:
 
-## Phase 6: Promote safely
+```text
+ROLLBACK_IMAGE=<acr>.azurecr.io/fabrikam-release-pilot@sha256:<digest>
+```
 
-Pin the KARS release, workload images, and policy artifacts. Run evaluation in
-CI. Review changes through a pull request. Reconcile AKS through GitOps, verify
-the loaded digests, and perform a post-deployment denied-egress test.
+```bash
+make rollback
+make verify
+```
 
-Do not treat deployment success as acceptance. Acceptance requires the
-application story and the negative controls to work together.
+See [`code/08/RUNBOOK.md`](../../code/08/RUNBOOK.md) for ownership and evidence
+procedures.
 
-## Definition of done
+## KarsEval compatibility evidence
 
-Ask an operator who did not build Forge to:
+The `KarsEval` CR and `jailbreak-baseline` corpus resolve successfully, but the
+upstream KARS `v0.1.25` Eval Runner Job is rejected by this AKS namespace's
+`restricted` Pod Security policy because the generated Runner lacks:
 
-1. Deploy it from the repository.
-2. Explain every approved destination and tool.
-3. Run one successful and three denied scenarios.
-4. Find the relevant audit evidence.
-5. Identify the model, image, KARS, and policy versions.
-6. Roll back to the previous release.
+- `runAsNonRoot: true`;
+- `allowPrivilegeEscalation: false`;
+- `capabilities.drop: ["ALL"]`;
+- a RuntimeDefault or Localhost Seccomp profile.
 
-Forge is ready only if the operator succeeds without private knowledge from
-Maya or Ethan.
+The failed Job was suspended and the namespace security policy was not
+weakened. The executable application evaluation matrix remains successful.
+Treat the KarsEval Runner as an upstream compatibility issue to fix before
+using it as a production promotion gate.
 
-The customer signs off only after one real issue moves from requirement to
-reviewed patch while a hostile README, an unknown package host, a repeated-test
-loop, and an over-budget request all fail in the expected way.
+## Platform support
 
-## Epilogue
-
-The original OpenClaw prototype was impressive because it could edit code.
-The MAF production workflow is trustworthy because the team can explain
-**which requirement it implements, where it may act, under which identity,
-within what token budget, which tests it passed, and with what evidence**.
-
-That is the practical value of KARS: not making development Agents infallible, but making
-their authority bounded, observable, and operable.
-
-## Continue learning
-
-Explore confidential agents, the lethal-trifecta defense demo, agent pairing,
-framework-specific adapters, signed policy bundles, and upstream blueprints.
-At every upgrade, re-read the roadmap and maturity matrix before depending on
-new alpha capabilities.
+The operator command ran from macOS arm64. ACR Tasks explicitly built Linux
+amd64, and the Azure Pod runs on an amd64 node. macOS amd64 and Linux amd64 use
+the same scripts. On Windows amd64, run them inside Ubuntu WSL2 with all Azure,
+Kubernetes, and KARS CLIs installed in WSL2.
 
 ## Official references
 
-- [Examples index](https://github.com/Azure/kars/blob/main/examples/README.md)
-- [Full-stack demo](https://github.com/Azure/kars/tree/main/examples/full-stack-demo)
-- [Playwright MCP example](https://github.com/Azure/kars/tree/main/examples/playwright-mcp)
-- [Blueprints](https://github.com/Azure/kars/tree/main/docs/blueprints)
+- [KARS](https://github.com/Azure/kars)
+- [KARS examples](https://github.com/Azure/kars/tree/main/examples)
+- [Microsoft Agent Framework GitHub Copilot samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
+- [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)

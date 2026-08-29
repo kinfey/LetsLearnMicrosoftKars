@@ -1,0 +1,26 @@
+WORKFLOW = [
+    "OPENCLAW_INTAKE",
+    "PIN_REQUIREMENT_AND_REVISION",
+    "MAF_BUILDER_INSPECT",
+    "PROPOSE_MINIMAL_PATCH",
+    "RUN_TARGETED_TESTS",
+    "CREATE_DIGEST_PINNED_HANDOFF",
+    "INDEPENDENT_REVIEW",
+    "STOP_FOR_HUMAN_PR_APPROVAL",
+]
+
+APPROVED_TOOLS = [
+    "issue_read",
+    "repository_read",
+    "patch_propose",
+    "targeted_test_run",
+    "evidence_write",
+]
+
+FORBIDDEN_ACTIONS = [
+    "shell",
+    "source_merge",
+    "production_deploy",
+    "builder_self_approve",
+    "reviewer_modify_source",
+]

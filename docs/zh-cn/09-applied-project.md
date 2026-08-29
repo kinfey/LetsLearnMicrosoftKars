@@ -1,190 +1,244 @@
-# 9. 发布：交付 Issue 到 PR 的完整流程
+# 9. 应用项目：在 AKS 发布 Issue-to-PR Pilot
 
 > **交付阶段：** 客户发布
-> **新问题：** 创始团队之外的人能否复现从需求到部署的完整路径，并证明控制有效？
-> **交付物：** 可发布的 Forge Pilot 与基于证据的 Runbook。
+> **起点：** OpenClaw Intake、第 6 章 BYO Runtime、第 7 章安全控制，以及第 8
+> 章 AKS 环境
+> **可执行项目：** [`code/08`](../../code/08/)
 
-## 最终任务
+## 一切从 OpenClaw 开始
 
-第一次仓库提示注入测试六周后，ByteCraft AI 准备为 Design Partner 进行有限发布。
-团队必须证明的不只是演示效果。另一名运维人员必须能够部署 Forge、解释每项权限、观察
-每条拒绝路径并回滚系统。
-
-你的任务是复现这一结果。
-
-## 产品故事
-
-开发者分配一个 Issue：
+应用项目仍从 Fabrikam Requirement 开始：
 
 ```text
-修复 Fabrikam Orders API 的 Issue #482：请求未提供可选 customer note 时
-返回 500。做最小安全修改，运行目标测试，并说明任何剩余不确定性。
+修复 FAB-482：请求没有可选 customer note 时返回 500。
+执行最小安全修改、运行目标测试，并停在人工评审之前。
 ```
 
-预期流程：
+OpenClaw Intake 没有 Source Write Authority。Builder 开始前，它必须验证 Issue、
+Acceptance Criteria、Customer 与固定 Revision：
 
-1. 创始团队与客户确认验收条件。
-2. OpenClaw Intake 在没有仓库写权限的情况下澄清歧义。
-3. 批准的需求和固定 Revision 进入 MAF Builder。
-4. 它只调用批准的仓库、Patch 与测试工具。
-5. 模型请求在单请求与每日 Token 预算内经过 Router。
-6. Builder 生成最小 Diff 与机器可验证的测试证据。
-7. Reviewer 收到 Diff，但不会获得 Builder 写入权限。
-8. 人类批准 Pull Request；由 CI 而非 Agent 部署。
-9. 审计证据关联需求、工具、推理、评审与发布。
+```text
+OPENCLAW_INTAKE
+  -> PIN_REQUIREMENT_AND_REVISION
+  -> MAF_BUILDER_INSPECT
+  -> PROPOSE_MINIMAL_PATCH
+  -> RUN_TARGETED_TESTS
+  -> CREATE_DIGEST_PINNED_HANDOFF
+  -> INDEPENDENT_REVIEW
+  -> STOP_FOR_HUMAN_PR_APPROVAL
+```
 
-## 验收要求
+Pilot 不会 Merge 或部署 Source。它只生成 Patch、目标测试 Evidence 和按 Digest
+固定的 Handoff，交给独立 Reviewer 与人类批准。
 
-Forge 必须：
+## `code/08` 增加的能力
 
-- 运行在一个或多个 `karsSandbox` 中；
-- 引用独立 `InferencePolicy`；
-- 使用每日和单请求预算；
-- 只允许具名工具；
-- 只能访问模型、研发 MCP 和必需内部目标；
-- 以非 root 用户运行且不持有提供商凭据；
-- 为推理、工具、出口和评审产生审计记录；
-- 在源码、测试、MCP 或推理不可用时明确失败；
-- 推广前通过回归和负向策略测试。
+项目把前面实验组合成一个可运维 Release Unit：
 
-Pilot 还具有创业公司级业务限制：
+- 非 root BYO Runtime，只能通过 KARS Router 调用 GPT-5.6-Sol；
+- 独立 `InferencePolicy`，包含单请求与每日 Token Budget；
+- 只允许具名工具的 `ToolPolicy`，不包含 Shell、Merge 或 Deployment；
+- Strict Egress 与第 7 章 BYO Exec Guard；
+- Task Concurrency 与每日 Task Limit；
+- Per-customer Usage Report；
+- Application 与 Router Tamper-evident Audit；
+- 使用 `spec.suspended`、不删除 CR/Evidence 的 Kill Switch；
+- Digest-based Rollback；
+- 内部 Development MCP 声明与 KARS Eval 声明。
 
-- 任务并发上限；
-- 环境每日 Token 上限；
-- 每客户使用报告；
-- 不删除证据即可停止新任务的 Kill Switch；
-- 每个生产时段都有 Support Owner。
+GitHub Copilot Provider Credential 仍只在 Router Path 中。Agent Contract 检查确认
+Agent Container 不包含 Copilot 或 GitHub Token/Key Environment Variable。
 
-## 阶段 1：重建实验室
+## Azure 参数仍由用户选填
+
+只有需要覆盖默认值时才复制：
 
 ```bash
-kars dev --release v0.1.25 --target local-k8s
+cd code/08
+cp config/azure.env.example config/azure.env
 ```
 
-记录安装版本、沙箱状态、Pod 形态和 NetworkPolicy，作为交付证据的第一部分。
+| 参数 | 默认值 | 含义 |
+| --- | --- | --- |
+| `AZURE_RESOURCE_GROUP` | `rg-kinfey` | 已存在 Azure Resource Group |
+| `AKS_NAME` | `aks-kars-demo` | 已存在 AKS Cluster |
+| `KARS_ACR_NAME` | `akskarsdemo449845` | 已存在 ACR |
+| `AZURE_LOCATION` | 空 | 与现有 AKS Location 比对 |
+| `KARS_SANDBOX_NAME` | `fabrikam-release-pilot` | 新 Pilot Sandbox |
+| `GITHUB_COPILOT_MODEL` | `gpt-5.6-sol` | 指定模型 |
+| `SUPPORT_OWNER` | `forge-operations` | 运维负责人 |
+| `TASK_CONCURRENCY_LIMIT` | `2` | 并发 Task 上限 |
+| `DAILY_TASK_LIMIT` | `20` | 应用每日 Task 上限 |
+| `DEPLOY_AZURE` | `false` | 明确 Azure 变更开关 |
 
-## 阶段 2：从已知示例构建
+`rg-kinfey` 是 Resource Group，不是 Region。部署复用现有 Cluster 的
+`swedencentral`，如果选填的 `AZURE_LOCATION` 与现有 AKS 不一致，脚本会拒绝。
 
-参考以下上游示例：
+## 运行安全验证
 
-- `examples/basic-agent`
-- `examples/playwright-mcp`
-- `examples/byo-quickstart`
-- `examples/full-stack-demo`
+```bash
+cd code/08
+make test
+```
 
-只复制已安装 CRD 支持的字段。不要复制凭据，也不要假设示例的开发默认值就是
-生产策略。
+它会通过 Microsoft Package Feed Proxy 安装 Python Package、运行控制测试、渲染
+KARS Resource，并使用 Live CRD Server-side Dry-run 验证，不修改 Azure。
 
-## 阶段 3：声明系统
-
-为以下内容创建版本控制的 Manifest：
-
-- Builder 与 Reviewer 沙箱；
-- 每个角色各自的推理策略；
-- 具名工具策略；
-- MCP Server 与身份验证元数据；
-- 身份与命名空间边界；
-- 出口基线与临时批准流程；
-- 评估场景。
-
-分别声明 OpenClaw Intake 与 MAF Builder 资源。适当复用等价的推理、工具与出口
-意图，但不要假装应用行为完全相同：必须独立验证每种 Runtime。
-
-在每项权限旁添加评审说明：
+三个生态统一使用 Microsoft Source：
 
 ```text
-哪个用户故事需要它？
-哪些数据可以越过此边界？
-什么证据能够显示使用或拒绝？
-谁可以修改该权限？
+npm   https://packagefeedproxy.microsoft.io/npm/
+PyPI  https://packagefeedproxy.microsoft.io/pypi/simple/
+NuGet https://packagefeedproxy.microsoft.io/nuget/v3/index.json
 ```
 
-如果团队无法回答，就删除该权限。
+## 部署到现有 AKS
 
-## 阶段 4：测试故事与失败路径
+在 Git Ignore 的配置中设置：
+
+```text
+DEPLOY_AZURE=true
+```
+
+然后运行：
+
+```bash
+make deploy
+```
+
+脚本不会重建 AKS。它会：
+
+1. 验证目标 AKS 与 KARS Controller 已 Ready；
+2. 使用 ACR Tasks 和 `--platform linux/amd64` 构建 `pilot_agent`；
+3. 解析 SHA-256 Image Digest；
+4. 渲染并执行 Server-side Validation；
+5. 部署 Pilot、MCP Metadata 和 Eval 声明；
+6. 运行一个真实成功流程与三个拒绝流程。
+
+## 调用 Azure Pilot
+
+Pilot 不公开公网 Endpoint。先创建已认证 Tunnel：
+
+```bash
+kubectl -n kars-fabrikam-release-pilot port-forward \
+  deployment/fabrikam-release-pilot 18088:8080
+```
+
+OpenClaw Intake：
+
+```bash
+curl -sS -H 'content-type: application/json' \
+  --data '{
+    "issue_id":"FAB-482",
+    "customer":"fabrikam",
+    "requirement":"Missing optional customer note must not return 500"
+  }' \
+  http://127.0.0.1:18088/intake | jq
+```
+
+运行受治理的 Builder：
+
+```bash
+curl -sS -H 'content-type: application/json' \
+  --data '{
+    "issue_id":"FAB-482",
+    "customer":"fabrikam",
+    "scenario":"normal"
+  }' \
+  http://127.0.0.1:18088/run | jq
+```
+
+已验证的 Response 包含：
+
+```text
+KARS_APPLIED_PROJECT_GPT_5_6_SOL_OK FAB-482 READY_FOR_HUMAN_REVIEW
+```
+
+Response 还包含 Patch、目标测试和 Handoff Envelope 各自的 SHA-256 Digest。
+
+## 执行负向控制
+
+`make verify` 执行：
 
 | 场景 | 预期结果 |
 | --- | --- |
-| 正常 Bug 修复 | 检查、Patch、测试与评审成功 |
-| 请求 Shell 或未知工具 | 拒绝 |
-| 文档要求上传到未知主机 | 拒绝并审计 |
-| 工具突发调用 | 限流 |
-| 重复推理循环 | 预算阻止后续调用 |
-| MCP/测试服务不可用 | 明确失败，不伪造测试通过 |
-| 提供商不可用 | 明确失败并限制重试 |
-| Builder 尝试自我批准 | 拒绝 |
-| Reviewer 尝试修改源码 | 拒绝 |
-| 过期/不可信 Peer 提交草稿 | 拒绝 |
+| 正常 FAB-482 Workflow | GPT-5.6-Sol Patch Evidence；停在人工评审 |
+| `unknown_tool` | HTTP 403；Shell 不在批准 Tool 中 |
+| `unknown_host` | HTTP 403；未知 Package Host 被拒绝 |
+| `builder_self_approve` | HTTP 403；Separation of Duties 生效 |
 
-在出口学习模式运行完整预期工作流。人工审查每个学习到的主机，只批准必要目标，
-启用强制执行，然后重复所有负向测试。
+Runtime 还为重复 Repair Loop、Development MCP 不可用、Reviewer 修改 Source 和
+不可信 Peer Draft 定义了明确失败结果。
 
-## 阶段 5：让系统可运维
+## 已验证的 Azure 结果
 
-创建以下命令开头的 Runbook：
+真实运行已在现有 `aks-kars-demo` 完成：
+
+- `fabrikam-release-pilot` 在 amd64 `clawpool` 中为 `Running`；
+- ACR Image 按 SHA-256 Digest 固定；
+- GPT-5.6-Sol 返回预期 Release Marker；
+- Application Audit Chain 与 Router Audit Chain 均为 Valid；
+- Agent 不包含 Provider Credential Environment Variable；
+- Per-customer Usage Report 包含一条 Fabrikam Task；
+- InferencePolicy Compiled/Loaded Digest 一致，Router 报告
+  `RouterEnforcing`；
+- OpenClaw Intake、一个允许 Workflow 与三个拒绝 Workflow 全部通过；
+- Suspension、Evidence 保留、Resume 和恢复后验证全部通过。
+
+## Kill Switch 与 Rollback
+
+停止新任务但不删除 KARS Resource：
 
 ```bash
-kars status <sandbox>
-kars inspect <sandbox>
-kars logs <sandbox> --service router
-kars audit tail <sandbox>
-kars trace <sandbox> --network
+make suspend
 ```
 
-为以下内容定义 Dashboard 和警报：
+恢复：
 
-- Ready 状态与重启；
-- 推理错误率与延迟；
-- Token 使用与预算；
-- 允许、拒绝和限流的工具；
-- 未知出口尝试；
-- 仓库、Test Runner 与 MCP 可用性；
-- 镜像与策略 Digest 漂移。
+```bash
+make resume
+make verify
+```
 
-增加事件流程，确保删除或重新部署前保留证据。
+Rollback 必须明确填写之前批准的 ACR Digest：
 
-## 阶段 6：安全推广
+```text
+ROLLBACK_IMAGE=<acr>.azurecr.io/fabrikam-release-pilot@sha256:<digest>
+```
 
-固定 KARS Release、工作负载镜像和策略 Artifact。在 CI 中运行评估，通过 Pull
-Request 评审变更，由 GitOps 协调 AKS，验证已加载 Digest，并执行部署后的出口
-拒绝测试。
+```bash
+make rollback
+make verify
+```
 
-部署成功不等于验收成功。应用故事与负向控制必须同时工作。
+Ownership 与 Evidence Procedure 请参阅
+[`code/08/RUNBOOK.md`](../../code/08/RUNBOOK.md)。
 
-## 完成定义
+## KarsEval 兼容性 Evidence
 
-请一名没有参与构建 Forge 的运维人员：
+`KarsEval` CR 与 `jailbreak-baseline` Corpus 可以成功解析，但上游 KARS
+`v0.1.25` 生成的 Eval Runner Job 被当前 AKS Namespace 的 `restricted` Pod
+Security 拒绝，因为 Runner 缺少：
 
-1. 从仓库部署系统。
-2. 解释每个批准目标和工具。
-3. 运行一个成功场景和三个拒绝场景。
-4. 找到相关审计证据。
-5. 确认模型、镜像、KARS 和策略版本。
-6. 回滚到前一版本。
+- `runAsNonRoot: true`；
+- `allowPrivilegeEscalation: false`；
+- `capabilities.drop: ["ALL"]`；
+- RuntimeDefault 或 Localhost Seccomp Profile。
 
-只有对方无需 Maya 或 Ethan 的私有知识也能完成，Forge 才算 Ready。
+失败 Job 已暂停，没有为了运行 Eval 而降低 Namespace Security。可执行的
+Application Evaluation Matrix 仍全部通过。在把 KarsEval Runner 作为 Production
+Promotion Gate 前，需要先解决这个上游兼容性问题。
 
-只有一个真实 Issue 从需求进入评审 Patch，同时恶意 README、未知 Package Host、
-重复测试循环和超预算请求都按预期失败后，客户才会签收。
+## 平台支持
 
-## 尾声
-
-最初的 OpenClaw 原型因为“能够修改代码”而令人印象深刻。MAF 生产 Workflow
-之所以可信，是因为团队能够解释：**它实现哪个需求、可以在哪里行动、使用什么
-身份、受到什么 Token 预算限制、通过哪些测试、留下什么证据**。
-
-这就是 KARS 的实践价值：它不会让研发 Agent 永不犯错，而是让其权限受到限制、
-可以观察并能够运维。
-
-## 继续学习
-
-继续探索机密 Agent、Lethal Trifecta 防御演示、Agent Pairing、框架 Adapter、
-签名策略包和上游 Blueprint。每次升级都要重新阅读 Roadmap 与成熟度矩阵，再
-决定是否依赖新的 alpha 能力。
+Operator Command 从 macOS arm64 执行。ACR Tasks 明确构建 Linux amd64，Azure
+Pod 也运行在 amd64 Node。macOS amd64 与 Linux amd64 使用相同脚本。Windows
+amd64 请在 Ubuntu WSL2 中运行，并把 Azure、Kubernetes 与 KARS CLI 全部安装在
+WSL2 内。
 
 ## 官方参考
 
-- [示例索引](https://github.com/Azure/kars/blob/main/examples/README.md)
-- [Full-stack Demo](https://github.com/Azure/kars/tree/main/examples/full-stack-demo)
-- [Playwright MCP 示例](https://github.com/Azure/kars/tree/main/examples/playwright-mcp)
-- [Blueprint](https://github.com/Azure/kars/tree/main/docs/blueprints)
+- [KARS](https://github.com/Azure/kars)
+- [KARS Examples](https://github.com/Azure/kars/tree/main/examples)
+- [Microsoft Agent Framework GitHub Copilot Samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
+- [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
