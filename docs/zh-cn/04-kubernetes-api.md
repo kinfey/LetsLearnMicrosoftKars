@@ -1,179 +1,340 @@
-# 4. 平台：把演示变成 Kubernetes 契约
+# 4. 平台：把 Forge 变成 Kubernetes API 契约
 
 > **交付阶段：** 共享开发平台
-> **新问题：** 每位工程师和 CI Job 如何复现相同的 Forge 环境？
-> **交付物：** 可评审的 `karsSandbox` 与 `InferencePolicy` Manifest。
+> **新问题：** 每位工程师和 CI Job 如何复现并评审同一个 Forge 环境？
+> **交付物：** 版本化的 `KarsSandbox`、`InferencePolicy` 契约与可执行生命周期证据。
+> **配套实验：** [`code/03`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/03)
 
-## 命令记录的问题
+## 用期望状态取代终端记忆
 
-创业团队招聘了第一位新工程师。Forge 已在 Maya 的本地集群运行，但没人能回答
-一个简单评审问题：“我们到底批准
-了什么？”
+`code/01` 已经证明 OpenClaw 可以完成受约束的 Issue-to-Patch 工作流，`code/02`
+进一步打开生成的 Pod 并测试隔离边界。但这些结果都不应依赖某个人记得 Maya
+输入过哪些命令。
 
-终端历史包含命令、默认值、重试和实验，却无法描述稳定的期望状态。Ethan 要求
-团队将 Forge 表达为可评审、可 Diff、可持续协调的 Kubernetes 资源。
+共享平台需要可评审的 API 契约：
 
-## 从两项职责开始
+- Git 保存预期的 Workload 与权限；
+- Kubernetes 验证 Object Shape；
+- KARS 协调请求状态；
+- `status.conditions` 解释请求是否成功；
+- `metadata.generation` 与 `status.observedGeneration` 显示 Controller 是否已经
+  处理最新变更。
 
-团队把工作负载与推理权限分开：
+`code/03` 会在正在运行的 `kars-dev` 集群中执行完整生命周期。
 
-- `karsSandbox` 描述 Forge 如何运行。
-- `InferencePolicy` 描述 Forge 可以使用的推理路径。
+## 使用准确的 KARS API 标识
 
-策略是必需的，并与沙箱位于同一命名空间，避免应用 Manifest 静默回退到不受
-限制的内联推理。
+Kubernetes API 名称区分大小写。已经安装的 CRD 是：
 
-## 编写第一份契约
+```text
+apiVersion: kars.azure.com/v1alpha1
+kind: KarsSandbox
+```
 
-创建 `forge.yaml`：
+之前出现的 `karsSandbox` 并不是 Alias。Kind 大小写错误时，Server-side Validation
+会返回 `no matches for kind`。
+
+不要假设某个字段一定存在，应直接检查当前集群 Schema：
+
+```bash
+kubectl explain karssandbox.spec --recursive
+kubectl explain inferencepolicy.spec --recursive
+kubectl get crd karssandboxes.kars.azure.com -o yaml
+```
+
+实验会把三个输出全部保存到集群外部。
+
+## 分离 Workload 与推理权限
+
+最小可部署 KARS Agent 包含：
+
+1. 同一个 Namespace 中的 `InferencePolicy`。
+2. 一个 `KarsSandbox`，其必需字段 `spec.inferenceRef.name` 指向该 Policy。
+
+系统不存在不受约束的 Inline Inference Fallback。Reference 只在 Sandbox 所在
+Namespace 中解析。
+
+`code/03/manifests/contract-v1.yaml` 包含第一版契约：
 
 ```yaml
 apiVersion: kars.azure.com/v1alpha1
 kind: InferencePolicy
 metadata:
-  name: forge-inference
+  name: forge-contract-inference
   namespace: kars-system
-  labels:
-    app.kubernetes.io/name: forge
 spec:
   appliesTo:
-    sandboxName: forge
+    sandboxName: forge-contract
   modelPreference:
     primary:
       provider: azure-openai
-      deployment: gpt-4.1
+      deployment: __MODEL__
+  tokenBudget:
+    perRequestTokens: 1024
+    dailyTokens: 4096
 ---
 apiVersion: kars.azure.com/v1alpha1
-kind: karsSandbox
+kind: KarsSandbox
 metadata:
-  name: forge
+  name: forge-contract
   namespace: kars-system
-  labels:
-    app.kubernetes.io/name: forge
 spec:
   runtime:
     kind: OpenClaw
     openclaw:
       config:
         agent:
-          model: azure/gpt-4.1
+          model: azure/__MODEL__
+  sandbox:
+    isolation: enhanced
+    seccompProfile: kars-strict
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    writablePaths:
+      - /sandbox
+      - /tmp
   inferenceRef:
-    name: forge-inference
+    name: forge-contract-inference
+  networkPolicy:
+    defaultDeny: true
+    egressMode: Strict
+    allowedEndpoints: []
 ```
 
-提供商和 Deployment 只是示例，Maya 会根据实际账号调整。
+`__MODEL__` 不会作为账号专属值提交到 Git。实验会读取 `code/01` 中正在运行的 Forge
+Sandbox 所选择的模型，并把 Manifest 渲染到 `code/03/.generated/`。
 
-应用前，团队检查：
+独立的 `forge-contract` Sandbox 可以避免 API 实验修改正常工作的 `forge` Agent。
 
-- 策略是否指向正确沙箱？
-- 沙箱是否引用正确策略？
-- 两者是否都位于 `kars-system`？
-- 当前 KARS 版本是否真正支持该 Runtime？
+## 持久化之前先验证
 
-然后执行：
+运行：
 
 ```bash
-kubectl diff -f forge.yaml
-kubectl apply -f forge.yaml
-kubectl get karssandbox forge -n kars-system -w
+cd code/03
+make validate
 ```
 
-## 把状态看作一场对话
-
-Kubernetes `spec` 是团队提出的请求，`status` 是 Controller 的回答。
+脚本使用真实 API Server，而不只是 YAML Parser：
 
 ```bash
-kubectl get karssandbox forge -n kars-system -o yaml
-kubectl describe karssandbox forge -n kars-system
-kars status forge
+kubectl apply \
+  --server-side \
+  --dry-run=server \
+  --field-manager=code03-lab \
+  -f .generated/contract-v1.yaml
 ```
 
-`Ready=True` 表示 Controller 报告协调成功，并不表示所有 Forge 代码修改都正确
-或安全。
+同一个实验还证明两个负向场景：
 
-Lina 故意把 `inferenceRef.name` 改为 `missing-policy`，沙箱随即进入 Degraded。
-团队先读取 `status.conditions`，而不是直接查看 Pod 日志。Condition 指出了无法
-解析的依赖；他们恢复引用并观察协调自动恢复。
-
-这次实验形成了一条长期有效的调试规则：
-
-> 调试生成资源之前，先读取 Owner Resource 的 Conditions。
-
-## 只在需要时扩展资源
-
-设计评审中，团队把后续需求映射到 CRD：
-
-| Forge 需求 | KARS 资源 |
+| 无效契约 | API 结果 |
 | --- | --- |
-| 运行研发进程 | `karsSandbox` |
-| 选择模型并限制推理 | `InferencePolicy` |
-| 只允许读取、Patch 与测试工具 | `ToolPolicy` |
-| 注册源码与研发工具服务 | `McpServer` |
-| 保存允许的 Memory | `karsMemory` |
-| 运行回归用例 | `karsEval` |
-| 描述可信 Peer | `TrustGraph` |
-| 临时访问某个主机 | `EgressApproval` |
-| 治理运维操作 | `karsSREAction` |
-| 暴露 Peer Endpoint | `A2AAgent` |
+| `kind: karsSandbox` | 因 Kind 区分大小写而被拒绝 |
+| `runtime.kind: UnsupportedRuntime` | 被当前 CRD Enum 拒绝 |
 
-他们不会为了“完整”而创建所有资源。每项资源必须对应具体需求，高级功能还必须
-检查上游成熟度表。
+这些错误发生在 Object 持久化之前，Controller 也不会创建 Workload。
 
-## 观察协调过程
+## 使用单一 Field Owner
 
-团队在 Git 中修改模型 Deployment：
+实验采用 Server-side Apply：
 
 ```bash
-kubectl diff -f forge.yaml
-kubectl apply -f forge.yaml
-kubectl get karssandbox forge -n kars-system -w
+kubectl apply \
+  --server-side \
+  --field-manager=code03-lab \
+  -f .generated/contract-v1.yaml
 ```
 
-他们观察 Controller 更新生成配置和状态。没人直接修改生成的 ConfigMap，因为
-协调会覆盖这种修改，并隐藏真正的 Source of Truth。
+Kubernetes 会在 `metadata.managedFields` 中记录 `code03-lab`，让字段所有权可见，
+也让 GitOps 工具能够检测冲突。
 
-## 决定字段所有者
+规则仍然是：
 
-本地实验使用 `kubectl apply` 即可。生产环境计划使用 Argo CD 或 Flux。团队提前
-建立一条规则：
+> 一个声明式字段只有一个 Owner。
 
-> 一个字段只有一个 Owner。
+紧急情况下可能需要 `kubectl patch`，但之后必须用经过评审的 Manifest 恢复期望状态。
+实验会临时破坏 `inferenceRef`，然后使用原 Field Manager 重新应用 V2。
 
-如果 GitOps 管理推理策略，运维人员在正常操作中就不使用命令式 CLI 修改同一策略。
-紧急变更必须回写 Git，或被明确回滚。
+## 把 Status 看成 Controller 的回答
 
-## 失败场景
+应用 V1 后，实验会等待以下事实同时成立：
 
-依次测试：
+```text
+status.phase == Running
+metadata.generation == status.observedGeneration
+status.conditions[type=Ready].status == True
+```
 
-1. 引用不存在的 `InferencePolicy`。
-2. 将策略和沙箱放入不同命名空间。
-3. 使用当前版本未实现的 Runtime。
-4. 使用无效的提供商 Deployment。
+已经验证的结果是：
 
-每次记录：
+```text
+generation=1 observedGeneration=1 phase=Running
+```
 
-- `karsSandbox` Condition；
-- 是否创建 Pod；
-- 路由器或 Controller 错误；
-- 恢复 Ready 所需的最小 Manifest 修改。
+实验还确认 KARS 添加了 Finalizer：
 
-## 本章结果
+```text
+kars.azure.com/namespace-cleanup
+```
 
-Forge 不再是“Maya 周一输入过的那些命令”，而是一份可版本化的契约。下一次评审
-讨论的是 Diff，而不是某个人的记忆。
+并生成：
 
-同一契约今天可以选择 OpenClaw，之后可以选择 MAF Python。Runtime 代码发生变化，
-但必需的推理引用、Sandbox 控制、Router 和状态模型仍属于平台职责。
+```text
+Namespace/kars-forge-contract
+Deployment/forge-contract
+```
+
+Owner Resource 才是 Source of Truth。运维人员应先查看其 Conditions，再调试生成的
+Deployment 或 Pod。
+
+## 使用 `kubectl diff` 评审契约变更
+
+V2 同时修改 OpenClaw Instructions 与推理预算：
+
+```yaml
+tokenBudget:
+  perRequestTokens: 2048
+  dailyTokens: 8192
+```
+
+应用前，实验执行：
+
+```bash
+kubectl diff \
+  --server-side \
+  --field-manager=code03-lab \
+  -f .generated/contract-v2.yaml
+```
+
+因为存在待评审变更，Diff 返回状态码 1。完成 Server-side Apply 后，验证状态变为：
+
+```text
+generation=2 observedGeneration=2 phase=Running
+```
+
+这比“看到一个新 Pod”更可靠：它证明 Owner Resource 已变化，并且 Controller 已观察
+到同一个 Generation。
+
+## 测试依赖错误与恢复
+
+### 缺失同 Namespace Policy
+
+实验会临时修改：
+
+```yaml
+inferenceRef:
+  name: intentionally-missing-policy
+```
+
+Sandbox 报告：
+
+```text
+phase: Degraded
+reason: InferencePolicyNotFound
+```
+
+重新应用经过评审的 V2 Manifest 后，`forge-contract-inference` 引用恢复，Sandbox
+重新进入 `Running`。
+
+### Policy 位于另一个 Namespace
+
+`code/03/manifests/cross-namespace.yaml` 在 `code03-policy-other` 中创建
+`InferencePolicy`，但 Sandbox 仍位于 `kars-system`。
+
+Policy Name 确实存在，但 `inferenceRef` 是 Namespace-local Reference，因此无法解析。
+Condition 会明确说明不支持 Cross-namespace Reference，也不会创建
+`kars-forge-cross-namespace` Workload Namespace 或 Pod。
+
+### 无效 Provider Deployment
+
+对 Kubernetes API 而言，Provider Deployment Name 只是一个不透明字符串。因此，
+`intentionally-invalid-model` 可以通过 CRD Validation，Sandbox 也能进入 `Running`。
+
+只有真正发起推理请求时才会验证它是否可用。已经验证的 Router 请求返回：
+
+```text
+HTTP 400
+```
+
+这一区别可以避免错误的调试假设：
+
+- Schema 与 Reconciliation 只能证明契约结构可以部署；
+- 只有真实推理请求才能证明配置的 Provider Deployment 可以使用。
+
+## 运行完整契约实验
+
+```bash
+cd code/03
+make test
+```
+
+该命令依次执行：
+
+1. Microsoft Package Source 强制检查。
+2. 根据当前模型渲染 Manifest。
+3. Server-side Schema Validation。
+4. V1 Server-side Apply 与 Readiness 检查。
+5. Managed Field、Finalizer、Namespace 与 Deployment 检查。
+6. Idempotence 与 V1-to-V2 Diff。
+7. V2 Generation 与 Budget Reconciliation。
+8. 缺失 Policy 错误与恢复。
+9. Cross-namespace Reference 错误。
+10. 无效 Provider 请求测试。
+11. 通过 Finalizer 清理资源。
+
+证据保存在：
+
+```text
+code/03/.evidence/<UTC timestamp>/
+```
+
+其中包含 CRD Schema、Owner Resource、生成的 Deployment、Diff、Conditions、
+Request Status、Events 与完整 Transcript。该目录位于 Kubernetes 外部，并通过
+Git Ignore 排除。
+
+## 强制使用 Microsoft Package Source
+
+实验开始前会应用并检查：
+
+```text
+https://packagefeedproxy.microsoft.io/npm/
+https://packagefeedproxy.microsoft.io/pypi/simple/
+https://packagefeedproxy.microsoft.io/nuget/v3/index.json
+```
+
+退出时会恢复上游 KARS 与 OpenClaw 源码文件。
+
+## 只根据需求增加资源
+
+当前安装的 KARS API 提供以下相关 Resource Kind：
+
+| 需求 | Resource Kind |
+| --- | --- |
+| 运行 Agent Workload | `KarsSandbox` |
+| 选择模型并限制推理 | `InferencePolicy` |
+| 治理工具 | `ToolPolicy` |
+| 注册 MCP Service | `McpServer` |
+| 保存允许的 Memory | `KarsMemory` |
+| 运行 Evaluation | `KarsEval` |
+| 描述可信 Peer | `TrustGraph` |
+| 临时批准 Egress | `EgressApproval` |
+| 治理 SRE 操作 | `KarsSREAction` |
+| 暴露 A2A Endpoint | `A2AAgent` |
+
+不要为了“完整”而创建所有 CRD。每个 Object 都必须对应真实的产品或运维需求，并根据
+当前安装的 KARS Revision 检查成熟度。
 
 ## 完成定义
 
-当全新集群能够协调 Manifest、缺失 Policy 会产生有用的 Degraded Condition、
-`kubectl diff` 能显示每项权限变化，并且 CI 而非创始人的 Shell History 能复现
-环境时，平台契约才算 Ready。
+当 Server-side Validation 能拒绝错误 Object、一个 Field Manager 管理经过评审的
+字段、`kubectl diff` 能显示权限变化、Controller 报告当前 Generation、依赖错误产生
+可操作 Conditions、真实推理验证 Provider 配置、Finalizer 清理生成资源，并且 CI
+可以在不依赖开发者 Shell History 的情况下重复同一实验时，平台契约才算 Ready。
 
 ## 官方参考
 
-- [CRD 参考](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
-- [基础 Agent 示例](https://github.com/Azure/kars/tree/main/examples/basic-agent)
-- [架构](https://github.com/Azure/kars/blob/main/docs/architecture.md)
+- [KARS CRD 参考](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
+- [KARS Basic Agent 示例](https://github.com/Azure/kars/tree/main/examples/basic-agent)
+- [KARS 架构](https://github.com/Azure/kars/blob/main/docs/architecture.md)
+- [KARS 源码仓库](https://github.com/Azure/kars)

@@ -1,188 +1,357 @@
-# 4. Platform: Turn the Demo into a Kubernetes Contract
+# 4. Platform: Turn Forge into a Kubernetes API Contract
 
 > **Delivery stage:** Shared development platform
-> **New problem:** How can every engineer and CI job reproduce the same Forge
-> environment?
-> **Deliverable:** Reviewable `karsSandbox` and `InferencePolicy` manifests.
+> **New problem:** How can every engineer and CI job reproduce and review the
+> same Forge environment?
+> **Deliverable:** Versioned `KarsSandbox` and `InferencePolicy` contracts with
+> executable lifecycle evidence.
+> **Working lab:** [`code/03`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/03)
 
-## The problem with a command transcript
+## Replace terminal memory with desired state
 
-The startup adds its first engineer. Forge works in Maya's local cluster, but
-nobody can answer a simple review
-question: "What exactly did we approve?"
+`code/01` proved that OpenClaw could complete a bounded Issue-to-Patch
+workflow. `code/02` opened the generated Pod and tested the isolation boundary.
+Neither result should depend on remembering which commands Maya typed.
 
-A terminal history contains commands, defaults, retries, and experiments. It
-does not describe a stable desired state. Ethan asks the team to express Forge
-as Kubernetes resources that can be reviewed, diffed, and reconciled.
+The shared platform needs a reviewable API contract:
 
-## Start with two responsibilities
+- Git stores the intended workload and authority.
+- Kubernetes validates the object shape.
+- KARS reconciles the requested state.
+- `status.conditions` explains whether the request succeeded.
+- `metadata.generation` and `status.observedGeneration` show whether the
+  controller has processed the latest change.
 
-The team separates the workload from its inference authority:
+The `code/03` lab exercises this complete lifecycle against the running
+`kars-dev` cluster.
 
-- `karsSandbox` says how Forge runs.
-- `InferencePolicy` says which inference path Forge may use.
+## Use the exact KARS API identity
 
-The policy is mandatory and lives in the same namespace as the sandbox. This
-prevents an application manifest from silently falling back to unrestricted
-inline inference.
+Kubernetes API names are case-sensitive. The installed CRD is:
 
-## Write the first contract
+```text
+apiVersion: kars.azure.com/v1alpha1
+kind: KarsSandbox
+```
 
-Create `forge.yaml`:
+The earlier spelling `karsSandbox` is not an alias. Server-side validation
+returns `no matches for kind` when the Kind casing is wrong.
+
+Inspect the live schema instead of assuming a field exists:
+
+```bash
+kubectl explain karssandbox.spec --recursive
+kubectl explain inferencepolicy.spec --recursive
+kubectl get crd karssandboxes.kars.azure.com -o yaml
+```
+
+The experiment saves all three outputs outside the cluster as evidence.
+
+## Separate workload from inference authority
+
+The smallest deployable KARS agent is:
+
+1. A sibling `InferencePolicy`.
+2. A `KarsSandbox` whose required `spec.inferenceRef.name` points to that
+   policy.
+
+There is no unrestricted inline inference fallback. The reference is local to
+the Sandbox namespace.
+
+`code/03/manifests/contract-v1.yaml` contains the first contract:
 
 ```yaml
 apiVersion: kars.azure.com/v1alpha1
 kind: InferencePolicy
 metadata:
-  name: forge-inference
+  name: forge-contract-inference
   namespace: kars-system
-  labels:
-    app.kubernetes.io/name: forge
 spec:
   appliesTo:
-    sandboxName: forge
+    sandboxName: forge-contract
   modelPreference:
     primary:
       provider: azure-openai
-      deployment: gpt-4.1
+      deployment: __MODEL__
+  tokenBudget:
+    perRequestTokens: 1024
+    dailyTokens: 4096
 ---
 apiVersion: kars.azure.com/v1alpha1
-kind: karsSandbox
+kind: KarsSandbox
 metadata:
-  name: forge
+  name: forge-contract
   namespace: kars-system
-  labels:
-    app.kubernetes.io/name: forge
 spec:
   runtime:
     kind: OpenClaw
     openclaw:
       config:
         agent:
-          model: azure/gpt-4.1
+          model: azure/__MODEL__
+  sandbox:
+    isolation: enhanced
+    seccompProfile: kars-strict
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    writablePaths:
+      - /sandbox
+      - /tmp
   inferenceRef:
-    name: forge-inference
+    name: forge-contract-inference
+  networkPolicy:
+    defaultDeny: true
+    egressMode: Strict
+    allowedEndpoints: []
 ```
 
-The provider and deployment are examples; Maya changes them to match the
-configured account.
+`__MODEL__` is not committed as an account-specific value. The lab reads the
+model from the live `code/01` Forge Sandbox and renders manifests into
+`code/03/.generated/`.
 
-Before applying, the team asks:
+The dedicated `forge-contract` Sandbox keeps the API experiment separate from
+the working `forge` Agent.
 
-- Does the policy target the correct sandbox?
-- Does the sandbox reference the correct policy?
-- Are both in `kars-system`?
-- Is the runtime actually supported by this KARS release?
+## Validate before persisting
 
-Then they apply:
+Run:
 
 ```bash
-kubectl diff -f forge.yaml
-kubectl apply -f forge.yaml
-kubectl get karssandbox forge -n kars-system -w
+cd code/03
+make validate
 ```
 
-## Read status as a conversation
-
-Kubernetes `spec` is the team's request. `status` is the controller's answer.
+The script uses the API server, not only a YAML parser:
 
 ```bash
-kubectl get karssandbox forge -n kars-system -o yaml
-kubectl describe karssandbox forge -n kars-system
-kars status forge
+kubectl apply \
+  --server-side \
+  --dry-run=server \
+  --field-manager=code03-lab \
+  -f .generated/contract-v1.yaml
 ```
 
-When `Ready=True`, the controller is reporting successful reconciliation—not
-that every possible Forge code change is correct or secure.
+The same experiment proves two negative cases:
 
-Lina intentionally changes `inferenceRef.name` to `missing-policy`. The
-sandbox becomes degraded. The team reads `status.conditions` before opening pod
-logs. The condition identifies the unresolved dependency, so they restore the
-reference and watch reconciliation recover.
-
-This experiment teaches a durable debugging rule:
-
-> Read the owner resource's conditions before debugging generated resources.
-
-## Add the rest of the map only when needed
-
-During design review, the team maps future requirements to CRDs:
-
-| Forge requirement | KARS resource |
+| Invalid contract | API result |
 | --- | --- |
-| Run the development process | `karsSandbox` |
-| Select model and cap inference | `InferencePolicy` |
-| Allow repository read, patch, and test tools | `ToolPolicy` |
-| Register the source-control/tool service | `McpServer` |
-| Persist approved memory | `karsMemory` |
-| Run regression cases | `karsEval` |
-| Model trusted peers | `TrustGraph` |
-| Temporarily reach a host | `EgressApproval` |
-| Govern an operator action | `karsSREAction` |
-| Expose a peer endpoint | `A2AAgent` |
+| `kind: karsSandbox` | Rejected because Kind names are case-sensitive |
+| `runtime.kind: UnsupportedRuntime` | Rejected by the installed CRD enum |
 
-They do not create every resource "for completeness." Each resource must answer
-a concrete requirement, and each advanced feature must be checked against the
-upstream maturity table.
+These failures happen before an object is persisted and before the controller
+creates a workload.
 
-## See reconciliation in practice
+## Apply with one field owner
 
-The team changes the model deployment in Git:
+The lab uses Server-side Apply:
 
 ```bash
-kubectl diff -f forge.yaml
-kubectl apply -f forge.yaml
-kubectl get karssandbox forge -n kars-system -w
+kubectl apply \
+  --server-side \
+  --field-manager=code03-lab \
+  -f .generated/contract-v1.yaml
 ```
 
-They observe the controller update the generated configuration and status. No
-operator edits a generated ConfigMap directly; reconciliation would overwrite
-that edit and hide the real source of truth.
+Kubernetes records `code03-lab` in `metadata.managedFields`. This makes field
+ownership visible and gives GitOps tools a clean path to detect conflicts.
 
-## Decide who owns fields
+The rule remains:
 
-For the local lab, `kubectl apply` is enough. In production, the team plans to
-use Argo CD or Flux. They establish one rule early:
+> One declarative field has one owner.
 
-> A field has one owner.
+An emergency `kubectl patch` may be necessary, but the reviewed manifest must
+subsequently restore the intended state. The lab demonstrates this by
+temporarily breaking `inferenceRef` and then reapplying V2 with the original
+field manager.
 
-If GitOps owns an inference policy, an operator does not use an imperative CLI
-command to change the same policy during normal operations. Emergency changes
-must be captured back into Git or explicitly reverted.
+## Read status as the controller's answer
 
-## Failure scenarios
+After V1 is applied, the experiment waits for all of these facts:
 
-Test these one at a time:
+```text
+status.phase == Running
+metadata.generation == status.observedGeneration
+status.conditions[type=Ready].status == True
+```
 
-1. Reference a missing `InferencePolicy`.
-2. Put policy and sandbox in different namespaces.
-3. Use a runtime not implemented in the installed release.
-4. Use an invalid provider deployment.
+The verified run produced:
 
-For each test, record:
+```text
+generation=1 observedGeneration=1 phase=Running
+```
 
-- the `karsSandbox` condition;
-- whether a pod was created;
-- the router or controller error;
-- the smallest manifest change that restores readiness.
+It also confirmed that KARS attached:
 
-## Chapter outcome
+```text
+kars.azure.com/namespace-cleanup
+```
 
-Forge is no longer "whatever Maya typed on Monday." It is a versionable
-contract. The next review can discuss a diff rather than a memory.
+as a finalizer and generated:
 
-The same contract can select OpenClaw today and MAF Python later. Runtime code
-changes, but the required inference reference, Sandbox controls, router, and
-status model remain platform concerns.
+```text
+Namespace/kars-forge-contract
+Deployment/forge-contract
+```
+
+The owner resource is the source of truth. Operators inspect its Conditions
+before debugging the generated Deployment or Pod.
+
+## Review a contract change with `kubectl diff`
+
+V2 changes both the OpenClaw instructions and the inference budget:
+
+```yaml
+tokenBudget:
+  perRequestTokens: 2048
+  dailyTokens: 8192
+```
+
+Before applying it, the lab runs:
+
+```bash
+kubectl diff \
+  --server-side \
+  --field-manager=code03-lab \
+  -f .generated/contract-v2.yaml
+```
+
+The diff exits with status 1 because a reviewed change is pending. After
+Server-side Apply, the verified state becomes:
+
+```text
+generation=2 observedGeneration=2 phase=Running
+```
+
+This is stronger evidence than seeing a new Pod: it proves the owner resource
+changed and the controller observed that exact generation.
+
+## Test dependency failures and recovery
+
+### Missing sibling policy
+
+The lab temporarily changes:
+
+```yaml
+inferenceRef:
+  name: intentionally-missing-policy
+```
+
+The Sandbox reports:
+
+```text
+phase: Degraded
+reason: InferencePolicyNotFound
+```
+
+Reapplying the reviewed V2 manifest restores `forge-contract-inference`, and
+the Sandbox returns to `Running`.
+
+### Policy in another namespace
+
+`code/03/manifests/cross-namespace.yaml` creates an `InferencePolicy` in
+`code03-policy-other` while the Sandbox remains in `kars-system`.
+
+The policy name exists, but the reference is unresolved because
+`inferenceRef` is namespace-local. The Condition explicitly says
+cross-namespace references are unsupported. No `kars-forge-cross-namespace`
+workload namespace or Pod is created.
+
+### Invalid provider deployment
+
+Provider deployment names are opaque strings to the Kubernetes API. Therefore
+`intentionally-invalid-model` passes CRD validation, and the Sandbox can reach
+`Running`.
+
+Validity is checked when inference is requested. The verified router request
+returned:
+
+```text
+HTTP 400
+```
+
+This distinction prevents a misleading debugging assumption:
+
+- schema and reconciliation prove the contract is structurally deployable;
+- only a live inference request proves the configured provider deployment is
+  usable.
+
+## Run the complete contract lab
+
+```bash
+cd code/03
+make test
+```
+
+The command performs:
+
+1. Microsoft package-source enforcement.
+2. Model-aware manifest rendering.
+3. Server-side schema validation.
+4. V1 Server-side Apply and readiness checks.
+5. Managed-field, finalizer, namespace, and Deployment inspection.
+6. Idempotence and V1-to-V2 diff checks.
+7. V2 generation and budget reconciliation.
+8. Missing-policy failure and recovery.
+9. Cross-namespace reference failure.
+10. Invalid provider request testing.
+11. Finalizer-driven cleanup.
+
+Evidence is stored in:
+
+```text
+code/03/.evidence/<UTC timestamp>/
+```
+
+The directory contains the CRD schema, owner resources, generated Deployment,
+diffs, Conditions, request status, events, and the complete transcript. It is
+outside Kubernetes and excluded from Git.
+
+## Enforce Microsoft package sources
+
+Before the experiment runs, it applies and verifies:
+
+```text
+https://packagefeedproxy.microsoft.io/npm/
+https://packagefeedproxy.microsoft.io/pypi/simple/
+https://packagefeedproxy.microsoft.io/nuget/v3/index.json
+```
+
+The upstream KARS and OpenClaw source files are restored on exit.
+
+## Add resources only for requirements
+
+The installed KARS API exposes these relevant resource kinds:
+
+| Requirement | Resource Kind |
+| --- | --- |
+| Run an Agent workload | `KarsSandbox` |
+| Select and budget inference | `InferencePolicy` |
+| Govern tools | `ToolPolicy` |
+| Register an MCP service | `McpServer` |
+| Persist approved memory | `KarsMemory` |
+| Run evaluations | `KarsEval` |
+| Describe trusted peers | `TrustGraph` |
+| Temporarily approve egress | `EgressApproval` |
+| Govern an SRE action | `KarsSREAction` |
+| Expose an A2A endpoint | `A2AAgent` |
+
+Do not create every CRD for completeness. Each object must answer a real
+product or operational requirement and must be checked against the maturity of
+the installed KARS revision.
 
 ## Definition of done
 
-The platform contract is ready when a clean cluster can reconcile it, a missing
-policy produces a useful Degraded condition, `kubectl diff` shows every
-authority change, and CI—not a founder's shell history—can reproduce it.
+The platform contract is ready when Server-side validation rejects malformed
+objects, one field manager owns the reviewed fields, `kubectl diff` exposes
+authority changes, the controller reports the current generation, dependency
+failures produce actionable Conditions, live inference validates provider
+configuration, finalizers clean generated resources, and CI can repeat the
+same experiment without relying on a developer's shell history.
 
 ## Official references
 
-- [CRD reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
-- [Basic agent example](https://github.com/Azure/kars/tree/main/examples/basic-agent)
-- [Architecture](https://github.com/Azure/kars/blob/main/docs/architecture.md)
+- [KARS CRD reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
+- [KARS basic agent example](https://github.com/Azure/kars/tree/main/examples/basic-agent)
+- [KARS architecture](https://github.com/Azure/kars/blob/main/docs/architecture.md)
+- [KARS source repository](https://github.com/Azure/kars)
