@@ -2,7 +2,9 @@
 
 [English](README.md) | [简体中文](README.zh.md)
 
-本实验把第 3 章中的 Sandbox 结论转换为针对 [`code/01`](../01/) Forge 部署的
+本实验把第 3 章中的 Sandbox 结论转换为针对
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+Forge 部署的
 可执行检查。设计依据包括
 [Azure/KARS 安全模型](https://github.com/Azure/kars/blob/main/docs/security.md)
 与 [Runtime Contract](https://github.com/Azure/kars/blob/main/docs/runtimes.md)。
@@ -26,11 +28,13 @@
 
 ## 前置条件
 
-1. 部署并验证 `code/01`。
+1. 部署并验证 [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)。
 2. 保持 `kars-dev` kind 集群运行。
 3. 安装 `kubectl`、`jq`、`curl`、Docker 和 Node.js 22。
 
-实验运行前会检查 `code/01` 中的所有依赖源：
+实验运行前会检查
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+中的所有依赖源：
 
 - npm：`https://packagefeedproxy.microsoft.io/npm/`
 - PyPI：`https://packagefeedproxy.microsoft.io/pypi/simple/`
@@ -96,6 +100,8 @@ make clean
 
 ## 平台说明
 
-已经验证的环境是 macOS arm64。脚本复用 `code/01` 的平台检测，同时支持 macOS
+已经验证的环境是 macOS arm64。脚本复用
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+的平台检测，同时支持 macOS
 amd64、Linux amd64，以及通过 Ubuntu WSL2 运行的 Windows amd64。Windows 用户应在
 WSL2 内运行命令，而不是直接使用原生 PowerShell 或 CMD。

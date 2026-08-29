@@ -2,8 +2,12 @@
 
 [English](README.md) | [简体中文](README.zh.md)
 
-本实验把第 5 章转换为针对 [`code/01`](../01/) Forge 环境的可执行治理检查，并复用
-[`code/02`](../02/) 与 [`code/03`](../03/) 的边界和证据模式。设计参考上游
+本实验把第 5 章转换为针对
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+Forge 环境的可执行治理检查，并复用
+[`code/02`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/02)
+与 [`code/03`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/03)
+的边界和证据模式。设计参考上游
 [KARS MCP Guide](https://github.com/Azure/kars/blob/main/docs/mcp.md)、
 [CRD Reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
 和 [Security Model](https://github.com/Azure/kars/blob/main/docs/security.md)。
@@ -48,7 +52,9 @@ Rate Limit 通过编译 Profile 与 `RouterEnforcing` Digest 回报进行验证�
 
 ## 运行
 
-保持经过验证的 `code/01` Forge 环境运行：
+保持经过验证的
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+Forge 环境运行：
 
 ```bash
 cd code/04
@@ -102,5 +108,7 @@ make clean
 
 ## 平台支持
 
-已经验证的环境是 macOS arm64。平台检测继承自 `code/01`，同时支持 macOS amd64、
+已经验证的环境是 macOS arm64。平台检测继承自
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)，
+同时支持 macOS amd64、
 Linux amd64，以及通过 Ubuntu WSL2 运行的 Windows amd64。

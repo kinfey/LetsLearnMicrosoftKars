@@ -2,9 +2,13 @@
 
 [English](README.md) | [简体中文](README.zh.md)
 
-This lab starts from the OpenClaw Forge contract in [`code/01`](../01/), the
-GPT-5.6-Sol BYO runtime in [`code/05`](../05/), and the security/recovery
-evidence in [`code/06`](../06/). It prepares a reviewed AKS promotion without
+This lab starts from the OpenClaw Forge contract in
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01),
+the GPT-5.6-Sol BYO runtime in
+[`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05),
+and the security/recovery evidence in
+[`code/06`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/06).
+It prepares a reviewed AKS promotion without
 allowing one Agent to build and approve the same change:
 
 ```text
@@ -49,8 +53,10 @@ cp config/aks.env.example config/aks.env
 
 ## What the plan-only lab proves
 
-- `code/05` remains `Running` with its original 1024-token policy.
-- The `code/06` BYO exec admission guard is installed.
+- [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
+  remains `Running` with its original 1024-token policy.
+- The [`code/06`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/06)
+  BYO exec admission guard is installed.
 - Microsoft Package Feed Proxy is used for npm, PyPI, and NuGet.
 - The host-side Microsoft Agent Framework `GitHubCopilotAgent` performs a real
   GPT-5.6-Sol tool call before promotion.
@@ -68,8 +74,11 @@ cp config/aks.env.example config/aks.env
 - KARS `0.1.25` completes `kars up --dry-run` for the selected Azure target.
 - Real deployment is denied unless it is explicitly enabled and an upstream
   KARS source checkout is available.
-- A promotion record links the source Git commit, code/05 image digest,
-  code/06 loaded policy digest, and target AKS parameters.
+- A promotion record links the source Git commit,
+  [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
+  image digest,
+  [`code/06`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/06)
+  loaded policy digest, and target AKS parameters.
 
 ## Run without creating Azure resources
 
@@ -133,7 +142,9 @@ Review these before real deployment:
 - **Day 0:** Azure location, address space/network architecture, API exposure,
   isolation level, node/region quota, and identity topology.
 - **Day 1:** GitOps reconciliation, external audit export, monitoring,
-  maintenance windows, policy rollout, rollback, and the code/06 recovery
+  maintenance windows, policy rollout, rollback, and the
+  [`code/06`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/06)
+  recovery
   procedure.
 
 Use Azure CNI Overlay/Cilium and Workload Identity for production unless the

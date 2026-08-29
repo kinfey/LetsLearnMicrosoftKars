@@ -3,7 +3,7 @@
 > **交付阶段：** 运维第 6 章的 BYO 生产候选
 > **起点：** OpenClaw Forge 行为，现在运行于 KARS BYO Workload，并使用
 > GitHub Copilot GPT-5.6-Sol
-> **可执行实验：** [`code/06`](../../code/06/)
+> **可执行实验：** [`code/06`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/06)
 
 ## 一切仍然从 OpenClaw 开始
 
@@ -27,7 +27,7 @@ OpenClaw FORMAT-482 Workflow
 
 ## 运行真实实验
 
-先完成 [`code/05`](../../code/05/)，然后执行：
+先完成 [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)，然后执行：
 
 ```bash
 cd code/06
@@ -43,7 +43,9 @@ GitHub Copilot CLI，并固定模型为 `gpt-5.6-sol`。
 ## 在应用层停止 Repair Loop
 
 Platform Budget 可以限制成本，但不能判断两个 Patch 是否等价，也不能判断任务是否
-超过业务 Deadline。`code/06/operations/repair_guard.py` 的 `RepairGuard` 会在以下
+超过业务 Deadline。
+[`code/06/operations/repair_guard.py`](https://github.com/kinfey/LetsLearnMicrosoftKars/blob/main/code/06/operations/repair_guard.py)
+的 `RepairGuard` 会在以下
 情况返回明确的 Human Escalation Decision：
 
 - 同一个 Patch Digest 出现两次；
@@ -81,7 +83,8 @@ Evidence 不包含 Secret Value。
 `openclaw`。第 6 章 BYO Runtime 使用 Container 名称 `agent`，因此最初无副作用的
 `kubectl exec ... -- true` 可以成功。
 
-`code/06/manifests/byo-agent-exec-ban.yaml` 为标记
+[`code/06/manifests/byo-agent-exec-ban.yaml`](https://github.com/kinfey/LetsLearnMicrosoftKars/blob/main/code/06/manifests/byo-agent-exec-ban.yaml)
+为标记
 `kars.azure.com/isolated=strict` 的 Namespace 中 `agent` Container 加入同等的
 Fail-closed 控制。没有 Break-glass Label 时，API Server 返回：
 

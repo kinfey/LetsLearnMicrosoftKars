@@ -101,7 +101,8 @@ condition: Ready=True
 reason: RouterEnforcing
 ```
 
-`code/04` 要求 `status.agtProfileDigest` 与编译 ConfigMap Annotation 完全一致，同时
+[`code/04`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/04)
+要求 `status.agtProfileDigest` 与编译 ConfigMap Annotation 完全一致，同时
 验证 Selector、Rate Limit、Approval Mode 和七个 Capability 字符串。仅仅
 `kubectl apply` 成功不能作为充分证据。
 
@@ -157,7 +158,8 @@ spec:
 
 ## 运行实验
 
-保持 `code/01` Forge Deployment 运行，然后执行：
+保持 [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+Forge Deployment 运行，然后执行：
 
 ```bash
 cd code/04

@@ -23,7 +23,7 @@ Can OpenClaw complete FORMAT-482 while the process reading untrusted
 repository content has no Copilot token, arbitrary shell, or direct egress?
 ```
 
-The complete implementation is in `code/01`. Run all commands in this chapter
+The complete implementation is in [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01). Run all commands in this chapter
 from that directory:
 
 ```bash

@@ -7,14 +7,19 @@
 
 ## 一切仍然从 OpenClaw 开始
 
-`code/01` 已经使用 OpenClaw 验证 FORMAT-482 用户路径：
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+已经使用 OpenClaw 验证 FORMAT-482 用户路径：
 
 ```text
 接收 Issue -> 检查仓库 -> Patch -> 具名测试 -> 证据
 ```
 
-`code/02` 验证 Sandbox Boundary，`code/03` 验证 Kubernetes API Contract，
-`code/04` 验证推理与工具 Policy。第 6 章只替换 Runtime Loop，不能削弱这些边界。
+[`code/02`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/02)
+验证 Sandbox Boundary，
+[`code/03`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/03)
+验证 Kubernetes API Contract，
+[`code/04`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/04)
+验证推理与工具 Policy。第 6 章只替换 Runtime Loop，不能削弱这些边界。
 
 生产问题不是“哪个 Framework 最好”，而是：
 
@@ -63,7 +68,8 @@ create_harness_agent(client=chat_client, ...)
 则提供 `GitHubCopilotAgent`：它已经是带有 Copilot CLI Session 和独立 Tool Loop 的
 完整 Agent，不是 Chat Client，因此不能直接传给 `create_harness_agent`。
 
-所以 `code/05` 不会声称存在一个实际上不存在的 Drop-in Integration。实验保留 Claw
+所以 [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
+不会声称存在一个实际上不存在的 Drop-in Integration。实验保留 Claw
 示例中的明确规划、受限工具、Approval、状态与 Human Review Stop，并验证两条真实
 路径。
 
@@ -155,7 +161,9 @@ USER 1000
 ```
 
 KARS 会在 `/sandbox` 挂载 `emptyDir`。不可变应用代码不能写入会被 Runtime Mount
-覆盖的路径。`code/05` 把代码放在 `/app`，只把 `/sandbox` 和 `/tmp` 用作可写
+覆盖的路径。
+[`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
+把代码放在 `/app`，只把 `/sandbox` 和 `/tmp` 用作可写
 Runtime State。
 
 实验验证：
@@ -198,12 +206,15 @@ KARS_BYO_GPT_5_6_SOL_OK FORMAT-482 STOP_FOR_HUMAN_REVIEW
 教程实际安装的 CRD 会在 Admission 阶段直接拒绝它，不会进入 Reconcile。Live Schema
 才是当前行为的权威依据。
 
-第一方 MAF Python Schema 是有效的；但 `code/05` 部署 Self-contained BYO Image，
+第一方 MAF Python Schema 是有效的；但
+[`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
+部署 Self-contained BYO Image，
 以确保 Custom Application Artifact 与 Entry Point 可以被完全控制和直接测试。
 
 ## 运行
 
-保持 `code/01` 运行，并确保 Copilot CLI 已认证：
+保持 [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+运行，并确保 Copilot CLI 已认证：
 
 ```bash
 jq -r .provider ~/.kars/config.json

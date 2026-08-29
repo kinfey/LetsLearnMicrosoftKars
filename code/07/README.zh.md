@@ -2,9 +2,13 @@
 
 [English](README.md) | [简体中文](README.zh.md)
 
-本实验从 [`code/01`](../01/) 的 OpenClaw Forge Contract、
-[`code/05`](../05/) 的 GPT-5.6-Sol BYO Runtime，以及
-[`code/06`](../06/) 的安全与恢复证据开始。它准备一条经过评审的 AKS Promotion
+本实验从
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+的 OpenClaw Forge Contract、
+[`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
+的 GPT-5.6-Sol BYO Runtime，以及
+[`code/06`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/06)
+的安全与恢复证据开始。它准备一条经过评审的 AKS Promotion
 路径，同时禁止同一个 Agent 编写并批准自己的变更：
 
 ```text
@@ -48,8 +52,10 @@ cp config/aks.env.example config/aks.env
 
 ## Plan-only 实验要证明什么
 
-- `code/05` 仍为 `Running`，并保持原始 1024 Token Policy。
-- `code/06` 的 BYO Exec Admission Guard 已安装。
+- [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
+  仍为 `Running`，并保持原始 1024 Token Policy。
+- [`code/06`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/06)
+  的 BYO Exec Admission Guard 已安装。
 - npm、PyPI 和 NuGet 使用 Microsoft Package Feed Proxy。
 - Promotion 前，Host-side Microsoft Agent Framework
   `GitHubCopilotAgent` 会执行真实 GPT-5.6-Sol Tool Call。
@@ -66,7 +72,10 @@ cp config/aks.env.example config/aks.env
   Resource。
 - KARS `0.1.25` 针对目标 Azure 参数完成 `kars up --dry-run`。
 - 真实部署必须明确启用，并提供上游 KARS Source Checkout，否则会被拒绝。
-- Promotion Record 关联 Source Git Commit、code/05 Image Digest、code/06
+- Promotion Record 关联 Source Git Commit、
+  [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
+  Image Digest、
+  [`code/06`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/06)
   Loaded Policy Digest 与目标 AKS 参数。
 
 ## 不创建 Azure Resource 的运行方式
@@ -131,7 +140,9 @@ Helm 和初始 Sandbox。
 - **Day 0：** Azure Location、Address Space/Network Architecture、API
   Exposure、Isolation Level、Node/Region Quota 与 Identity Topology。
 - **Day 1：** GitOps Reconciliation、External Audit Export、Monitoring、
-  Maintenance Window、Policy Rollout、Rollback 与 code/06 Recovery
+  Maintenance Window、Policy Rollout、Rollback 与
+  [`code/06`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/06)
+  Recovery
   Procedure。
 
 生产环境默认建议 Azure CNI Overlay/Cilium 与 Workload Identity，除非环境有明确

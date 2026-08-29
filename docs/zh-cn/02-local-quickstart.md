@@ -21,7 +21,7 @@ NetworkPolicy、Token 预算和审计证据。
 OpenClaw 能否完成 FORMAT-482？
 ```
 
-完整实现位于 `code/01`。本章所有命令都从该目录执行：
+完整实现位于 [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)。本章所有命令都从该目录执行：
 
 ```bash
 cd code/01

@@ -3,7 +3,7 @@
 [English](README.md) | [简体中文](README.zh.md)
 
 This lab turns Chapter 3's sandbox claims into executable checks against the
-Forge deployment from [`code/01`](../01/). Its design follows the
+Forge deployment from [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01). Its design follows the
 [Azure/KARS security model](https://github.com/Azure/kars/blob/main/docs/security.md)
 and [runtime contract](https://github.com/Azure/kars/blob/main/docs/runtimes.md).
 
@@ -26,11 +26,13 @@ the fixed-revision disposable workspace and exposes only seven narrow tools.
 
 ## Prerequisites
 
-1. Deploy and validate `code/01`.
+1. Deploy and validate [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01).
 2. Keep the `kars-dev` kind cluster running.
 3. Install `kubectl`, `jq`, `curl`, Docker, and Node.js 22.
 
-All package restore configuration comes from `code/01` and is verified before
+All package restore configuration comes from
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+and is verified before
 the lab runs:
 
 - npm: `https://packagefeedproxy.microsoft.io/npm/`
@@ -102,6 +104,8 @@ local evidence.
 ## Platform notes
 
 The validated environment is macOS arm64. The same scripts use the platform
-detection from `code/01` and support macOS amd64, Linux amd64, and Windows
+detection from
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+and support macOS amd64, Linux amd64, and Windows
 amd64 through Ubuntu WSL2. Run Windows commands inside WSL2, not native
 PowerShell or CMD.

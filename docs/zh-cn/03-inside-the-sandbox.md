@@ -58,7 +58,8 @@ Init Container 安装网络规则，使 Agent UID 可以通过 Loopback 到达�
 
 ### `agent`
 
-Forge 与 OpenClaw Runtime 以 UID 1000 运行。在 `code/01` 的实际实现中，
+Forge 与 OpenClaw Runtime 以 UID 1000 运行。在
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01) 的实际实现中，
 OpenClaw 不会直接挂载代码仓库，而是调用本地 Router，由 Router 代理访问独立的
 Workspace MCP Service。OpenClaw 既不持有 Provider 凭据，也没有直接出口。
 
@@ -154,7 +155,8 @@ Namespace Break-glass Label，只执行范围明确的只读探测，并通过 S
 
 ## 使用 Forge 测试边界
 
-`code/01` 中的 Fixture 仓库就是专门准备的一次性测试仓库。绝不要使用生产 Checkout
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+中的 Fixture 仓库就是专门准备的一次性测试仓库。绝不要使用生产 Checkout
 进行以下实验。
 
 | 测试 | 预期结果 |
@@ -186,7 +188,9 @@ make test-full
 通过 `127.0.0.1:8443` 返回 HTTP 200、缺失 Policy 时出现 Degraded Condition，
 以及删除 Forge Pod 后 Controller 成功创建替代 Pod。
 
-实验开始前会强制检查 `code/01` 使用的 Microsoft Package Feed Proxy：
+实验开始前会强制检查
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+使用的 Microsoft Package Feed Proxy：
 
 ```text
 https://packagefeedproxy.microsoft.io/npm/

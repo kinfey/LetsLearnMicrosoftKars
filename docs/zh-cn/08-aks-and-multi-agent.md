@@ -3,7 +3,7 @@
 > **交付阶段：** 规划并评审 AKS 生产 Promotion
 > **起点：** OpenClaw Forge、第 6 章 GPT-5.6-Sol BYO Runtime，以及第 7 章
 > Security/Recovery Evidence
-> **可执行实验：** [`code/07`](../../code/07/)
+> **可执行实验：** [`code/07`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/07)
 
 ## 一切仍然从 OpenClaw 开始
 
@@ -32,7 +32,9 @@ make test
 
 默认运行不会创建 Azure Resource。它会：
 
-1. 确认 `code/05` BYO Runtime 与 `code/06` Security Guard；
+1. 确认 [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
+   BYO Runtime 与 [`code/06`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/06)
+   Security Guard；
 2. 检查 Microsoft npm、PyPI 与 NuGet Source；
 3. 运行确定性的 Builder/Reviewer Authorization Test；
 4. 通过 Host Microsoft Agent Framework `GitHubCopilotAgent` 调用
@@ -60,8 +62,9 @@ make test
 | KARS Release | `v0.1.25` |
 | Isolation | `enhanced` |
 
-请复制 `code/07/config/aks.env.example` 为 Git Ignore 的
-`code/07/config/aks.env`，并填写全部必填 Azure 参数。教程不会公开真实部署名称，
+请复制
+[`code/07/config/aks.env.example`](https://github.com/kinfey/LetsLearnMicrosoftKars/blob/main/code/07/config/aks.env.example)
+为 Git Ignore 的 `code/07/config/aks.env`，并填写全部必填 Azure 参数。教程不会公开真实部署名称，
 也不会把真实部署名称作为默认值。
 
 ## 把 Plan-only 作为 Deployment Gate
@@ -93,7 +96,8 @@ Capacity、Model Availability、Network Routing 或 Runtime Health。
 
 ## 分离 Builder 与 Reviewer Authority
 
-`code/07/operations/handoff.py` 定义 Digest-pinned Handoff Envelope。测试要求：
+[`code/07/operations/handoff.py`](https://github.com/kinfey/LetsLearnMicrosoftKars/blob/main/code/07/operations/handoff.py)
+定义 Digest-pinned Handoff Envelope。测试要求：
 
 - Builder 可以提出 Patch，但不能批准 Release。
 - Reviewer 可以评审并批准 Builder Artifact。
@@ -139,8 +143,10 @@ Promotion Record 包含：
 - Repository Commit；
 - KARS Version `0.1.25`；
 - Model `gpt-5.6-sol`；
-- 正在运行的 code/05 BYO Image Digest；
-- code/06 Loaded Policy Digest；
+- 正在运行的 [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
+  BYO Image Digest；
+- [`code/06`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/06)
+  Loaded Policy Digest；
 - Target Resource Group、Cluster Name 与 Location；
 - `deployed: false`。
 

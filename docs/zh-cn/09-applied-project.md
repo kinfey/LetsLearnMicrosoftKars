@@ -3,7 +3,7 @@
 > **交付阶段：** 客户发布
 > **起点：** OpenClaw Intake、第 6 章 MAF 模式、第 7 章安全控制，以及第 8
 > 章 AKS 环境
-> **可执行项目：** [`code/08`](../../code/08/)
+> **可执行项目：** [`code/08`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/08)
 
 ## 一切从 OpenClaw 开始
 
@@ -31,7 +31,7 @@ OPENCLAW_INTAKE
 Pilot 不会 Merge 或部署 Source。它只生成 Patch、目标测试 Evidence 和按 Digest
 固定的 Handoff，交给独立 Reviewer 与人类批准。
 
-## `code/08` 增加的能力
+## [`code/08`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/08) 增加的能力
 
 项目把前面实验组合成一个可运维 Release Unit：
 
@@ -251,7 +251,7 @@ make verify
 ```
 
 Ownership 与 Evidence Procedure 请参阅
-[`code/08/RUNBOOK.md`](../../code/08/RUNBOOK.md)。
+[`code/08/RUNBOOK.md`](https://github.com/kinfey/LetsLearnMicrosoftKars/blob/main/code/08/RUNBOOK.md)。
 
 ## KarsEval 兼容性 Evidence
 

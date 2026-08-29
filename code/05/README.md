@@ -3,7 +3,8 @@
 [English](README.md) | [简体中文](README.zh.md)
 
 This lab turns Chapter 6 into two executable runtime lanes built from the
-OpenClaw Forge behavior established in [`code/01`](../01/):
+OpenClaw Forge behavior established in
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01):
 
 ```text
 Lane A: host-side framework/provider canary
@@ -94,7 +95,8 @@ restored when the lab exits.
 
 ## Prerequisites
 
-- The [`code/01`](../01/) Forge environment is deployed and `Running`.
+- The [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+  Forge environment is deployed and `Running`.
 - Docker Desktop, kind, kubectl, jq, curl, Python 3.11+, and Node.js 22.
 - GitHub Copilot CLI installed and authenticated.
 - A Copilot plan that exposes GPT-5.6-Sol.

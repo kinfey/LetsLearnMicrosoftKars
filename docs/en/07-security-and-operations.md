@@ -3,7 +3,7 @@
 > **Delivery stage:** Operate the Chapter 6 BYO production candidate
 > **Starting point:** OpenClaw Forge behavior, now running as a KARS BYO
 > workload with GitHub Copilot GPT-5.6-Sol
-> **Executable lab:** [`code/06`](../../code/06/)
+> **Executable lab:** [`code/06`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/06)
 
 ## Everything still starts from OpenClaw
 
@@ -29,7 +29,7 @@ understood procedure.
 
 ## Run the real experiment
 
-First complete [`code/05`](../../code/05/), then run:
+First complete [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05), then run:
 
 ```bash
 cd code/06
@@ -46,7 +46,9 @@ the authenticated GitHub Copilot CLI, and fixes the model to `gpt-5.6-sol`.
 
 A platform budget limits cost, but it cannot determine whether two patches are
 equivalent or whether the task has exceeded its business deadline. The
-`RepairGuard` in `code/06/operations/repair_guard.py` returns explicit
+`RepairGuard` in
+[`code/06/operations/repair_guard.py`](https://github.com/kinfey/LetsLearnMicrosoftKars/blob/main/code/06/operations/repair_guard.py)
+returns explicit
 human-escalation decisions for:
 
 - the same patch digest appearing twice;
@@ -85,7 +87,8 @@ The installed upstream `kars-sandbox-exec-ban` matched the OpenClaw container
 name `openclaw`. The Chapter 6 BYO runtime uses the container name `agent`, so
 an initial harmless `kubectl exec ... -- true` succeeded.
 
-`code/06/manifests/byo-agent-exec-ban.yaml` adds the same fail-closed control
+[`code/06/manifests/byo-agent-exec-ban.yaml`](https://github.com/kinfey/LetsLearnMicrosoftKars/blob/main/code/06/manifests/byo-agent-exec-ban.yaml)
+adds the same fail-closed control
 for `agent` containers in namespaces labeled
 `kars.azure.com/isolated=strict`. With no break-glass label, the API server
 returns:

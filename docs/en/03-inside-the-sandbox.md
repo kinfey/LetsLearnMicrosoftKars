@@ -62,7 +62,8 @@ net, not the policy decision point.
 
 ### `agent`
 
-Forge and its OpenClaw runtime execute as UID 1000. In the `code/01`
+Forge and its OpenClaw runtime execute as UID 1000. In the
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
 implementation, OpenClaw does not mount the repository directly. It calls the
 local router, which mediates access to the separate workspace MCP service.
 OpenClaw owns neither provider credentials nor direct egress.
@@ -174,7 +175,7 @@ read-only probes, and remove the label through a shell trap.
 
 ## Test the boundaries with Forge
 
-The fixture repository from `code/01` is intentionally disposable. Never use a
+The fixture repository from [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01) is intentionally disposable. Never use a
 production checkout for these experiments.
 
 | Test | Expected result |
@@ -208,7 +209,7 @@ HTTPS, HTTP 200 through `127.0.0.1:8443`, a missing-policy Degraded condition,
 and successful controller replacement of the deleted Forge Pod.
 
 Before running, the lab enforces the Microsoft package sources used by
-`code/01`:
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01):
 
 ```text
 https://packagefeedproxy.microsoft.io/npm/

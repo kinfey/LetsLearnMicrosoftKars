@@ -2,8 +2,11 @@
 
 [English](README.md) | [简体中文](README.zh.md)
 
-本实验从 [`code/01`](../01/) 的 OpenClaw Forge Workflow 开始，并直接运维
-[`code/05`](../05/) 已部署的 GPT-5.6-Sol KARS BYO Runtime：
+本实验从
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+的 OpenClaw Forge Workflow 开始，并直接运维
+[`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
+已部署的 GPT-5.6-Sol KARS BYO Runtime：
 
 ```text
 OpenClaw Issue-to-Patch Contract
@@ -26,7 +29,8 @@ OpenClaw Issue-to-Patch Contract
 - Sandbox ServiceAccount 不能读取 Secret，也不能创建 Pod。
 - Agent Environment 中不存在 GitHub/Copilot Provider Credential 名称。
 - Agent 直接出口仍被拒绝。
-- 上游 Exec Admission Policy 针对名为 `openclaw` 的 Container；`code/06`
+- 上游 Exec Admission Policy 针对名为 `openclaw` 的 Container；
+  [`code/06`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/06)
   为 BYO `agent` Container 安装补充 Policy，并证明 `kubectl exec` 被拒绝。
 - `/agt/audit/verify` 返回有效 Router Hash Chain，`/agt/status` 返回 Native
   Governance 和已加载 Policy。
@@ -50,11 +54,14 @@ OpenClaw Issue-to-Patch Contract
 - PyPI：`https://packagefeedproxy.microsoft.io/pypi/simple/`
 - NuGet：`https://packagefeedproxy.microsoft.io/nuget/v3/index.json`
 
-运行退出时会恢复从 `code/01` 继承的 Source Rewrite。
+运行退出时会恢复从
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+继承的 Source Rewrite。
 
 ## 前置条件
 
-- 先完成 [`code/05`](../05/)，`forge-byo-copilot-claw` 必须处于
+- 先完成 [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)，
+  `forge-byo-copilot-claw` 必须处于
   `Running`。
 - Docker Desktop、kind、kubectl、jq、curl、Python 3.11+ 和 Node.js 22。
 - GitHub Copilot CLI 已安装并认证。
@@ -86,8 +93,12 @@ make inspect
 make clean
 ```
 
-`make clean` 会删除 `code/06` 的 BYO Exec Admission Guard，并确认
-`code/05` Runtime 和原始 Inference Budget 健康；它不会删除 `code/05`
+`make clean` 会删除
+[`code/06`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/06)
+的 BYO Exec Admission Guard，并确认
+[`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
+Runtime 和原始 Inference Budget 健康；它不会删除
+[`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
 Sandbox。
 
 ## Incident 顺序

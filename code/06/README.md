@@ -2,8 +2,10 @@
 
 [English](README.md) | [简体中文](README.zh.md)
 
-This lab starts with the OpenClaw Forge workflow from [`code/01`](../01/) and
-operates the GPT-5.6-Sol KARS BYO runtime deployed by [`code/05`](../05/):
+This lab starts with the OpenClaw Forge workflow from
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+and operates the GPT-5.6-Sol KARS BYO runtime deployed by
+[`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05):
 
 ```text
 OpenClaw issue-to-patch contract
@@ -28,7 +30,8 @@ real `forge-byo-copilot-claw` Pod, verifies recovery, and restores the original
 - The Agent environment contains no GitHub/Copilot provider credential names.
 - Direct Agent egress remains denied.
 - The upstream exec admission policy targets the `openclaw` container name.
-  `code/06` installs a complementary policy for the BYO `agent` container and
+  [`code/06`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/06)
+  installs a complementary policy for the BYO `agent` container and
   proves `kubectl exec` is denied.
 - `/agt/audit/verify` reports a valid Router hash chain and `/agt/status`
   reports native governance with a loaded policy.
@@ -54,11 +57,14 @@ The lab applies and verifies:
 - PyPI: `https://packagefeedproxy.microsoft.io/pypi/simple/`
 - NuGet: `https://packagefeedproxy.microsoft.io/nuget/v3/index.json`
 
-The source rewrites inherited from `code/01` are restored when the run exits.
+The source rewrites inherited from
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+are restored when the run exits.
 
 ## Prerequisites
 
-- Complete [`code/05`](../05/) first. `forge-byo-copilot-claw` must be
+- Complete [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
+  first. `forge-byo-copilot-claw` must be
   `Running`.
 - Docker Desktop, kind, kubectl, jq, curl, Python 3.11+, and Node.js 22.
 - GitHub Copilot CLI installed and authenticated.
@@ -90,9 +96,13 @@ make inspect
 make clean
 ```
 
-`make clean` removes the `code/06` BYO exec admission guard and confirms the
-`code/05` runtime and original inference budget are healthy. It does not delete
-the `code/05` Sandbox.
+`make clean` removes the
+[`code/06`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/06)
+BYO exec admission guard and confirms the
+[`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
+runtime and original inference budget are healthy. It does not delete the
+[`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
+Sandbox.
 
 ## Incident sequence
 

@@ -7,7 +7,9 @@
 
 ## 用期望状态取代终端记忆
 
-`code/01` 已经证明 OpenClaw 可以完成受约束的 Issue-to-Patch 工作流，`code/02`
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+已经证明 OpenClaw 可以完成受约束的 Issue-to-Patch 工作流，
+[`code/02`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/02)
 进一步打开生成的 Pod 并测试隔离边界。但这些结果都不应依赖某个人记得 Maya
 输入过哪些命令。
 
@@ -20,7 +22,8 @@
 - `metadata.generation` 与 `status.observedGeneration` 显示 Controller 是否已经
   处理最新变更。
 
-`code/03` 会在正在运行的 `kars-dev` 集群中执行完整生命周期。
+[`code/03`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/03)
+会在正在运行的 `kars-dev` 集群中执行完整生命周期。
 
 ## 使用准确的 KARS API 标识
 
@@ -54,7 +57,8 @@ kubectl get crd karssandboxes.kars.azure.com -o yaml
 系统不存在不受约束的 Inline Inference Fallback。Reference 只在 Sandbox 所在
 Namespace 中解析。
 
-`code/03/manifests/contract-v1.yaml` 包含第一版契约：
+[`code/03/manifests/contract-v1.yaml`](https://github.com/kinfey/LetsLearnMicrosoftKars/blob/main/code/03/manifests/contract-v1.yaml)
+包含第一版契约：
 
 ```yaml
 apiVersion: kars.azure.com/v1alpha1
@@ -102,8 +106,10 @@ spec:
     allowedEndpoints: []
 ```
 
-`__MODEL__` 不会作为账号专属值提交到 Git。实验会读取 `code/01` 中正在运行的 Forge
-Sandbox 所选择的模型，并把 Manifest 渲染到 `code/03/.generated/`。
+`__MODEL__` 不会作为账号专属值提交到 Git。实验会读取
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+中正在运行的 Forge Sandbox 所选择的模型，并把 Manifest 渲染到
+`code/03/.generated/`。
 
 独立的 `forge-contract` Sandbox 可以避免 API 实验修改正常工作的 `forge` Agent。
 
@@ -239,7 +245,8 @@ reason: InferencePolicyNotFound
 
 ### Policy 位于另一个 Namespace
 
-`code/03/manifests/cross-namespace.yaml` 在 `code03-policy-other` 中创建
+[`code/03/manifests/cross-namespace.yaml`](https://github.com/kinfey/LetsLearnMicrosoftKars/blob/main/code/03/manifests/cross-namespace.yaml)
+在 `code03-policy-other` 中创建
 `InferencePolicy`，但 Sandbox 仍位于 `kars-system`。
 
 Policy Name 确实存在，但 `inferenceRef` 是 Namespace-local Reference，因此无法解析。

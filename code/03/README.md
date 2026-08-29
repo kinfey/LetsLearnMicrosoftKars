@@ -3,8 +3,10 @@
 [English](README.md) | [简体中文](README.zh.md)
 
 This lab turns Chapter 4 into an executable Kubernetes API lifecycle using the
-Forge environment from [`code/01`](../01/) and the evidence practices from
-[`code/02`](../02/). It follows the upstream
+Forge environment from [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+and the evidence practices from
+[`code/02`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/02).
+It follows the upstream
 [KARS CRD reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md),
 [basic agent example](https://github.com/Azure/kars/tree/main/examples/basic-agent),
 and [architecture](https://github.com/Azure/kars/blob/main/docs/architecture.md).
@@ -31,7 +33,8 @@ Chapter 2 `forge` Sandbox.
 ## Microsoft package sources
 
 Before running any test, the lab applies and verifies the package-source
-configuration from `code/01`:
+configuration from
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01):
 
 - npm: `https://packagefeedproxy.microsoft.io/npm/`
 - PyPI: `https://packagefeedproxy.microsoft.io/pypi/simple/`
@@ -41,7 +44,9 @@ The upstream source files are restored when the lab exits.
 
 ## Run
 
-Keep the validated `code/01` kind environment running, then execute:
+Keep the validated
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+kind environment running, then execute:
 
 ```bash
 cd code/03
@@ -106,5 +111,6 @@ must be reconciled back to the reviewed manifest.
 ## Platform support
 
 The validated environment is macOS arm64. Platform detection is inherited from
-`code/01`, including macOS amd64, Linux amd64, and Windows amd64 through Ubuntu
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01),
+including macOS amd64, Linux amd64, and Windows amd64 through Ubuntu
 WSL2.

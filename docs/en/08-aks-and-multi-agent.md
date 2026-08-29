@@ -3,7 +3,7 @@
 > **Delivery stage:** Plan and review the AKS production promotion
 > **Starting point:** OpenClaw Forge, the Chapter 6 GPT-5.6-Sol BYO runtime,
 > and the Chapter 7 security/recovery evidence
-> **Executable lab:** [`code/07`](../../code/07/)
+> **Executable lab:** [`code/07`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/07)
 
 ## Everything still starts from OpenClaw
 
@@ -33,7 +33,9 @@ make test
 
 The default run creates no Azure resources. It:
 
-1. confirms the `code/05` BYO runtime and `code/06` security guard;
+1. confirms the [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
+   BYO runtime and [`code/06`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/06)
+   security guard;
 2. verifies Microsoft npm, PyPI, and NuGet sources;
 3. runs deterministic Builder/Reviewer authorization tests;
 4. calls GPT-5.6-Sol through the host Microsoft Agent Framework
@@ -63,8 +65,8 @@ The lab uses:
 | KARS release | `v0.1.25` |
 | Isolation | `enhanced` |
 
-Copy `code/07/config/aks.env.example` to the ignored
-`code/07/config/aks.env` file and fill in every required Azure value. The
+Copy [`code/07/config/aks.env.example`](https://github.com/kinfey/LetsLearnMicrosoftKars/blob/main/code/07/config/aks.env.example)
+to the ignored `code/07/config/aks.env` file and fill in every required Azure value. The
 tutorial intentionally does not publish or default to names from a real
 deployment.
 
@@ -98,7 +100,8 @@ cluster.
 
 ## Separate Builder and Reviewer authority
 
-`code/07/operations/handoff.py` defines a digest-pinned handoff envelope. The
+[`code/07/operations/handoff.py`](https://github.com/kinfey/LetsLearnMicrosoftKars/blob/main/code/07/operations/handoff.py)
+defines a digest-pinned handoff envelope. The
 tests require:
 
 - Builder may propose a patch but cannot approve release.
@@ -145,8 +148,10 @@ The promotion record includes:
 - the repository commit;
 - KARS version `0.1.25`;
 - model `gpt-5.6-sol`;
-- the running code/05 BYO image digest;
-- the loaded code/06 policy digest;
+- the running [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
+  BYO image digest;
+- the loaded [`code/06`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/06)
+  policy digest;
 - target resource group, cluster name, and location;
 - `deployed: false`.
 

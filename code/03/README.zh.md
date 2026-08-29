@@ -3,7 +3,10 @@
 [English](README.md) | [简体中文](README.zh.md)
 
 本实验把第 4 章转换为可执行的 Kubernetes API 生命周期，并复用
-[`code/01`](../01/) 的 Forge 环境与 [`code/02`](../02/) 的证据方法。设计参考
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+的 Forge 环境与
+[`code/02`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/02)
+的证据方法。设计参考
 上游 [KARS CRD Reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)、
 [Basic Agent Example](https://github.com/Azure/kars/tree/main/examples/basic-agent)
 和 [Architecture](https://github.com/Azure/kars/blob/main/docs/architecture.md)。
@@ -28,7 +31,9 @@
 
 ## Microsoft Package Source
 
-运行任何测试之前，实验会应用并检查 `code/01` 中的 Package Source：
+运行任何测试之前，实验会应用并检查
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+中的 Package Source：
 
 - npm：`https://packagefeedproxy.microsoft.io/npm/`
 - PyPI：`https://packagefeedproxy.microsoft.io/pypi/simple/`
@@ -38,7 +43,9 @@
 
 ## 运行
 
-保持已经验证的 `code/01` kind 环境运行，然后执行：
+保持已经验证的
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+kind 环境运行，然后执行：
 
 ```bash
 cd code/03
@@ -102,5 +109,7 @@ Owner；紧急 Patch 必须重新同步回经过评审的 Manifest。
 
 ## 平台支持
 
-已经验证的环境是 macOS arm64。平台检测继承自 `code/01`，同时支持 macOS amd64、
+已经验证的环境是 macOS arm64。平台检测继承自
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)，
+同时支持 macOS amd64、
 Linux amd64，以及通过 Ubuntu WSL2 运行的 Windows amd64。

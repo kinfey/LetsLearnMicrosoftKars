@@ -3,7 +3,7 @@
 > **Delivery stage:** Customer release
 > **Starting point:** OpenClaw Intake, the Chapter 6 MAF pattern, Chapter 7
 > controls, and the Chapter 8 AKS environment
-> **Executable project:** [`code/08`](../../code/08/)
+> **Executable project:** [`code/08`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/08)
 
 ## Everything starts with OpenClaw
 
@@ -31,7 +31,7 @@ OPENCLAW_INTAKE
 The Pilot never merges or deploys source code. It produces a patch, targeted
 test evidence, and a digest-pinned handoff for independent review.
 
-## What `code/08` adds
+## What [`code/08`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/08) adds
 
 The project combines the earlier labs into one operable release unit:
 
@@ -255,7 +255,8 @@ make rollback
 make verify
 ```
 
-See [`code/08/RUNBOOK.md`](../../code/08/RUNBOOK.md) for ownership and evidence
+See [`code/08/RUNBOOK.md`](https://github.com/kinfey/LetsLearnMicrosoftKars/blob/main/code/08/RUNBOOK.md)
+for ownership and evidence
 procedures.
 
 ## KarsEval compatibility evidence

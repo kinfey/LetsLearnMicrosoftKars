@@ -3,8 +3,12 @@
 [English](README.md) | [简体中文](README.zh.md)
 
 This lab turns Chapter 5 into executable governance checks against the Forge
-environment from [`code/01`](../01/), using the boundary and evidence patterns
-from [`code/02`](../02/) and [`code/03`](../03/). It follows the upstream
+environment from
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01),
+using the boundary and evidence patterns from
+[`code/02`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/02)
+and [`code/03`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/03).
+It follows the upstream
 [KARS MCP guide](https://github.com/Azure/kars/blob/main/docs/mcp.md),
 [CRD reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md),
 and [security model](https://github.com/Azure/kars/blob/main/docs/security.md).
@@ -54,7 +58,9 @@ Upstream source files are restored when the lab exits.
 
 ## Run
 
-Keep the validated `code/01` Forge environment running:
+Keep the validated
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+Forge environment running:
 
 ```bash
 cd code/04
@@ -112,5 +118,6 @@ evidence.
 ## Platform support
 
 The validated environment is macOS arm64. Platform detection is inherited from
-`code/01`, including macOS amd64, Linux amd64, and Windows amd64 through Ubuntu
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01),
+including macOS amd64, Linux amd64, and Windows amd64 through Ubuntu
 WSL2.

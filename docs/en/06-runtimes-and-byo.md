@@ -7,14 +7,19 @@
 
 ## Everything still starts from OpenClaw
 
-`code/01` proved the FORMAT-482 journey with OpenClaw:
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+proved the FORMAT-482 journey with OpenClaw:
 
 ```text
 receive issue -> inspect repository -> patch -> named test -> evidence
 ```
 
-`code/02` proved the Sandbox boundary, `code/03` proved the Kubernetes API
-contract, and `code/04` proved inference and tool policy. Chapter 6 changes the
+[`code/02`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/02)
+proved the Sandbox boundary,
+[`code/03`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/03)
+proved the Kubernetes API contract, and
+[`code/04`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/04)
+proved inference and tool policy. Chapter 6 changes the
 runtime loop without weakening those boundaries.
 
 The production question is not "Which framework is best?" It is:
@@ -66,7 +71,8 @@ instead exposes `GitHubCopilotAgent`, which is already a complete agent with a
 Copilot CLI session and its own tool loop. It is not a chat client and cannot
 be passed directly to `create_harness_agent`.
 
-Therefore `code/05` does not claim a nonexistent drop-in integration. It keeps
+Therefore [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
+does not claim a nonexistent drop-in integration. It keeps
 the claw principles—explicit planning, bounded tools, approvals, state, and a
 human-review stop—and tests two honest lanes.
 
@@ -160,7 +166,9 @@ USER 1000
 ```
 
 KARS mounts an `emptyDir` at `/sandbox`. Immutable application code must not be
-baked into a path that the runtime mount hides. `code/05` keeps code under
+baked into a path that the runtime mount hides.
+[`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
+keeps code under
 `/app` and reserves `/sandbox` and `/tmp` for writable state.
 
 The experiment verifies:
@@ -207,13 +215,16 @@ reaches a degraded condition. The installed CRD used by this tutorial rejects
 it at admission, before reconciliation. Treat the live schema as the
 authoritative behavior.
 
-The first-class MAF Python schema is valid, but `code/05` deploys a
+The first-class MAF Python schema is valid, but
+[`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
+deploys a
 self-contained BYO image so the custom application artifact and entrypoint are
 fully controlled and directly testable.
 
 ## Run
 
-Keep `code/01` running and ensure the Copilot CLI is authenticated:
+Keep [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+running and ensure the Copilot CLI is authenticated:
 
 ```bash
 jq -r .provider ~/.kars/config.json

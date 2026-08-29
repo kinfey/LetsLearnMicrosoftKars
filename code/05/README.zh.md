@@ -2,7 +2,9 @@
 
 [English](README.md) | [简体中文](README.zh.md)
 
-本实验把第 6 章转换为两条可执行 Runtime 路径，并以 [`code/01`](../01/) 已经建立的
+本实验把第 6 章转换为两条可执行 Runtime 路径，并以
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+已经建立的
 OpenClaw Forge 行为作为共同起点：
 
 ```text
@@ -86,7 +88,8 @@ Host Virtual Environment 与 Container Image 都通过 Microsoft Package Feed Pr
 
 ## 前置条件
 
-- [`code/01`](../01/) Forge 环境已经部署并处于 `Running`。
+- [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+  Forge 环境已经部署并处于 `Running`。
 - Docker Desktop、kind、kubectl、jq、curl、Python 3.11+ 和 Node.js 22。
 - GitHub Copilot CLI 已安装并完成认证。
 - Copilot Plan 可以使用 GPT-5.6-Sol。

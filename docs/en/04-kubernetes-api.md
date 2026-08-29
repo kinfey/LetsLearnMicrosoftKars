@@ -9,8 +9,10 @@
 
 ## Replace terminal memory with desired state
 
-`code/01` proved that OpenClaw could complete a bounded Issue-to-Patch
-workflow. `code/02` opened the generated Pod and tested the isolation boundary.
+[`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+proved that OpenClaw could complete a bounded Issue-to-Patch workflow.
+[`code/02`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/02)
+opened the generated Pod and tested the isolation boundary.
 Neither result should depend on remembering which commands Maya typed.
 
 The shared platform needs a reviewable API contract:
@@ -22,7 +24,8 @@ The shared platform needs a reviewable API contract:
 - `metadata.generation` and `status.observedGeneration` show whether the
   controller has processed the latest change.
 
-The `code/03` lab exercises this complete lifecycle against the running
+The [`code/03`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/03)
+lab exercises this complete lifecycle against the running
 `kars-dev` cluster.
 
 ## Use the exact KARS API identity
@@ -58,7 +61,8 @@ The smallest deployable KARS agent is:
 There is no unrestricted inline inference fallback. The reference is local to
 the Sandbox namespace.
 
-`code/03/manifests/contract-v1.yaml` contains the first contract:
+[`code/03/manifests/contract-v1.yaml`](https://github.com/kinfey/LetsLearnMicrosoftKars/blob/main/code/03/manifests/contract-v1.yaml)
+contains the first contract:
 
 ```yaml
 apiVersion: kars.azure.com/v1alpha1
@@ -107,7 +111,8 @@ spec:
 ```
 
 `__MODEL__` is not committed as an account-specific value. The lab reads the
-model from the live `code/01` Forge Sandbox and renders manifests into
+model from the live [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+Forge Sandbox and renders manifests into
 `code/03/.generated/`.
 
 The dedicated `forge-contract` Sandbox keeps the API experiment separate from
@@ -249,7 +254,8 @@ the Sandbox returns to `Running`.
 
 ### Policy in another namespace
 
-`code/03/manifests/cross-namespace.yaml` creates an `InferencePolicy` in
+[`code/03/manifests/cross-namespace.yaml`](https://github.com/kinfey/LetsLearnMicrosoftKars/blob/main/code/03/manifests/cross-namespace.yaml)
+creates an `InferencePolicy` in
 `code03-policy-other` while the Sandbox remains in `kars-system`.
 
 The policy name exists, but the reference is unresolved because

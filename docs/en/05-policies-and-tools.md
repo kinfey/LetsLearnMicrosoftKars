@@ -106,7 +106,8 @@ condition: Ready=True
 reason: RouterEnforcing
 ```
 
-`code/04` requires the `status.agtProfileDigest` to equal the compiled
+[`code/04`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/04)
+requires the `status.agtProfileDigest` to equal the compiled
 ConfigMap annotation. It also verifies the selector, rate limit, approval mode,
 and all seven capability strings. A successful `kubectl apply` alone is not
 sufficient evidence.
@@ -168,7 +169,8 @@ attempts to restore the MCP replica.
 
 ## Run the lab
 
-Keep the `code/01` Forge deployment running, then execute:
+Keep the [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
+Forge deployment running, then execute:
 
 ```bash
 cd code/04
