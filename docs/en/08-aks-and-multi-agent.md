@@ -1,176 +1,256 @@
-# 8. Deployment: Promote Forge to AKS
+# 8. AKS and Multi-Agent Promotion: Separate Build from Approval
 
-> **Delivery stage:** CI/CD and production deployment
-> **New problem:** How can a small startup deploy frequently without letting an
-> Agent approve, merge, and release its own work?
-> **Deliverable:** A GitOps promotion path, separated identities, and rollback.
+> **Delivery stage:** Plan and review the AKS production promotion
+> **Starting point:** OpenClaw Forge, the Chapter 6 GPT-5.6-Sol BYO runtime,
+> and the Chapter 7 security/recovery evidence
+> **Executable lab:** [`code/07`](../../code/07/)
 
-## Why Forge becomes two Agents
+## Everything still starts from OpenClaw
 
-The design partner accepts the MAF candidate. Developers like Forge's patches,
-but engineering policy will not allow the same
-Agent to write a change and approve its merge.
-
-The team splits the deployed workflow:
-
-- **Forge Intake (OpenClaw canary)** captures ambiguous developer requests and
-  helps refine acceptance criteria; it cannot modify production repositories.
-- **Forge Builder (MAF Python)** reads the approved issue, edits an ephemeral
-  workspace, and runs targeted tests.
-- **Forge Reviewer** inspects the diff and evidence, then approves or rejects
-  the proposed pull request.
-
-The startup does not assume OpenClaw and MAF have identical mesh capabilities
-in this release. Workflow handoff uses a reviewed service/API boundary unless
-the selected runtime path is explicitly documented and tested. Runtime
-marketing claims never replace an end-to-end test.
-
-The separation is useful only if identity, tools, data transfer, and audit
-evidence are also separated.
-
-## Prepare the AKS move
-
-Ethan verifies Azure CLI, Helm 3.14+, subscription permissions, regional model
-availability, quota, and any confidential-compute requirements.
-
-```bash
-az login
-az account set --subscription <subscription-id>
-kars up \
-  --name forge \
-  --region swedencentral \
-  --release v0.1.25
-```
-
-The default mesh path uses cluster Workload Identity and anonymous mesh
-registration. For per-sandbox Entra Agent ID and verified mesh identity:
-
-```bash
-kars up \
-  --name forge \
-  --region swedencentral \
-  --release v0.1.25 \
-  --mesh-trust=entra
-```
-
-The Entra option requires additional tenant permissions. Region selection is a
-joint decision across AKS, model deployment, identity, quota, and confidential
-compute—not simply the nearest region.
-
-## Design the authority split
-
-The team creates a table before deploying:
-
-| Control | Builder | Reviewer |
-| --- | --- | --- |
-| Identity | Build workload identity | Review workload identity |
-| Tools | Read, patch, targeted tests | Read diff/evidence, approve/reject |
-| Egress | Model + approved dev-tool MCP | Model + internal review service |
-| Write access | Ephemeral workspace/branch | Pull-request review status only |
-| Token budget | Higher implementation budget | Smaller review budget |
-| Human access | Repository developers | Maintainers |
-
-Passing a diff between Agents does not transfer authority. The Reviewer never
-receives the Builder's workspace or write identity.
-
-## Pair and communicate carefully
-
-KARS exposes mesh, pairing, handoff, and A2A workflows:
-
-```bash
-kars mesh setup-trust
-kars mesh status
-kars pair generate --expires 30d --token-budget 100000
-kars a2a list-exposed
-```
-
-Pairing is bounded by expiry and budget. The message contains the draft,
-citations, and task metadata—not environment data or reusable credentials.
-
-Encrypted mesh sessions can keep content opaque to a relay, but connectivity
-is not authorization. Some TrustGraph and A2A verification paths remain
-incomplete in the current alpha. The team checks the maturity documentation
-and adds compensating controls before relying on them.
-
-## Decide whether confidential isolation is needed
-
-A future Forge workload may modify unreleased product source. For that threat
-model, the team evaluates confidential sandbox isolation backed by Kata/SEV-SNP.
-
-Confidential execution can strengthen workload isolation, but it does not
-replace:
-
-- least-privilege identity;
-- tool and egress policy;
-- application validation;
-- audit export;
-- human approval.
-
-## Promote through GitOps
-
-The production sequence is:
-
-1. Pin and validate KARS in local Kubernetes.
-2. Commit sandbox, identity, and policy resources.
-3. Pin workload images and policy bundles by digest.
-4. Run regression and policy tests in CI.
-5. Review the pull request with application, platform, and security owners.
-6. Let Argo CD or Flux reconcile AKS.
-7. Verify sandbox readiness and router-loaded policy digests.
-8. Run post-deployment denied-path tests.
-
-The CI pipeline has four independent gates:
+OpenClaw established the original FORMAT-482 issue-to-patch behavior. The
+runtime changed in Chapter 6 and the operational controls became measurable in
+Chapter 7, but the business contract did not change:
 
 ```text
-build MAF image
-  -> scan/sign/pin digest
-  -> run unit + karsEval + policy tests
-  -> update reviewed karsSandbox manifest
-  -> GitOps reconcile to AKS
-  -> smoke + denial tests
+OpenClaw Intake
+    -> approved issue and acceptance criteria
+    -> Forge Builder
+    -> patch digest + test-evidence digest
+    -> Forge Reviewer
+    -> human-reviewed GitOps change
+    -> KARS on AKS
 ```
 
-Forge can propose the application change, but it cannot alter the pipeline,
-approve the manifest pull request, or mint production identity.
+The multi-agent design is not two prompts chatting. It is separation of
+identity, tools, budget, data, and approval authority.
 
-The team avoids imperative edits to GitOps-owned fields. An emergency change is
-either committed immediately or explicitly rolled back.
+## Run the safe default
 
-## Multi-tenant boundary
+```bash
+cd code/07
+make test
+```
 
-When a second business unit adopts KARS, Ethan does not place all Agents in one
-shared namespace. The platform separates namespaces, workload identities,
-quotas, network policy, RBAC, and policy ownership. An application team cannot
-modify another tenant's governance resources.
+The default run creates no Azure resources. It:
 
-## Production rehearsal
+1. confirms the `code/05` BYO runtime and `code/06` security guard;
+2. verifies Microsoft npm, PyPI, and NuGet sources;
+3. runs deterministic Builder/Reviewer authorization tests;
+4. calls GPT-5.6-Sol through the host Microsoft Agent Framework
+   `GitHubCopilotAgent`;
+5. renders two independent KARS Sandboxes and Policies;
+6. validates them with the live KARS API server using Server-side Dry-run;
+7. executes the official KARS `up --dry-run`;
+8. proves that real deployment requires explicit opt-in and a digest-pinned
+   ACR image;
+9. creates a promotion record linking source image and policy digests.
 
-Before launch, the team rehearses:
+The completed macOS arm64 run passed every phase without creating Azure
+resources.
 
-1. The Builder submits a minimal patch and passing targeted-test evidence.
-2. The Reviewer approves the proposed pull request.
-3. An unpaired Agent attempts submission and is rejected.
-4. An expired pairing token is rejected.
-5. The Builder attempts to approve its own change and is denied.
-6. The Reviewer attempts to modify source and is denied.
-7. Operators reconstruct the entire workflow from exported evidence.
+## Interpret the requested Azure values correctly
 
-## Chapter outcome
+The lab uses:
 
-Forge is now a system of cooperating identities, not two prompts talking to
-each other. The architecture preserves separation of duties from Kubernetes
-resources through runtime policy and audit.
+| Parameter | Default |
+| --- | --- |
+| Resource group | `rg-kinfey` |
+| AKS cluster | `aks-kars-demo` |
+| Azure location | existing resource-group location, otherwise `eastus2` |
+| Model | `gpt-5.6-sol` |
+| KARS release | `v0.1.25` |
+| Isolation | `enhanced` |
+
+`rg-kinfey` is a resource-group name, not an Azure region. The live read-only
+lookup found that the group exists in `swedencentral`, so the generated plan
+used that location.
+
+Every value is optional and can be changed in the ignored
+`code/07/config/aks.env` file.
+
+## Use plan-only as the deployment gate
+
+The generated command was:
+
+```bash
+kars up \
+  --name forge-intake \
+  --model gpt-5.6-sol \
+  --policy developer \
+  --region swedencentral \
+  --cluster-name aks-kars-demo \
+  --resource-group rg-kinfey \
+  --isolation enhanced \
+  --release v0.1.25 \
+  --mesh-trust anonymous \
+  --dry-run \
+  --yes
+```
+
+KARS reported that a real run would check Azure credentials, deploy AKS, ACR,
+Key Vault, model infrastructure, Azure Monitor, and Workload Identity; configure
+firewalls and ACR attachment; install the KARS control plane; create a
+federated credential; and wait for the initial Sandbox.
+
+Dry-run proves command resolution and preflight. It does not prove quota,
+capacity, model availability, network routing, or runtime health in the future
+cluster.
+
+## Separate Builder and Reviewer authority
+
+`code/07/operations/handoff.py` defines a digest-pinned handoff envelope. The
+tests require:
+
+- Builder may propose a patch but cannot approve release.
+- Reviewer may review and approve a Builder artifact.
+- Reviewer cannot modify source.
+- Reviewer cannot approve an artifact produced by Reviewer.
+- Wrong model or unpinned evidence is rejected.
+
+The handoff contains references and digests, not a reusable credential or the
+Builder's writable workspace.
+
+## Render separate KARS resources
+
+The GitOps template produces:
+
+| Resource | Builder | Reviewer |
+| --- | --- | --- |
+| `KarsSandbox` | `forge-builder` | `forge-reviewer` |
+| `InferencePolicy` | `forge-builder-inference` | `forge-reviewer-inference` |
+| `ToolPolicy` | `forge-builder-tools` | `forge-reviewer-tools` |
+| Per-request tokens | 2048 | 512 |
+| Daily tokens | 8192 | 2048 |
+| Tool authority | read/search/patch/test/diff | read diff/evidence + submit decision |
+| Approval mode | `never` | `always` |
+| Trust threshold | 700 | 800 |
+
+Both Sandboxes use:
+
+- `runtime.kind: BYO`;
+- `contractVersion: v1`;
+- GPT-5.6-Sol;
+- enhanced isolation;
+- read-only root filesystem;
+- strict, default-deny egress;
+- local registry mode.
+
+The live KARS CRDs accepted all six resources in Server-side Dry-run. They were
+not applied, so no extra local Agent Pods were created.
+
+## Carry Chapter 7 evidence into promotion
+
+The promotion record includes:
+
+- the repository commit;
+- KARS version `0.1.25`;
+- model `gpt-5.6-sol`;
+- the running code/05 BYO image digest;
+- the loaded code/06 policy digest;
+- target resource group, cluster name, and location;
+- `deployed: false`.
+
+Promotion must start from known runtime and policy artifacts, not rebuild an
+untraceable image during production approval.
+
+## Review AKS Day-0 decisions
+
+Before removing `--dry-run`, decide:
+
+- Azure location and regional quota/capacity;
+- VNet and address spaces;
+- API-server access;
+- Azure CNI Overlay versus directly routable Pod IPs;
+- Cilium/network-policy requirements;
+- egress through a static gateway, firewall, or NVA;
+- Workload Identity and Key Vault integration;
+- system/user node pools, zones, and VM sizes;
+- confidential isolation requirements.
+
+These are Day-0 decisions because some require cluster recreation. For a
+production design, prefer Azure CNI Overlay with Cilium, Workload Identity,
+multiple zones, and non-burstable VM families unless the environment has a
+documented constraint.
+
+KARS owns the infrastructure workflow in this lab. Inspect the resulting AKS
+configuration after deployment; do not infer every network property from a
+successful CLI dry-run.
+
+## Plan Day-1 operation
+
+The AKS deployment is incomplete without:
+
+- external Router audit export, because Chapter 7 proved local history resets
+  with the Pod;
+- Managed Prometheus, Container Insights, Grafana, and control-plane diagnostic
+  logs;
+- maintenance windows and staged upgrade/rollback;
+- image signing and digest pinning;
+- GitOps ownership of production fields;
+- post-deployment allow and deny tests;
+- Pod disruption budgets and topology spread for replicated services;
+- policy rollout verification using compiled and loaded digests.
+
+## Deploy only by explicit opt-in
+
+After pushing the BYO image to ACR and pinning its digest:
+
+```bash
+cd code/07
+cp config/aks.env.example config/aks.env
+```
+
+Set:
+
+```text
+DEPLOY_AKS=true
+FORGE_IMAGE=<acr>.azurecr.io/forge-byo@sha256:<digest>
+```
+
+Then:
+
+```bash
+make deploy
+```
+
+The script refuses the operation unless the switch is exactly `true` and the
+image is digest-pinned. It then runs non-dry-run `kars up`, retrieves AKS
+credentials, renders the reviewed resources, and applies them.
+
+No subscription ID or credential is written to the repository.
+
+## Do not overclaim Mesh or A2A
+
+KARS `0.1.25` exposes `mesh`, `pair`, and `a2a` CLI surfaces, and current
+upstream blueprints describe federation. This experiment intentionally uses
+`registryMode: local` plus a reviewed application handoff contract.
+
+It does not claim that cross-cluster pairing, Entra mesh trust, public A2A,
+encrypted relay transport, token expiry, replay defense, or dual-cluster audit
+was executed. Those require a separate deployment with two independently
+controlled trust domains and explicit negative tests.
+
+## Platform support
+
+The completed run used macOS arm64. macOS amd64 and Linux amd64 use the same
+scripts. Windows amd64 runs inside Ubuntu WSL2 with Docker Desktop WSL
+integration and all CLIs installed inside WSL2.
 
 ## Definition of done
 
-Deployment is ready when artifacts are signed and pinned, MAF production and
-OpenClaw canary have separate policies and identities, GitOps owns production
-fields, Builder cannot self-approve, rollback is rehearsed, and post-deployment
-tests prove both an allowed task and a denied path.
+The AKS promotion is ready only when the OpenClaw-derived requirement remains
+traceable, Builder cannot self-approve, Reviewer cannot edit source, both
+runtime and policy artifacts are digest-pinned, Day-0 AKS choices are reviewed,
+the GitOps resources pass admission, external audit and rollback are prepared,
+and post-deployment tests prove one allowed workflow and one denied authority
+violation.
 
 ## Official references
 
-- [Getting started](https://github.com/Azure/kars/blob/main/docs/getting-started.md)
-- [Security](https://github.com/Azure/kars/blob/main/docs/security.md)
-- [Use cases](https://github.com/Azure/kars/blob/main/docs/use-cases.md)
-- [Feature maturity](https://github.com/Azure/kars/blob/main/docs/maturity.md)
+- [KARS getting started](https://github.com/Azure/kars/blob/main/docs/getting-started.md)
+- [Enterprise self-hosted blueprint](https://github.com/Azure/kars/blob/main/docs/blueprints/03-enterprise-self-hosted.md)
+- [Cross-org federation blueprint](https://github.com/Azure/kars/blob/main/docs/blueprints/05-cross-org-federation.md)
+- [KARS CRD reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
+- [Microsoft Agent Framework GitHub Copilot samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
+- [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
+- [Azure CNI Overlay](https://learn.microsoft.com/azure/aks/azure-cni-overlay)
