@@ -1,55 +1,168 @@
 # Let's Learn Microsoft KARS
 
-A bilingual, story-driven guide to [Azure KARS](https://github.com/Azure/kars),
-the Agent Reference Stack for Kubernetes. Follow a startup AI team from product
-requirements through development, testing, and production deployment.
+[English](README.md) | [简体中文](README.zh.md) | [GitHub Pages](https://kinfey.github.io/LetsLearnMicrosoftKars/)
 
-English is the canonical edition. The Chinese edition is maintained as a
-chapter-for-chapter translation.
+An OpenClaw-first, bilingual, executable guide to
+[Azure KARS](https://github.com/Azure/kars), the Agent Reference Stack for
+Kubernetes. The repository follows a startup team as it turns an
+issue-to-pull-request prototype into a governed Microsoft Agent Framework
+application running on AKS with GitHub Copilot GPT-5.6-Sol.
 
-> This guide tracks KARS `v0.1.25` (reviewed on 2026-08-24). KARS is an alpha
-> reference implementation, not an officially supported Microsoft product.
-> Confirm commands against `kars --help` when using another version.
+This is not only conceptual documentation. Each stage has runnable source,
+policy, tests, and evidence under
+[`code/01`–`code/08`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code).
 
-## Read the tutorial
+> This guide tracks KARS `v0.1.25` and was last reviewed on 2026-08-29. KARS is
+> an alpha reference implementation, not an officially supported Microsoft
+> product. Confirm commands against `kars --help` when using another version.
 
-- [GitHub Pages website](https://kinfey.github.io/LetsLearnMicrosoftKars/)
-- [English (default)](docs/en/README.md)
-- [简体中文](docs/zh-cn/README.md)
+## What this repository demonstrates
 
-## Learning path
+- Start with **OpenClaw** to prove a bounded conversational workflow.
+- Move the workflow into **Microsoft Agent Framework (MAF) Python** when it
+  needs explicit application code, typed tools, repeatable tests, and bounded
+  model iterations.
+- Route model traffic through the local **KARS Inference Router**, rather than
+  giving the Agent direct provider credentials or unrestricted egress.
+- Apply `KarsSandbox`, `InferencePolicy`, `ToolPolicy`, and `McpServer`
+  contracts through the Kubernetes API.
+- Enforce model selection, token budgets, tool allowlists, egress rules,
+  separation of duties, audit chains, repair limits, Kill Switch, rollback,
+  and human review.
+- Promote Linux amd64 workloads to an existing or newly created AKS
+  environment without publishing real Azure resource names.
+- Run real GitHub Copilot **GPT-5.6-Sol** inference through both OpenClaw/BYO
+  and first-class MAF runtime paths.
 
-| Chapter | Delivery stage | New problem solved | Runtime focus |
-| --- | --- | --- | --- |
-| 1 | Requirements | Bound an issue-to-PR product before writing code | Architecture |
-| 2 | Prototype | Prove the user journey locally in one day | OpenClaw |
-| 3 | Development environment | Protect customer source and credentials | Shared sandbox |
-| 4 | Platform contract | Make every environment reproducible and reviewable | Both |
-| 5 | Cost and authority | Control tokens, tools, dependencies, and egress | Both |
-| 6 | Framework decision | Move from conversational prototype to coded workflow | OpenClaw → MAF Python |
-| 7 | Testing | Test behavior, policy, security, and regressions | MAF + `karsEval` |
-| 8 | Deployment | Promote safely through CI/CD to AKS | MAF production, OpenClaw canary |
-| 9 | Release | Deliver one requirement from issue to reviewed patch | End to end |
+## Architecture
 
-## Language synchronization
+```text
+Requirement / Issue
+        |
+        v
+OpenClaw Intake and prototype
+        |
+        v
+MAF Agent + bounded tools
+        |
+        v
+KARS Sandbox
+  +--------------------------------------+
+  | Agent runtime, UID 1000              |
+  |        | localhost:8443/8444         |
+  |        v                             |
+  | Inference Router, UID 1001           |
+  | policy | budget | identity | audit   |
+  +--------------------------------------+
+        |
+        v
+GitHub Copilot GPT-5.6-Sol / approved MCP
+        |
+        v
+Digest-pinned evidence and human review
+```
 
-Every English chapter at `docs/en/NN-*.md` has a matching Chinese chapter at
-`docs/zh-cn/NN-*.md`. Keep headings, code blocks, links, warnings, and chapter
-order equivalent. Commands and API names remain in English.
+The Agent does not own the production provider credential. KARS keeps
+inference, tool, network, identity, and audit controls consistent while the
+application evolves from OpenClaw to MAF Python.
 
-## Official sources
+## Learning path and executable labs
 
-The tutorial summarizes the upstream project; the upstream documentation is
-authoritative:
+| Chapter | Outcome | Executable lab |
+| --- | --- | --- |
+| [1. Why KARS](https://kinfey.github.io/LetsLearnMicrosoftKars/en/01-why-kars/) | Bound the product and threat model before implementation | Architecture and delivery contract |
+| [2. Local quickstart](https://kinfey.github.io/LetsLearnMicrosoftKars/en/02-local-quickstart/) | Build the first OpenClaw Issue-to-Patch workflow | [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01) |
+| [3. Inside the Sandbox](https://kinfey.github.io/LetsLearnMicrosoftKars/en/03-inside-the-sandbox/) | Inspect UID, filesystem, network, and credential boundaries | [`code/02`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/02) |
+| [4. Kubernetes API](https://kinfey.github.io/LetsLearnMicrosoftKars/en/04-kubernetes-api/) | Make Sandbox and policy state reproducible through CRDs | [`code/03`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/03) |
+| [5. Policies and tools](https://kinfey.github.io/LetsLearnMicrosoftKars/en/05-policies-and-tools/) | Enforce token, tool, MCP, dependency, and egress policy | [`code/04`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/04) |
+| [6. Runtimes and BYO](https://kinfey.github.io/LetsLearnMicrosoftKars/en/06-runtimes-and-byo/) | Compare a host-side MAF canary with a KARS BYO runtime | [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05) |
+| [7. Security and operations](https://kinfey.github.io/LetsLearnMicrosoftKars/en/07-security-and-operations/) | Test repair limits, admission controls, audit, and recovery | [`code/06`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/06) |
+| [8. AKS and multi-agent](https://kinfey.github.io/LetsLearnMicrosoftKars/en/08-aks-and-multi-agent/) | Separate Builder and Reviewer and promote to AKS | [`code/07`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/07) |
+| [9. Applied project](https://kinfey.github.io/LetsLearnMicrosoftKars/en/09-applied-project/) | Run an OpenClaw-first, first-class MAF release pilot | [`code/08`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/08) |
 
-- [KARS repository](https://github.com/Azure/kars)
-- [Getting started](https://github.com/Azure/kars/blob/main/docs/getting-started.md)
-- [Architecture](https://github.com/Azure/kars/blob/main/docs/architecture.md)
-- [CRD reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
-- [CLI reference](https://github.com/Azure/kars/blob/main/docs/cli-reference.md)
-- [Security](https://github.com/Azure/kars/blob/main/docs/security.md)
-- [Maturity](https://github.com/Azure/kars/blob/main/docs/maturity.md)
+## Start here
+
+Read the bilingual tutorial:
+
+- [English documentation](https://kinfey.github.io/LetsLearnMicrosoftKars/en/)
+- [简体中文文档](https://kinfey.github.io/LetsLearnMicrosoftKars/zh-cn/)
+
+Run the first local lab:
+
+```bash
+git clone https://github.com/kinfey/LetsLearnMicrosoftKars.git
+cd LetsLearnMicrosoftKars/code/01
+make test
+```
+
+The labs are cumulative. Complete each predecessor before running a later lab,
+because later stages verify live Sandbox, policy, image, and audit evidence
+created by earlier stages.
+
+## Platform and package requirements
+
+- Verified development host: macOS arm64.
+- Also documented: macOS amd64, Linux amd64, and Windows amd64 through Ubuntu
+  WSL2.
+- Azure workload target: Linux amd64.
+- Node.js: 22.
+- Required tools vary by lab and include Docker Desktop, kind, kubectl, Helm,
+  Azure CLI, Python 3.11+, jq, curl, KARS CLI, and authenticated GitHub Copilot
+  CLI.
+
+All package restoration uses Microsoft Package Feed Proxy:
+
+| Ecosystem | Source |
+| --- | --- |
+| npm | `https://packagefeedproxy.microsoft.io/npm/` |
+| PyPI | `https://packagefeedproxy.microsoft.io/pypi/simple/` |
+| NuGet | `https://packagefeedproxy.microsoft.io/nuget/v3/index.json` |
+
+## Azure deployment
+
+The repository does not publish or bind examples to real Azure resource names.
+Before an Azure deployment, copy the relevant ignored environment template and
+provide your own values:
+
+```bash
+export AZURE_RESOURCE_GROUP="<your-resource-group>"
+export AKS_NAME="<your-aks-cluster>"
+export KARS_ACR_NAME="<your-acr-name>"
+export AZURE_LOCATION="<your-azure-region>"
+```
+
+Real deployment remains an explicit opt-in. Review the plan, expected cost,
+architecture, policies, and rollback procedure before enabling the deployment
+switch in the selected lab.
+
+## Important implementation notes
+
+- KARS `v0.1.25` accepts `agentCode.oci` in the MAF runtime plan but does not
+  materialize that code mount in the generated Pod. The applied project keeps
+  immutable code outside `/sandbox` and copies it into the writable runtime
+  volume at startup.
+- GPT-5.6-Sol uses the Responses API. The MAF implementation disables stored
+  response continuation and replays bounded tool history inline for
+  compatibility with the KARS GitHub Copilot adapter.
+- `KarsEval` corpus resolution is demonstrated, but the upstream `v0.1.25`
+  Runner Job does not satisfy AKS restricted Pod Security. The examples do not
+  weaken the namespace policy to make that Job run.
+- Generated evidence and local Azure configuration remain uncommitted. Do not
+  place credentials, tokens, subscription IDs, or customer source in the
+  repository.
+
+## Official references
+
+- [Azure KARS repository](https://github.com/Azure/kars)
+- [KARS architecture](https://github.com/Azure/kars/blob/main/docs/architecture.md)
+- [KARS getting started](https://github.com/Azure/kars/blob/main/docs/getting-started.md)
+- [KARS CRD reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
+- [KARS security](https://github.com/Azure/kars/blob/main/docs/security.md)
+- [Microsoft Agent Framework](https://github.com/microsoft/agent-framework)
+- [GitHub Copilot provider samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
+- [Build Your Own Claw sample](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
 
 ## License
 
-Unless stated otherwise, this tutorial is released under the [MIT License](LICENSE).
+Unless stated otherwise, this tutorial is released under the
+[MIT License](LICENSE).
