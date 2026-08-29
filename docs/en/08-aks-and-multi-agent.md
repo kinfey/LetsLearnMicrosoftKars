@@ -52,21 +52,21 @@ resources.
 
 The lab uses:
 
-| Parameter | Default |
+| Parameter | Value |
 | --- | --- |
-| Resource group | `rg-kinfey` |
-| AKS cluster | `aks-kars-demo` |
-| Azure location | existing resource-group location, otherwise `eastus2` |
+| Resource group | required: your Azure resource group |
+| AKS cluster | required: your AKS cluster name |
+| ACR | required: your globally unique ACR name |
+| Log Analytics | required: your workspace name |
+| Azure location | optional: existing resource-group location, otherwise `eastus2` |
 | Model | `gpt-5.6-sol` |
 | KARS release | `v0.1.25` |
 | Isolation | `enhanced` |
 
-`rg-kinfey` is a resource-group name, not an Azure region. The live read-only
-lookup found that the group exists in `swedencentral`, so the generated plan
-used that location.
-
-Every value is optional and can be changed in the ignored
-`code/07/config/aks.env` file.
+Copy `code/07/config/aks.env.example` to the ignored
+`code/07/config/aks.env` file and fill in every required Azure value. The
+tutorial intentionally does not publish or default to names from a real
+deployment.
 
 ## Use plan-only as the deployment gate
 
@@ -77,9 +77,9 @@ kars up \
   --name forge-intake \
   --model gpt-5.6-sol \
   --policy developer \
-  --region swedencentral \
-  --cluster-name aks-kars-demo \
-  --resource-group rg-kinfey \
+  --region "<your-azure-region>" \
+  --cluster-name "${AKS_NAME}" \
+  --resource-group "${AZURE_RESOURCE_GROUP}" \
   --isolation enhanced \
   --release v0.1.25 \
   --mesh-trust anonymous \
@@ -213,9 +213,9 @@ make deploy
 ```
 
 The script refuses the operation unless the switch is exactly `true`. It uses
-Azure CLI rather than non-dry-run `kars up`, because KARS `0.1.25` would turn
-the requested name into `aks-kars-demo-aks`. It creates the exact
-`aks-kars-demo` cluster, builds the BYO image through ACR Tasks with
+Azure CLI rather than non-dry-run `kars up`, because KARS `0.1.25` appends an
+`-aks` suffix to the requested name. It creates the exact cluster name supplied
+in `AKS_NAME`, builds the BYO image through ACR Tasks with
 `--platform linux/amd64`, resolves its digest, installs KARS and AGT, and
 applies the reviewed resources.
 
@@ -223,9 +223,9 @@ No subscription ID or credential is written to the repository.
 
 ## Verified Azure deployment
 
-The real deployment completed in `swedencentral`:
+The real deployment completed on the configured Azure environment:
 
-- AKS `aks-kars-demo` is `Succeeded` with Azure CNI Overlay and Cilium.
+- The configured AKS cluster is `Succeeded` with Azure CNI Overlay and Cilium.
 - OIDC issuer and Workload Identity are enabled.
 - The one-node `system` pool uses `Standard_D2as_v5`; the one-node
   `clawpool` uses `Standard_D4as_v5`. Both nodes report `amd64`.

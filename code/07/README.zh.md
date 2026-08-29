@@ -23,10 +23,12 @@ CRD 验证 GitOps Resource，不创建任何 Azure Resource。真实 AKS Deploym
 
 ## 默认与可选 Azure 参数
 
-| Variable | 默认值 | 含义 |
+| Variable | 值 | 含义 |
 | --- | --- | --- |
-| `AZURE_RESOURCE_GROUP` | `rg-kinfey` | Azure Resource Group |
-| `AKS_NAME` | `aks-kars-demo` | AKS Cluster 名称 |
+| `AZURE_RESOURCE_GROUP` | 必填 | 你的 Azure Resource Group |
+| `AKS_NAME` | 必填 | 你的 AKS Cluster 名称 |
+| `KARS_ACR_NAME` | 必填 | 你的全局唯一 ACR 名称 |
+| `LOG_ANALYTICS_WORKSPACE` | 必填 | 你的 Log Analytics Workspace |
 | `AZURE_LOCATION` | 已存在 Resource Group 的 Location，否则 `eastus2` | Azure Region |
 | `KARS_SANDBOX_NAME` | `forge-intake` | `kars up` 创建的初始 OpenClaw Sandbox |
 | `KARS_RELEASE` | `v0.1.25` | 固定 KARS Release |
@@ -36,10 +38,7 @@ CRD 验证 GitOps Resource，不创建任何 Azure Resource。真实 AKS Deploym
 | `DEPLOY_AKS` | `false` | 真实 Azure 创建开关 |
 | `FORGE_IMAGE` | Local Development Image | Plan-only Image Placeholder；真实部署会在 ACR 构建并固定 Digest |
 
-`rg-kinfey` 被解释为 Resource Group 名称，而不是 Azure Region。完整运行中，这个
-已存在的 Resource Group 自动解析到 `swedencentral`。
-
-如需修改参数但不提交：
+如需提供 Azure 参数但不提交：
 
 ```bash
 cp config/aks.env.example config/aks.env
@@ -80,9 +79,9 @@ make test
 已完成的默认运行解析为：
 
 ```text
-Resource group: rg-kinfey
-AKS cluster:    aks-kars-demo
-Location:       swedencentral
+Resource group: <your-resource-group>
+AKS cluster:    <your-aks-cluster>
+Location:       <your-azure-region>
 Model:          gpt-5.6-sol
 KARS release:   v0.1.25
 Azure created:  no
@@ -153,7 +152,7 @@ cp config/aks.env.example config/aks.env
 make deploy
 ```
 
-`make deploy` 会创建准确名称的 `aks-kars-demo`、ACR 与 Log Analytics
+`make deploy` 会创建 `AKS_NAME` 指定名称的 Cluster，以及配置的 ACR 与 Log Analytics
 Workspace；导入 KARS `v0.1.25`；通过 ACR Tasks 和
 `--platform linux/amd64` 构建 BYO Image；按 Digest 固定 Image；安装 KARS 与
 AGT；并应用经过评审的 Builder/Reviewer Resource。如果 `DEPLOY_AKS` 不严格
@@ -163,7 +162,7 @@ Repository 和 Evidence 不保存 Subscription ID、Credential 或 Secret Value�
 
 ### 已验证的 Azure 结果
 
-- `swedencentral` 中的 AKS `aks-kars-demo` 状态为 `Succeeded`。
+- 配置 Azure Location 中的 AKS Cluster 状态为 `Succeeded`。
 - `system` Pool 使用一个 `Standard_D2as_v5` Node，`clawpool` 使用一个
   `Standard_D4as_v5` Node；两者均报告 `amd64`。
 - Azure CNI Overlay、Cilium、OIDC Issuer 与 Workload Identity 已启用。

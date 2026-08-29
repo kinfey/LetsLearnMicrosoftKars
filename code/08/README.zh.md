@@ -29,14 +29,14 @@ make test
 
 ```bash
 cp config/azure.env.example config/azure.env
-# 设置 DEPLOY_AZURE=true，并评审所有可选 Azure 参数。
+# 填写 AZURE_RESOURCE_GROUP、AKS_NAME 与 KARS_ACR_NAME。
+# 然后设置 DEPLOY_AZURE=true。
 make deploy
 ```
 
-默认复用 Resource Group `rg-kinfey`、AKS `aks-kars-demo`、ACR
-`akskarsdemo449845`、KARS `v0.1.25` 与 GPT-5.6-Sol。`rg-kinfey` 是 Resource
-Group，不是 Region；脚本会验证现有 AKS 的实际 Location。ACR Task 明确构建
-Linux amd64，并按 Digest 选择 MAF Runtime。
+Azure Resource 名称是用户必填参数，Repository 不会绑定或公开真实部署名称。
+脚本会验证现有 AKS 的实际 Location。ACR Task 明确构建 Linux amd64，并按
+Digest 选择 MAF Runtime。
 
 KARS `v0.1.25` 已在 CRD/Runtime Plan 中提供 `agentCode.oci`，但还没有把该 Code
 Mount 真正生成到 Pod。本实验因此扩展官方 KARS MAF Python Image，把应用烘焙到

@@ -124,7 +124,7 @@ the team will learn, break, inspect, and repair Forge.
 ### Stage 3: AKS
 
 ```bash
-kars up --name forge --region swedencentral --release v0.1.25
+kars up --name forge --region "<your-azure-region>" --release v0.1.25
 ```
 
 AKS adds Azure identity options and production infrastructure. It comes only

@@ -24,10 +24,12 @@ opt-in because it creates billable infrastructure.
 
 ## Default and optional Azure parameters
 
-| Variable | Default | Meaning |
+| Variable | Value | Meaning |
 | --- | --- | --- |
-| `AZURE_RESOURCE_GROUP` | `rg-kinfey` | Azure resource group |
-| `AKS_NAME` | `aks-kars-demo` | AKS cluster name |
+| `AZURE_RESOURCE_GROUP` | required | Your Azure resource group |
+| `AKS_NAME` | required | Your AKS cluster name |
+| `KARS_ACR_NAME` | required | Your globally unique ACR name |
+| `LOG_ANALYTICS_WORKSPACE` | required | Your Log Analytics workspace |
 | `AZURE_LOCATION` | existing resource-group location, otherwise `eastus2` | Azure region |
 | `KARS_SANDBOX_NAME` | `forge-intake` | Initial OpenClaw sandbox created by `kars up` |
 | `KARS_RELEASE` | `v0.1.25` | Pinned KARS release |
@@ -37,10 +39,7 @@ opt-in because it creates billable infrastructure.
 | `DEPLOY_AKS` | `false` | Real Azure creation switch |
 | `FORGE_IMAGE` | local development image | Plan-only image placeholder; real deployment builds and pins it in ACR |
 
-`rg-kinfey` is treated as the resource-group name, not an Azure region. In the
-completed run, the existing group resolved the location to `swedencentral`.
-
-To edit values without committing them:
+To supply Azure values without committing them:
 
 ```bash
 cp config/aks.env.example config/aks.env
@@ -82,9 +81,9 @@ make test
 The completed default run resolved:
 
 ```text
-Resource group: rg-kinfey
-AKS cluster:    aks-kars-demo
-Location:       swedencentral
+Resource group: <your-resource-group>
+AKS cluster:    <your-aks-cluster>
+Location:       <your-azure-region>
 Model:          gpt-5.6-sol
 KARS release:   v0.1.25
 Azure created:  no
@@ -156,8 +155,8 @@ cp config/aks.env.example config/aks.env
 make deploy
 ```
 
-`make deploy` creates the exact `aks-kars-demo` cluster, ACR, and Log Analytics
-workspace; imports KARS `v0.1.25`; builds the BYO image through ACR Tasks with
+`make deploy` creates the cluster named by `AKS_NAME`, plus the configured ACR
+and Log Analytics workspace; imports KARS `v0.1.25`; builds the BYO image through ACR Tasks with
 `--platform linux/amd64`; pins the image by digest; installs KARS and AGT; and
 applies the reviewed Builder/Reviewer resources. It refuses to deploy unless
 `DEPLOY_AKS` is exactly `true`.
@@ -166,7 +165,7 @@ No subscription ID is stored in the repository or evidence.
 
 ### Verified Azure result
 
-- AKS `aks-kars-demo` is `Succeeded` in `swedencentral`.
+- The configured AKS cluster is `Succeeded` in the configured Azure location.
 - The `system` pool uses one `Standard_D2as_v5` node and `clawpool` uses one
   `Standard_D4as_v5` node; both report `amd64`.
 - Azure CNI Overlay, Cilium, OIDC issuer, and Workload Identity are enabled.

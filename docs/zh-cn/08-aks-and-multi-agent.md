@@ -49,19 +49,20 @@ make test
 
 实验使用：
 
-| 参数 | 默认值 |
+| 参数 | 值 |
 | --- | --- |
-| Resource Group | `rg-kinfey` |
-| AKS Cluster | `aks-kars-demo` |
-| Azure Location | 已存在 Resource Group 的 Location，否则 `eastus2` |
+| Resource Group | 必填：你的 Azure Resource Group |
+| AKS Cluster | 必填：你的 AKS Cluster 名称 |
+| ACR | 必填：你的全局唯一 ACR 名称 |
+| Log Analytics | 必填：你的 Workspace 名称 |
+| Azure Location | 选填：已存在 Resource Group 的 Location，否则 `eastus2` |
 | Model | `gpt-5.6-sol` |
 | KARS Release | `v0.1.25` |
 | Isolation | `enhanced` |
 
-`rg-kinfey` 是 Resource Group 名称，不是 Azure Region。只读查询发现该 Group
-存在于 `swedencentral`，所以生成的 Plan 使用这个 Location。
-
-所有值均可选，可以在 Git Ignore 的 `code/07/config/aks.env` 中修改。
+请复制 `code/07/config/aks.env.example` 为 Git Ignore 的
+`code/07/config/aks.env`，并填写全部必填 Azure 参数。教程不会公开真实部署名称，
+也不会把真实部署名称作为默认值。
 
 ## 把 Plan-only 作为 Deployment Gate
 
@@ -72,9 +73,9 @@ kars up \
   --name forge-intake \
   --model gpt-5.6-sol \
   --policy developer \
-  --region swedencentral \
-  --cluster-name aks-kars-demo \
-  --resource-group rg-kinfey \
+  --region "<your-azure-region>" \
+  --cluster-name "${AKS_NAME}" \
+  --resource-group "${AZURE_RESOURCE_GROUP}" \
   --isolation enhanced \
   --release v0.1.25 \
   --mesh-trust anonymous \
@@ -204,8 +205,8 @@ make deploy
 ```
 
 如果 Switch 不严格等于 `true`，脚本会拒绝执行。真实部署使用 Azure CLI，而
-不是非 Dry-run `kars up`，因为 KARS `0.1.25` 会把请求名称变成
-`aks-kars-demo-aks`。脚本创建准确名称的 `aks-kars-demo`，通过 ACR Tasks 和
+不是非 Dry-run `kars up`，因为 KARS `0.1.25` 会在请求名称后追加 `-aks`。
+脚本创建 `AKS_NAME` 指定的准确名称，通过 ACR Tasks 和
 `--platform linux/amd64` 构建 BYO Image，解析其 Digest，安装 KARS 与 AGT，
 并应用经过评审的 Resource。
 
@@ -213,9 +214,9 @@ Repository 不会写入 Subscription ID 或 Credential。
 
 ## 已验证的 Azure 部署
 
-真实部署已在 `swedencentral` 完成：
+真实部署已在配置的 Azure 环境完成：
 
-- AKS `aks-kars-demo` 状态为 `Succeeded`，使用 Azure CNI Overlay 与 Cilium。
+- 配置的 AKS Cluster 状态为 `Succeeded`，使用 Azure CNI Overlay 与 Cilium。
 - OIDC Issuer 与 Workload Identity 已启用。
 - 单 Node `system` Pool 使用 `Standard_D2as_v5`，单 Node `clawpool` 使用
   `Standard_D4as_v5`；两个 Node 均报告 `amd64`。

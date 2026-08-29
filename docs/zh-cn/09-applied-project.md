@@ -78,11 +78,11 @@ cd code/08
 cp config/azure.env.example config/azure.env
 ```
 
-| 参数 | 默认值 | 含义 |
+| 参数 | 值 | 含义 |
 | --- | --- | --- |
-| `AZURE_RESOURCE_GROUP` | `rg-kinfey` | 已存在 Azure Resource Group |
-| `AKS_NAME` | `aks-kars-demo` | 已存在 AKS Cluster |
-| `KARS_ACR_NAME` | `akskarsdemo449845` | 已存在 ACR |
+| `AZURE_RESOURCE_GROUP` | 必填 | 你的现有 Azure Resource Group |
+| `AKS_NAME` | 必填 | 你的现有 AKS Cluster |
+| `KARS_ACR_NAME` | 必填 | 你的现有 ACR |
 | `AZURE_LOCATION` | 空 | 与现有 AKS Location 比对 |
 | `KARS_SANDBOX_NAME` | `fabrikam-release-pilot` | 新 Pilot Sandbox |
 | `GITHUB_COPILOT_MODEL` | `gpt-5.6-sol` | 指定模型 |
@@ -91,8 +91,9 @@ cp config/azure.env.example config/azure.env
 | `DAILY_TASK_LIMIT` | `20` | 应用每日 Task 上限 |
 | `DEPLOY_AZURE` | `false` | 明确 Azure 变更开关 |
 
-`rg-kinfey` 是 Resource Group，不是 Region。部署复用现有 Cluster 的
-`swedencentral`，如果选填的 `AZURE_LOCATION` 与现有 AKS 不一致，脚本会拒绝。
+请在 Git Ignore 的 `config/azure.env` 中填写必填值。部署会复用现有 Cluster 的
+Location；如果选填的 `AZURE_LOCATION` 与现有 AKS 不一致，脚本会拒绝。教程不会
+公开真实 Azure Resource 名称，也不会把它们作为默认值。
 
 ## 运行安全验证
 
@@ -208,7 +209,7 @@ Runtime 还为重复 Repair Loop、Development MCP 不可用、Reviewer 修改 S
 
 ## 已验证的 Azure 结果
 
-真实运行已在现有 `aks-kars-demo` 完成：
+真实运行已在配置的现有 AKS Cluster 完成：
 
 - `fabrikam-release-pilot` 在 amd64 `clawpool` 中为 `Running`；
 - Sandbox 报告 `MicrosoftAgentFramework/python`；

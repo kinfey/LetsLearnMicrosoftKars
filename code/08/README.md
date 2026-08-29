@@ -32,14 +32,15 @@ Deploy to an existing environment:
 
 ```bash
 cp config/azure.env.example config/azure.env
-# Set DEPLOY_AZURE=true and review the optional Azure values.
+# Fill AZURE_RESOURCE_GROUP, AKS_NAME, and KARS_ACR_NAME.
+# Then set DEPLOY_AZURE=true.
 make deploy
 ```
 
-The default values reuse resource group `rg-kinfey`, AKS `aks-kars-demo`, ACR
-`akskarsdemo449845`, KARS `v0.1.25`, and GPT-5.6-Sol. `rg-kinfey` is a resource
-group, not a region; the script verifies the existing AKS location. The ACR
-Task explicitly builds Linux amd64 and the MAF runtime is selected by digest.
+Azure resource names are required user inputs and are never bound to a real
+deployment in this repository. The script verifies the existing AKS location.
+The ACR Task explicitly builds Linux amd64 and the MAF runtime is selected by
+digest.
 
 KARS `v0.1.25` exposes `agentCode.oci` in the CRD/runtime plan but does not yet
 materialize that code mount in the Pod. This lab therefore extends the official

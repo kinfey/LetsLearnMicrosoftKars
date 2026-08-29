@@ -115,7 +115,7 @@ KARS 创建 kind 集群并部署接近生产形态的 Pod。团队将在这里�
 ### 阶段 3：AKS
 
 ```bash
-kars up --name forge --region swedencentral --release v0.1.25
+kars up --name forge --region "<your-azure-region>" --release v0.1.25
 ```
 
 AKS 增加 Azure 身份选项和生产基础设施。只有本地验收测试通过后才进入此阶段。

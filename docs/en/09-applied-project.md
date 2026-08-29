@@ -79,11 +79,11 @@ cd code/08
 cp config/azure.env.example config/azure.env
 ```
 
-| Variable | Default | Meaning |
+| Variable | Value | Meaning |
 | --- | --- | --- |
-| `AZURE_RESOURCE_GROUP` | `rg-kinfey` | Existing Azure resource group |
-| `AKS_NAME` | `aks-kars-demo` | Existing AKS cluster |
-| `KARS_ACR_NAME` | `akskarsdemo449845` | Existing ACR |
+| `AZURE_RESOURCE_GROUP` | required | Your existing Azure resource group |
+| `AKS_NAME` | required | Your existing AKS cluster |
+| `KARS_ACR_NAME` | required | Your existing ACR |
 | `AZURE_LOCATION` | empty | Verify against the existing AKS location |
 | `KARS_SANDBOX_NAME` | `fabrikam-release-pilot` | New Pilot Sandbox |
 | `GITHUB_COPILOT_MODEL` | `gpt-5.6-sol` | Required model |
@@ -92,9 +92,9 @@ cp config/azure.env.example config/azure.env
 | `DAILY_TASK_LIMIT` | `20` | Application daily task cap |
 | `DEPLOY_AZURE` | `false` | Explicit Azure change gate |
 
-`rg-kinfey` is a resource-group name, not a region. The deployment reuses the
-existing cluster location, `swedencentral`, and refuses a conflicting optional
-`AZURE_LOCATION`.
+Fill the required values in the ignored `config/azure.env` file. The deployment
+reuses the existing cluster location and refuses a conflicting optional
+`AZURE_LOCATION`; no real Azure resource names are published as defaults.
 
 ## Run the safe validation
 
@@ -213,7 +213,7 @@ drafts.
 
 ## Verified Azure result
 
-The real run completed on the existing `aks-kars-demo` cluster:
+The real run completed on the configured existing AKS cluster:
 
 - `fabrikam-release-pilot` is `Running` on the amd64 `clawpool`;
 - the Sandbox reports `MicrosoftAgentFramework/python`;
