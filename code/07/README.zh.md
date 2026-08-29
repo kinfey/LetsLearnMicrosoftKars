@@ -141,23 +141,38 @@ Plan 当作每个 Network Setting 已经验证。
 
 ## 真实 Azure Deployment
 
-先把 BYO Image 推送到 ACR，并按 Digest 固定。随后评审
-`.evidence/<run>/aks-plan.json`、渲染后的 Manifest、Quota 与 Cost。
+先评审 `.evidence/<run>/aks-plan.json`、渲染后的 Manifest、Quota 与 Cost。
+真实部署使用 Azure CLI，而不是非 Dry-run `kars up`，因为 KARS `0.1.25` 会在
+请求的 Cluster Name 后追加 `-aks`。
 
 ```bash
 cp config/aks.env.example config/aks.env
 # 编辑 config/aks.env：
 # DEPLOY_AKS=true
-# FORGE_IMAGE=<acr>.azurecr.io/forge-byo@sha256:<digest>
 
 make deploy
 ```
 
-`make deploy` 会执行非 Dry-run `kars up`、获取 AKS Credential，并应用经过评审的
-Builder/Reviewer Resource。如果 `DEPLOY_AKS` 不严格等于 `true`，或
-`FORGE_IMAGE` 没有按 Digest 固定，脚本会拒绝部署。
+`make deploy` 会创建准确名称的 `aks-kars-demo`、ACR 与 Log Analytics
+Workspace；导入 KARS `v0.1.25`；通过 ACR Tasks 和
+`--platform linux/amd64` 构建 BYO Image；按 Digest 固定 Image；安装 KARS 与
+AGT；并应用经过评审的 Builder/Reviewer Resource。如果 `DEPLOY_AKS` 不严格
+等于 `true`，脚本会拒绝部署。
 
 Repository 和 Evidence 不保存 Subscription ID、Credential 或 Secret Value。
+
+### 已验证的 Azure 结果
+
+- `swedencentral` 中的 AKS `aks-kars-demo` 状态为 `Succeeded`。
+- `system` Pool 使用一个 `Standard_D2as_v5` Node，`clawpool` 使用一个
+  `Standard_D4as_v5` Node；两者均报告 `amd64`。
+- Azure CNI Overlay、Cilium、OIDC Issuer 与 Workload Identity 已启用。
+- KARS Controller、AGT Registry/Relay、OpenClaw Intake、Builder 与 Reviewer
+  均为 Running。
+- Builder 与 Reviewer 使用相同的、按 Digest 固定的 Linux amd64 Image。
+- 真实 Router 调用通过 `gpt-5.6-sol` 返回
+  `KARS_BYO_GPT_5_6_SOL_OK`；Router Audit Integrity、Credential Isolation 与
+  Exec Denial 也全部通过。
 
 ## Mesh 与 A2A 范围
 
@@ -182,8 +197,10 @@ Ingress、Entra Mesh Trust 或 Encrypted Relay Delivery。
 ├── kars-up-command.txt
 ├── kars-up-dry-run.txt
 ├── deploy-opt-in-denial.txt
-├── deploy-image-denial.txt
-└── promotion-record.json
+├── deploy-source-denial.txt
+├── azure-gpt-response.json
+├── azure-audit-verify.json
+└── azure-release-record.json
 ```
 
 ## 平台支持

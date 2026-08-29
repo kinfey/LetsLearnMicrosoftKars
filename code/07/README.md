@@ -144,23 +144,38 @@ network setting.
 
 ## Real Azure deployment
 
-First push the BYO image to ACR and pin it by digest. Then review
-`.evidence/<run>/aks-plan.json`, the rendered manifests, quota, and cost.
+Review `.evidence/<run>/aks-plan.json`, the rendered manifests, quota, and
+cost. The real deployment uses Azure CLI instead of non-dry-run `kars up`
+because KARS `0.1.25` would append `-aks` to the requested cluster name.
 
 ```bash
 cp config/aks.env.example config/aks.env
 # Edit config/aks.env:
 # DEPLOY_AKS=true
-# FORGE_IMAGE=<acr>.azurecr.io/forge-byo@sha256:<digest>
 
 make deploy
 ```
 
-`make deploy` runs the non-dry-run `kars up`, retrieves AKS credentials, and
-applies the reviewed Builder/Reviewer resources. It will refuse to deploy when
-`DEPLOY_AKS` is not exactly `true` or when `FORGE_IMAGE` is not digest-pinned.
+`make deploy` creates the exact `aks-kars-demo` cluster, ACR, and Log Analytics
+workspace; imports KARS `v0.1.25`; builds the BYO image through ACR Tasks with
+`--platform linux/amd64`; pins the image by digest; installs KARS and AGT; and
+applies the reviewed Builder/Reviewer resources. It refuses to deploy unless
+`DEPLOY_AKS` is exactly `true`.
 
 No subscription ID is stored in the repository or evidence.
+
+### Verified Azure result
+
+- AKS `aks-kars-demo` is `Succeeded` in `swedencentral`.
+- The `system` pool uses one `Standard_D2as_v5` node and `clawpool` uses one
+  `Standard_D4as_v5` node; both report `amd64`.
+- Azure CNI Overlay, Cilium, OIDC issuer, and Workload Identity are enabled.
+- KARS Controller, AGT Registry/Relay, OpenClaw Intake, Builder, and Reviewer
+  are Running.
+- The Builder and Reviewer use the same digest-pinned Linux amd64 image.
+- A real Router call returned `KARS_BYO_GPT_5_6_SOL_OK` from
+  `gpt-5.6-sol`; Router audit integrity, credential isolation, and exec denial
+  also passed.
 
 ## Mesh and A2A scope
 
@@ -186,8 +201,10 @@ Each run writes:
 ├── kars-up-command.txt
 ├── kars-up-dry-run.txt
 ├── deploy-opt-in-denial.txt
-├── deploy-image-denial.txt
-└── promotion-record.json
+├── deploy-source-denial.txt
+├── azure-gpt-response.json
+├── azure-audit-verify.json
+└── azure-release-record.json
 ```
 
 The promotion record does not contain Azure subscription IDs, credentials, or

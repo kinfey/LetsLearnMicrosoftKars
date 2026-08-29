@@ -193,7 +193,7 @@ The AKS deployment is incomplete without:
 
 ## Deploy only by explicit opt-in
 
-After pushing the BYO image to ACR and pinning its digest:
+Review the plan, rendered resources, quota, and cost:
 
 ```bash
 cd code/07
@@ -204,7 +204,6 @@ Set:
 
 ```text
 DEPLOY_AKS=true
-FORGE_IMAGE=<acr>.azurecr.io/forge-byo@sha256:<digest>
 ```
 
 Then:
@@ -213,11 +212,30 @@ Then:
 make deploy
 ```
 
-The script refuses the operation unless the switch is exactly `true` and the
-image is digest-pinned. It then runs non-dry-run `kars up`, retrieves AKS
-credentials, renders the reviewed resources, and applies them.
+The script refuses the operation unless the switch is exactly `true`. It uses
+Azure CLI rather than non-dry-run `kars up`, because KARS `0.1.25` would turn
+the requested name into `aks-kars-demo-aks`. It creates the exact
+`aks-kars-demo` cluster, builds the BYO image through ACR Tasks with
+`--platform linux/amd64`, resolves its digest, installs KARS and AGT, and
+applies the reviewed resources.
 
 No subscription ID or credential is written to the repository.
+
+## Verified Azure deployment
+
+The real deployment completed in `swedencentral`:
+
+- AKS `aks-kars-demo` is `Succeeded` with Azure CNI Overlay and Cilium.
+- OIDC issuer and Workload Identity are enabled.
+- The one-node `system` pool uses `Standard_D2as_v5`; the one-node
+  `clawpool` uses `Standard_D4as_v5`. Both nodes report `amd64`.
+- The KARS Controller and AGT Registry/Relay are Ready.
+- OpenClaw Intake, Builder, and Reviewer Sandboxes are Running.
+- Builder and Reviewer use the same ACR image pinned by SHA-256 digest.
+- A real `gpt-5.6-sol` request returned
+  `KARS_BYO_GPT_5_6_SOL_OK FORMAT-482 STOP_FOR_HUMAN_REVIEW`.
+- Router audit-chain verification, Agent credential isolation, and the BYO
+  Agent exec-denial test passed.
 
 ## Do not overclaim Mesh or A2A
 
@@ -232,9 +250,10 @@ controlled trust domains and explicit negative tests.
 
 ## Platform support
 
-The completed run used macOS arm64. macOS amd64 and Linux amd64 use the same
-scripts. Windows amd64 runs inside Ubuntu WSL2 with Docker Desktop WSL
-integration and all CLIs installed inside WSL2.
+The deployment command ran from macOS arm64, but ACR Tasks explicitly built
+the workload as Linux amd64 and both AKS nodes report `amd64`. macOS amd64 and
+Linux amd64 use the same scripts. Windows amd64 runs inside Ubuntu WSL2 with
+Docker Desktop WSL integration and all CLIs installed inside WSL2.
 
 ## Definition of done
 

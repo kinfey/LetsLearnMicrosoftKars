@@ -184,7 +184,7 @@ Configuration，不能根据成功的 CLI Dry-run 推断每个 Network Property 
 
 ## 只通过明确 Opt-in 部署
 
-把 BYO Image 推送到 ACR 并固定 Digest 后：
+先评审 Plan、渲染后的 Resource、Quota 与 Cost：
 
 ```bash
 cd code/07
@@ -195,7 +195,6 @@ cp config/aks.env.example config/aks.env
 
 ```text
 DEPLOY_AKS=true
-FORGE_IMAGE=<acr>.azurecr.io/forge-byo@sha256:<digest>
 ```
 
 然后：
@@ -204,11 +203,29 @@ FORGE_IMAGE=<acr>.azurecr.io/forge-byo@sha256:<digest>
 make deploy
 ```
 
-如果 Switch 不严格等于 `true`，或 Image 没有按 Digest 固定，脚本会拒绝执行。
-随后脚本才运行非 Dry-run `kars up`、获取 AKS Credential、渲染并应用经过评审的
-Resource。
+如果 Switch 不严格等于 `true`，脚本会拒绝执行。真实部署使用 Azure CLI，而
+不是非 Dry-run `kars up`，因为 KARS `0.1.25` 会把请求名称变成
+`aks-kars-demo-aks`。脚本创建准确名称的 `aks-kars-demo`，通过 ACR Tasks 和
+`--platform linux/amd64` 构建 BYO Image，解析其 Digest，安装 KARS 与 AGT，
+并应用经过评审的 Resource。
 
 Repository 不会写入 Subscription ID 或 Credential。
+
+## 已验证的 Azure 部署
+
+真实部署已在 `swedencentral` 完成：
+
+- AKS `aks-kars-demo` 状态为 `Succeeded`，使用 Azure CNI Overlay 与 Cilium。
+- OIDC Issuer 与 Workload Identity 已启用。
+- 单 Node `system` Pool 使用 `Standard_D2as_v5`，单 Node `clawpool` 使用
+  `Standard_D4as_v5`；两个 Node 均报告 `amd64`。
+- KARS Controller 与 AGT Registry/Relay 均已 Ready。
+- OpenClaw Intake、Builder 与 Reviewer Sandbox 均为 Running。
+- Builder 与 Reviewer 使用相同的、按 SHA-256 Digest 固定的 ACR Image。
+- 真实 `gpt-5.6-sol` 请求返回
+  `KARS_BYO_GPT_5_6_SOL_OK FORMAT-482 STOP_FOR_HUMAN_REVIEW`。
+- Router Audit Chain、Agent Credential Isolation 和 BYO Agent Exec Denial
+  测试全部通过。
 
 ## 不夸大 Mesh 或 A2A
 
@@ -222,9 +239,10 @@ Encrypted Relay、Token Expiry、Replay Defense 或 Dual-cluster Audit。这些�
 
 ## 平台支持
 
-完整运行使用 macOS arm64。macOS amd64 与 Linux amd64 使用相同脚本。Windows
-amd64 请在 Ubuntu WSL2 内运行，启用 Docker Desktop WSL Integration，并把全部
-CLI 安装在 WSL2 内。
+部署命令从 macOS arm64 执行，但 ACR Tasks 明确把 Workload 构建为 Linux
+amd64，而且两个 AKS Node 均报告 `amd64`。macOS amd64 与 Linux amd64 使用
+相同脚本。Windows amd64 请在 Ubuntu WSL2 内运行，启用 Docker Desktop WSL
+Integration，并把全部 CLI 安装在 WSL2 内。
 
 ## 完成定义
 
