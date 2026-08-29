@@ -1,43 +1,26 @@
-# 6. 框架：从 OpenClaw 切换到 MAF Python
+# 6. Runtime 与 BYO：从 OpenClaw 转向明确代码
 
 > **交付阶段：** 生产实现
-> **新问题：** OpenClaw 原型已经验证用户路径，但 ByteCraft 如何让流程变成明确、
-> 可单元测试且可维护的代码？
-> **交付物：** 在相同 KARS 策略边界下通过 Canary 验证的 MAF Python 实现。
+> **起点：** 保留已经验证的 OpenClaw 行为，再决定哪个应用循环运行在 KARS Security
+> Shell 内部或旁边。
+> **可执行实验：** [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
 
-## 原型已经完成使命
+## 一切仍然从 OpenClaw 开始
 
-OpenClaw 帮助 Maya 快速学习。开发者可以自然地在对话中描述 Issue，KARS Plugin
-提供治理感知工具，团队无需先构建编排服务就能修改 Prompt 与工具策略。
+`code/01` 已经使用 OpenClaw 验证 FORMAT-482 用户路径：
 
-第一位客户随后提出了更困难的问题：
+```text
+接收 Issue -> 检查仓库 -> Patch -> 具名测试 -> 证据
+```
 
-- 哪段代码决定测试失败后是否再次 Patch？
-- 能否对“诊断到实现”的状态转换做单元测试？
-- 能否保证 Agent 在创建 Pull Request 前停止？
-- 六个月后，工程师如何调试 Workflow State？
+`code/02` 验证 Sandbox Boundary，`code/03` 验证 Kubernetes API Contract，
+`code/04` 验证推理与工具 Policy。第 6 章只替换 Runtime Loop，不能削弱这些边界。
 
-这些问题不代表 OpenClaw 不好，而是说明 Forge 已验证的行为应转化为明确应用代码。
+生产问题不是“哪个 Framework 最好”，而是：
 
-## 为两个框架分配职责
+> 另一个实现能否保留相同状态、权限、模型、失败行为和 Human Review Stop？
 
-ByteCraft 决定：
-
-| 关注点 | OpenClaw | Microsoft Agent Framework Python |
-| --- | --- | --- |
-| Forge 中的主要用途 | 交互式需求接收、UX 探索、快速工具实验 | 明确的 Issue → 检查 → Patch → 测试流程 |
-| 应用形态 | Prompt/Plugin 驱动对话 | Python 应用与受控步骤 |
-| KARS 集成 | OpenClaw KARS Plugin | 一等 MAF Python Adapter |
-| 模型路径 | Localhost Router | Adapter 提供的 Router Endpoint |
-| 治理外壳 | KARS Sandbox/Policy | 相同 KARS Sandbox/Policy |
-| 当前限制 | 丰富工具不等于自动最小权限 | Python 已发布；MAF .NET 当前 Deferred |
-
-创业团队不会一次重写所有内容。OpenClaw 保留为产品探索和面向 Operator 的 Canary，
-MAF Python 成为候选生产 Builder。
-
-## 定义与框架无关的工作流
-
-迁移代码前，Maya 先写出独立于 SDK 的状态机：
+实验把 Workflow 转换为明确状态机：
 
 ```text
 RECEIVE_REQUIREMENT
@@ -50,143 +33,222 @@ RECEIVE_REQUIREMENT
   -> STOP_FOR_HUMAN_REVIEW
 ```
 
-每个转换都具有：
+其中故意没有 `MERGE` 或 `DEPLOY` 状态。
 
-- 允许的输入与输出；
-- 具名工具；
-- 最大尝试次数；
-- Token 预期；
-- 失败结果；
-- Audit Correlation ID。
+## 区分 Framework、Provider 与 Runtime
 
-两个实现都不包含 `MERGE` 或 `DEPLOY`。这些操作属于独立的人类或 CI 权限。
+三个容易被混用的名称属于不同层：
 
-## 保留 OpenClaw 作为行为参考
+| 层 | 本章示例 | 职责 |
+| --- | --- | --- |
+| Agent Framework | Microsoft Agent Framework | Agent API、Tool、Session 与应用结构 |
+| Model Provider Path | GitHub Copilot / GPT-5.6-Sol | 模型访问与 Host-side Copilot Session |
+| KARS Runtime | `OpenClaw`、`MicrosoftAgentFramework` 或 `BYO` | Governed Sandbox 内的 Container Plan |
 
-OpenClaw Sandbox 继续用于：
+修改 `KarsSandbox.spec.runtime.kind` 会切换 Runtime Container Producer，但不会自动把
+OpenClaw Prompt 转换为经过测试的 Python 代码。
 
-- 测试开发者如何描述模糊 Issue；
-- 验证工具描述与拒绝消息；
-- 探索 Forge 真正需要哪些 Context 文件；
-- 使用 KARS Plugin 的治理工具面；
-- 将 MAF 候选行为与已知用户路径对比。
+## 两个引用示例之间存在真实接口差异
 
-OpenClaw Plugin 将特权操作路由到 KARS。内置工具会根据 Plugin Contract 被替换
-或拒绝。团队仍只授予实验所需工具。
+Microsoft
+[Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
+示例通过以下方式创建 Harness：
 
-## 创建 MAF Python Sandbox
+```python
+create_harness_agent(client=chat_client, ...)
+```
 
-KARS 为 Python 提供一等 `MicrosoftAgentFramework` Adapter。Adapter 会把 MAF
-Azure OpenAI Client 指向本地推理路由器，并在 Sandbox 内使用合成 API Key；
-真实凭据仍由 KARS 代理。
+这个 Factory 需要 Chat Client。
+[GitHub Copilot Provider](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
+则提供 `GitHubCopilotAgent`：它已经是带有 Copilot CLI Session 和独立 Tool Loop 的
+完整 Agent，不是 Chat Client，因此不能直接传给 `create_harness_agent`。
 
-接近生产的 Runtime Block：
+所以 `code/05` 不会声称存在一个实际上不存在的 Drop-in Integration。实验保留 Claw
+示例中的明确规划、受限工具、Approval、状态与 Human Review Stop，并验证两条真实
+路径。
+
+## 路径 A：Host-side MAF GitHub Copilot Canary
+
+```text
+Microsoft Agent Framework GitHubCopilotAgent
+    -> 本机已认证 Copilot CLI
+    -> GitHub Copilot GPT-5.6-Sol
+```
+
+实验通过 Microsoft Package Feed Proxy 安装准确版本：
+
+```text
+agent-framework-github-copilot==1.0.3
+```
+
+Agent 明确固定模型：
+
+```python
+GitHubCopilotOptions(
+    model="gpt-5.6-sol",
+    available_tools=["inspect_forge_contract"],
+    on_permission_request=bounded_permission_handler,
+)
+```
+
+Copilot SDK 仍然有自己的 Custom Tool Permission Layer。MAF
+`approval_mode="never_require"` 不代表批准所有 Copilot Action。Permission Handler
+只批准一次 `inspect_forge_contract`，并拒绝 Shell、File、URL、MCP、Write 和其他
+所有请求。
+
+Tool 会返回 Prompt 中不存在的随机 Nonce。通过结果必须包含这个 Nonce：
+
+```text
+COPILOT_GPT_5_6_SOL_OK FORMAT-482 <random-nonce> STOP_FOR_HUMAN_REVIEW
+```
+
+这样可以避免把只复述文字的回答误认为 Tool 已经执行。
+
+路径 A 使用 Host 已认证的 Copilot CLI；它是 Framework/Provider Canary，不是
+KARS 隔离工作负载。
+
+## 路径 B：KARS BYO 生产候选
+
+```text
+KarsSandbox/runtime.kind=BYO
+    -> BYO Python Application
+    -> http://127.0.0.1:8443/v1/responses
+    -> KARS Router
+    -> GitHub Copilot GPT-5.6-Sol
+```
+
+模型仍由 `InferencePolicy` 选择：
+
+```yaml
+spec:
+  modelPreference:
+    primary:
+      provider: azure-openai
+      deployment: gpt-5.6-sol
+  tokenBudget:
+    perRequestTokens: 1024
+    dailyTokens: 4096
+```
+
+在本教程的 Local KARS 配置中，Router Provider Override 是 `github-copilot`，
+`deployment` 承载模型 ID。BYO Agent 可以看到 `KARS_MODEL=gpt-5.6-sol`，但不会
+获得 Copilot Token。
+
+Runtime 声明是：
 
 ```yaml
 spec:
   runtime:
-    kind: MicrosoftAgentFramework
-    microsoftAgentFramework:
-      language: python
-      agentCode:
-        oci:
-          image: ghcr.io/bytecraft/forge-maf@sha256:<digest>
-  inferenceRef:
-    name: forge-inference
+    kind: BYO
+    byo:
+      image: forge-byo-copilot-claw:dev
+      contractVersion: v1
 ```
 
-开发期间，KARS 也支持从 Git 加载 Agent 代码：
+## BYO Image Contract
 
-```yaml
-agentCode:
-  git:
-    url: https://github.com/bytecraft/forge
-    ref: <pinned-commit>
-    path: agents/forge-maf
+Image 必须声明并实现 Contract：
+
+```dockerfile
+LABEL org.kars.runtime.contract="v1"
+USER 1000
 ```
 
-团队使用固定 Commit 保证可重复性，推广时使用签名 OCI Image。MAF 应用包含
-`pyproject.toml` 或 `requirements.txt`，默认 Entry Point 可以是
-`python -u agent.py`。
+KARS 会在 `/sandbox` 挂载 `emptyDir`。不可变应用代码不能写入会被 Runtime Mount
+覆盖的路径。`code/05` 把代码放在 `/app`，只把 `/sandbox` 和 `/tmp` 用作可写
+Runtime State。
 
-> MAF Python 已发布。当前 KARS 版本不要选择 `language: dotnet`：.NET Adapter
-> 仍为 Deferred，应产生 Degraded/Invalid Runtime Condition。
+实验验证：
 
-## 哪些发生变化，哪些不能变化
+- OCI Contract Label `v1`；
+- Image User 与 Agent Container UID 1000；
+- Router UID 1001；
+- Read-only Root Filesystem；
+- Agent Drop 全部 Capability；
+- 特权操作只存在于短生命周期 `egress-guard` Init Container；
+- `KARS_RUNTIME_KIND=BYO`；
+- `KARS_RUNTIME_CONTRACT_VERSION=v1`；
+- Agent Environment 中没有 GitHub/Copilot Provider Credential 名称。
 
-### 随框架变化
+## Localhost 是 Provider Boundary
 
-- 编排代码与状态表示；
-- Prompt 组合；
-- Python 工具封装；
-- 单元测试边界；
-- 应用遥测。
-
-### 仍由 KARS 控制
-
-- Agent UID 与 Sandbox 形态；
-- 推理 Router 与外部身份；
-- `InferencePolicy` 与 Token 预算；
-- `ToolPolicy`、MCP 注册与速率限制；
-- 出口强制策略；
-- Kubernetes NetworkPolicy；
-- Audit Chain 与工作负载状态。
-
-修改 `spec.runtime.kind` 是很小的平台变更，但迁移应用行为仍是真实工程工作。KARS
-保持权限边界稳定，却不会自动把 Prompt 翻译成经过测试的 Python 逻辑。
-
-## 运行并行 Canary
-
-团队部署两个使用等价策略的 Sandbox：
+BYO 应用直接连接 `example.com:443` 时发生 Timeout。同一个进程随后调用
+`127.0.0.1:8443` Router，并获得真实 GPT-5.6-Sol 响应：
 
 ```text
-forge-openclaw-canary  -> OpenClaw
-forge-maf-candidate    -> MicrosoftAgentFramework / Python
+KARS_BYO_GPT_5_6_SOL_OK FORMAT-482 STOP_FOR_HUMAN_REVIEW
 ```
 
-回放相同 Corpus：
+在已验证运行中，这个结果通过 30 个 Responses API Event 返回。InferencePolicy
+显示 Compiled 与 Loaded Digest 一致，Phase 为 `Ready`。
 
-| 场景 | 对比内容 |
+这证明替换 Agent Loop 不会自动获得直接模型或 Internet 访问能力。
+
+## Live CRD 实际接受什么
+
+实验对已经安装的 CRD 执行 Server-side Dry-run：
+
+| Runtime Shape | 结果 |
 | --- | --- |
-| 明确 Null Handling Bug | Patch 大小与目标测试 |
-| 模糊需求 | 是否提出澄清问题 |
-| 恶意仓库指令 | 工具与出口拒绝 |
-| 重复失败测试 | 尝试次数与 Token 限制 |
-| 工具故障 | 明确报错，不伪造结果 |
-| 接近 Token 上限 | 带部分证据优雅停止 |
+| `MicrosoftAgentFramework` + `language: python` | 接受 |
+| `MicrosoftAgentFramework` + `language: dotnet` | 拒绝：支持值只有 `python` |
+| 没有 `contractVersion` 的 `BYO` | 拒绝：Required Value |
 
-只有 MAF 保持或改善行为，并且 Router 显示相同策略决定，候选版本才通过。
+部分上游说明仍把 MAF .NET 描述为进入 Degraded Condition 的 Deferred Runtime，但本
+教程实际安装的 CRD 会在 Admission 阶段直接拒绝它，不会进入 Reconcile。Live Schema
+才是当前行为的权威依据。
 
-## 阻止迁移捷径
+第一方 MAF Python Schema 是有效的；但 `code/05` 部署 Self-contained BYO Image，
+以确保 Custom Application Artifact 与 Entry Point 可以被完全控制和直接测试。
 
-Lina 拒绝四个诱人的捷径：
+## 运行
 
-1. “迁移期间”让 MAF 直接访问 Azure OpenAI Endpoint。
-2. 因新工具 Wrapper 尚未完成而注入 GitHub PAT。
-3. 为了运行时安装 Python 依赖而扩大出口。
-4. 提高 Token 上限来隐藏状态机循环。
+保持 `code/01` 运行，并确保 Copilot CLI 已认证：
 
-依赖应进入构建镜像，凭据应位于平台身份/工具服务之后，循环应由应用测试解决。
+```bash
+jq -r .provider ~/.kars/config.json
+# github-copilot
 
-## 回滚策略
+cd code/05
+make test
+```
 
-在 MAF 验收套件通过前，OpenClaw Canary 保持少量流量。失败的 Rollout 只需把
-Sandbox 引用切回上一个已评审版本，不需要修改推理、网络或身份架构。
+已经验证的 Host 是 macOS arm64。继承的平台设置还支持 macOS amd64、Linux amd64，
+以及通过 Ubuntu WSL2 运行的 Windows amd64。
 
-## 完成定义
+实验强制使用：
 
-满足以下条件后，框架切换才算完成：
+```text
+npm    https://packagefeedproxy.microsoft.io/npm/
+PyPI   https://packagefeedproxy.microsoft.io/pypi/simple/
+NuGet  https://packagefeedproxy.microsoft.io/nuget/v3/index.json
+```
 
-- MAF Python Workflow 具有明确且经过测试的状态转换；
-- 相同 Issue Corpus 产生等价或更好的结果；
-- Token、工具、出口和恶意内容测试仍然 Fail Closed；
-- Router 不可用时，MAF 无法调用提供商；
-- Image 与源码 Revision 已固定；
-- OpenClaw 被有意保留为 Canary，或通过明确决策下线。
+## 已验证结果
+
+完整运行证明：
+
+| 检查 | 结果 |
+| --- | --- |
+| Framework-neutral Workflow Test | 通过 |
+| MAF `GitHubCopilotAgent` Model | `gpt-5.6-sol` |
+| Bounded Custom Tool | 调用一次并回显随机 Nonce |
+| MAF Python CRD Shape | 接受 |
+| MAF .NET CRD Shape | 拒绝 |
+| 缺少 BYO Contract Version | 拒绝 |
+| BYO Image | arm64、UID 1000、Contract Label `v1` |
+| BYO Direct Egress | Timeout Deny |
+| BYO Provider Credential | Agent Environment 中不存在 |
+| BYO Router Inference | GPT-5.6-Sol 响应成功 |
+| InferencePolicy | Compiled Digest 等于 Loaded Digest |
+| 最终 Workflow State | `STOP_FOR_HUMAN_REVIEW` |
+
+证据保存在 `code/05/.evidence/<UTC timestamp>/`，不包含 Secret Value。
 
 ## 官方参考
 
-- [Runtime Catalog](https://github.com/Azure/kars/blob/main/docs/runtimes.md)
-- [MAF Quickstart](https://github.com/Azure/kars/tree/main/examples/maf-quickstart)
-- [OpenClaw Plugin](https://github.com/Azure/kars/blob/main/docs/openclaw-plugin.md)
-- [OpenClaw 基础示例](https://github.com/Azure/kars/tree/main/examples/basic-agent)
+- [Azure/KARS Runtime Catalog](https://github.com/Azure/kars/blob/main/docs/runtimes.md)
+- [Azure/KARS Runtime Contract](https://github.com/Azure/kars/blob/main/docs/runtimes/CONTRACT.md)
+- [Azure/KARS BYO Quickstart](https://github.com/Azure/kars/tree/main/examples/byo-quickstart)
+- [Microsoft Agent Framework GitHub Copilot Samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
+- [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
