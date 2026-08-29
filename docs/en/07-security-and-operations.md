@@ -1,191 +1,266 @@
-# 7. Testing: Stop Forge from Fixing the Same Test Forever
+# 7. Security and Operations: Contain, Observe, and Recover Forge
 
-> **Delivery stage:** Test and release qualification
-> **New problem:** A patch can compile and still be unsafe, wasteful, or based
-> on fabricated test evidence. What must the startup test before deployment?
-> **Deliverable:** A layered MAF test suite plus KARS policy and security tests.
+> **Delivery stage:** Operate the Chapter 6 BYO production candidate
+> **Starting point:** OpenClaw Forge behavior, now running as a KARS BYO
+> workload with GitHub Copilot GPT-5.6-Sol
+> **Executable lab:** [`code/06`](../../code/06/)
 
-## An incident without an attacker
+## Everything still starts from OpenClaw
 
-The MAF candidate passes its first unit tests, so ByteCraft enables overnight
-staging evaluation. At 02:13, Forge receives a flaky integration test. It changes a timeout,
-runs the test, sees another failure, and changes the timeout again. The repair
-cycle repeats.
+Chapter 1 defined the OpenClaw issue-to-patch workflow. Chapters 2 through 5
+bounded its filesystem, Kubernetes API, tools, and policies. Chapter 6 kept the
+same Forge contract while adding a host-side Microsoft Agent Framework canary
+and an in-cluster KARS BYO runtime.
 
-The token budget stops further inference. The rate limit slows the tool loop.
-The on-call engineer sees denied decisions in the router stream.
+Chapter 7 operates that real runtime:
 
-No prompt injection occurred, yet the same controls that limit hostile behavior
-also limit ordinary software failure.
-
-## Reconstruct the timeline
-
-The on-call engineer begins with the owner resource:
-
-```bash
-kars status forge
-kars inspect forge
-kubectl get events -n kars-system --sort-by=.lastTimestamp
+```text
+OpenClaw FORMAT-482 workflow
+    -> application Repair Guard
+    -> BYO agent, UID 1000, no provider credential
+    -> localhost KARS Router, UID 1001
+    -> GitHub Copilot GPT-5.6-Sol
+    -> policy decisions, audit chain, metrics, recovery evidence
 ```
 
-Then follows the mediated path:
+The lesson is not that an Agent will never fail. It is that a failed Agent must
+stop, leave evidence, remain inside its authority, and recover through an
+understood procedure.
+
+## Run the real experiment
+
+First complete [`code/05`](../../code/05/), then run:
 
 ```bash
-kars logs forge --service router
-kars audit tail forge --decision deny
-kars trace forge --network
+cd code/06
+make test
 ```
 
-The evidence shows:
+The validated run used macOS arm64. The scripts also support macOS amd64 and
+Linux amd64. Windows amd64 uses Ubuntu WSL2 with Docker Desktop WSL integration.
 
-1. repeated `apply_patch` and `run_tests` calls from one task;
-2. test-tool throttling;
-3. increasing inference token use;
-4. budget denial;
-5. no successful unknown-host egress.
+The lab enforces Microsoft Package Feed Proxy for npm, PyPI, and NuGet, reuses
+the authenticated GitHub Copilot CLI, and fixes the model to `gpt-5.6-sol`.
 
-This is more useful than a final Agent message saying "something went wrong."
+## Stop the repair loop in the application
 
-## Understand the layers
+A platform budget limits cost, but it cannot determine whether two patches are
+equivalent or whether the task has exceeded its business deadline. The
+`RepairGuard` in `code/06/operations/repair_guard.py` returns explicit
+human-escalation decisions for:
 
-Each control answers a different question:
+- the same patch digest appearing twice;
+- more than the configured repair attempts;
+- a task reaching its deadline before a new attempt.
 
-| Layer | Question |
+The deterministic tests run before any live model call. The OpenClaw-derived
+workflow still ends at `STOP_FOR_HUMAN_REVIEW`; no merge or deploy action is
+introduced.
+
+## Capture evidence before changing the workload
+
+The incident inventory records:
+
+- `KarsSandbox` and `InferencePolicy` state;
+- sanitized Deployment security contexts and environment variable names;
+- Pod image IDs, UIDs, readiness, and restart counts;
+- namespace Events;
+- admission policies;
+- least-privilege RBAC results.
+
+The live Sandbox ServiceAccount returned:
+
+```json
+{
+  "canGetSecrets": "no",
+  "canCreatePods": "no"
+}
+```
+
+The evidence deliberately excludes Secret values.
+
+## Close the BYO exec-policy gap
+
+The installed upstream `kars-sandbox-exec-ban` matched the OpenClaw container
+name `openclaw`. The Chapter 6 BYO runtime uses the container name `agent`, so
+an initial harmless `kubectl exec ... -- true` succeeded.
+
+`code/06/manifests/byo-agent-exec-ban.yaml` adds the same fail-closed control
+for `agent` containers in namespaces labeled
+`kars.azure.com/isolated=strict`. With no break-glass label, the API server
+returns:
+
+```text
+ValidatingAdmissionPolicy 'kars-byo-agent-exec-ban' ... denied request:
+exec/attach into the BYO agent runtime is denied
+```
+
+This is why security tests must target the actual runtime shape, not only the
+original OpenClaw container name.
+
+## Verify the mediated path
+
+The boundary phase proves:
+
+- the runtime contract still names `gpt-5.6-sol`;
+- provider credential names are absent from the Agent environment;
+- direct Internet egress from the Agent times out;
+- exec/attach into the BYO Agent is denied;
+- a normal request still succeeds through `127.0.0.1:8443`.
+
+The Router then exposes operational evidence:
+
+```bash
+curl http://127.0.0.1:18444/agt/audit
+curl http://127.0.0.1:18444/agt/audit/verify
+curl http://127.0.0.1:18444/agt/status
+curl http://127.0.0.1:18444/metrics
+```
+
+The completed run reported `integrity: valid`, `Hash chain verified`, native
+governance, a loaded policy, and KARS audit/inference metrics.
+
+## Exercise a token-budget incident
+
+The lab temporarily changes:
+
+```yaml
+spec:
+  tokenBudget:
+    perRequestTokens: 16
+```
+
+The current Router fast-fail implementation checks declared output limits on
+the Chat Completions path. A request with `max_tokens: 17` receives:
+
+```json
+{
+  "error": {
+    "message": "Requested max_tokens=17 exceeds InferencePolicy tokenBudget.perRequestTokens=16",
+    "type": "token_budget_exceeded",
+    "code": "per_request_tokens_exceeded"
+  }
+}
+```
+
+The HTTP status is 429. The lab then restores `1024` and runs GPT-5.6-Sol again
+through the BYO application's `/v1/responses` path.
+
+These are separate verified claims. This experiment does not claim that the
+Responses route has identical declared-token preflight enforcement.
+
+## Treat policy activation as a rollout
+
+The generated ConfigMap changed, but the running Router Pod kept the old
+mounted profile during the experiment. Its loaded digest therefore did not
+converge until the Deployment restarted.
+
+The runbook performs:
+
+```bash
+kubectl -n kars-forge-byo-copilot-claw rollout restart \
+  deployment/forge-byo-copilot-claw
+kubectl -n kars-forge-byo-copilot-claw rollout status \
+  deployment/forge-byo-copilot-claw
+```
+
+It waits until:
+
+- the Policy generation equals `status.observedGeneration`;
+- `compiledDigest` equals `loadedDigest`;
+- phase is `Ready`.
+
+The same procedure is used when restoring the original policy, including from
+the exit trap after a failure.
+
+## Recover from Pod loss
+
+After collecting volatile evidence, the experiment deletes only the current
+Pod by its exact name. The Deployment creates a replacement with a different
+UID and returns to Ready. Port-forwards are re-established, the BYO endpoint
+calls GPT-5.6-Sol, and the Router verifies a new audit chain.
+
+This proves Pod self-healing. It does not prove a controller upgrade, cluster
+restore, or regional disaster-recovery procedure; those require separate
+runbooks and tests.
+
+## Audit integrity is not audit persistence
+
+Before Pod replacement, the Router had two audit entries. Immediately after
+replacement, it had zero:
+
+```json
+{
+  "beforeRestart": 2,
+  "immediatelyAfterRestart": 0,
+  "persisted": false
+}
+```
+
+The next request started a new chain and `/agt/audit/verify` again returned
+valid. That proves tamper detection inside the current in-memory chain. It does
+not preserve incident history across Pod loss.
+
+Production operation must stream audit records to an independently controlled,
+durable backend before deleting a suspect Pod. Chain-head signing and stronger
+non-repudiation must also be evaluated against the KARS maturity documentation.
+
+## Record the release, not only the response
+
+The final record includes:
+
+| Field | Validated value |
 | --- | --- |
-| Container/confidential isolation | What can the process affect locally? |
-| NetworkPolicy and router | Where can traffic go? |
-| Workload identity | Which external identity may be used? |
-| Inference policy | Which model and how much inference? |
-| Tool policy | Which actions and at what rate? |
-| Content-safety observation | What provider safety signals were returned? |
-| Audit chain | Which decisions were recorded, and were records altered? |
+| KARS | `0.1.25` |
+| Model | `gpt-5.6-sol` |
+| Runtime | `BYO` |
+| Repository | exact Git commit |
+| Workload | exact image digest |
+| Policy | exact loaded digest |
 
-No layer proves the Agent's output is true. Evaluation and human approval are
-still required for consequential decisions.
-
-## Respond without destroying evidence
-
-The incident runbook says:
-
-1. Capture sandbox status, events, policy versions, and router logs.
-2. Remove external exposure or revoke temporary approvals.
-3. Do not delete the sandbox until volatile evidence is collected.
-4. Identify the prompt, task ID, tool, identity, destination, and decision.
-5. Rotate any external secret that might have been exposed.
-6. Correct the parser or planner.
-7. Re-run regression, budget, and denied-egress tests.
-8. Restore service through the normal deployment path.
-
-The team exports audit data to an independently controlled system. KARS audit
-records are tamper-evident, but chain-head signing and full non-repudiation are
-still roadmap work.
-
-## Fix the product, not only the threshold
-
-Arun suggests doubling the budget so the pull request can finish. Maya rejects
-that as the only fix. The loop needs:
-
-- a maximum number of repair attempts per failing test;
-- explicit detection of repeated equivalent patches;
-- a task deadline;
-- idempotent retry behavior;
-- a regression case using the flaky test.
-
-Platform budgets contain the failure; application logic removes its cause.
-
-## Build an operational view
-
-For live inspection:
-
-```bash
-kars operator
-kars headlamp --install
-```
-
-The dashboard and alerts track:
-
-- sandbox readiness and restart count;
-- router errors and latency;
-- allowed and denied tool calls;
-- token usage versus budget;
-- unknown or denied egress;
-- repository and test-tool availability;
-- loaded image and policy digests.
-
-The team avoids alerting on every denial. A denial can mean a control worked.
-They alert on patterns: repeated denials, budget exhaustion, new destinations,
-or a sudden change in tool-call volume.
+An Agent saying "the test passed" is not release evidence. The response,
+policy decision, runtime identity, image, and source revision must be
+correlated.
 
 ## Provider telemetry caveat
 
-Azure AI Foundry can return detailed prompt-filter results. Copilot and GitHub
-Models apply server-side filtering but do not expose the same router-visible
-category and severity data. The operations design must reflect the chosen
-provider rather than assuming identical safety telemetry.
+GitHub Copilot applies provider-side safety controls, but the Router path used
+here does not receive Azure AI Foundry-style `prompt_filter_results` with the
+same visible categories and severities. Operations dashboards must represent
+the telemetry that the selected provider actually exposes.
 
-## Turn the incident into an evaluation
+## Production checklist
 
-The flaky test becomes a `karsEval` regression scenario. Before a model,
-prompt, runtime, or policy change is promoted, the team runs:
-
-```bash
-kars eval run forge-regression
-```
-
-The suite checks:
-
-- the task stops after the configured attempt limit;
-- no unsupported claim is generated;
-- tool calls remain under the threshold;
-- the unknown-host test is denied;
-- a normal bug still produces a minimal patch with passing targeted tests.
-
-## Build the startup's testing pyramid
-
-The team separates failures by layer:
-
-| Layer | What ByteCraft tests | Example |
-| --- | --- | --- |
-| MAF unit tests | State transitions and pure decision logic | Third equivalent failure returns `needs_human` |
-| Tool contract tests | Inputs, outputs, timeouts, and redaction | `run_tests` returns exit code and bounded logs |
-| Sandbox integration | Router path, UID, mounts, and denied egress | Direct package-host request fails |
-| Policy tests | Token, rate, tool, and host decisions | 32k request cap returns a clear denial |
-| `karsEval` regression | End-to-end behavior on a fixed corpus | Issue #482 yields the minimal patch |
-| Security tests | Repository prompt injection and exfiltration | Hostile README cannot upload source |
-| Deployment smoke tests | AKS identity and loaded policy digest | One known task succeeds after rollout |
-
-OpenClaw and MAF receive the same high-level corpus during the migration, but
-MAF also has direct unit tests for workflow transitions. This additional test
-surface is the reason for the framework decision, not simply a language
-preference.
-
-## Production hardening review
-
-- Pin KARS, workload images, and policy artifacts.
-- Enforce egress; do not leave production in learning mode.
-- Replace wildcard tools with named grants.
-- Set per-request and daily budgets.
-- Use workload identity instead of long-lived secrets.
-- Apply namespace quotas and pod security controls.
-- Export audit, metrics, and traces.
-- Test upgrade, rollback, restore, and incident response.
-- Review the KARS maturity matrix at every upgrade.
-
-## Chapter outcome
-
-The 02:13 incident ends without data loss or uncontrolled spend. More
-importantly, the team can explain why. Forge has moved from "a clever process"
-to an operable service.
+- Keep application attempt/deadline/duplicate guards in addition to platform
+  budgets.
+- Extend admission controls whenever a new runtime changes container names or
+  resource shapes.
+- Export audit and metrics outside the workload before destructive response.
+- Alert on denial patterns and budget exhaustion, not every successful denial.
+- Use workload identity or Router-owned credentials; keep credentials out of
+  the Agent.
+- Pin KARS, images, models, and policy artifacts.
+- Test policy activation, rollback, Pod recovery, upgrades, and restore
+  separately.
+- Preserve human approval before merge, release, or deployment.
 
 ## Definition of done
 
-Testing is complete when normal, ambiguous, hostile, over-budget, tool-outage,
-and flaky-test cases all produce expected bounded outcomes; no test relies only
-on the Agent's natural-language claim that it passed; and the release records
-the corpus, model, prompt, image, policy, and KARS versions.
+The security and operations test is complete when the OpenClaw-derived workflow
+stops bad repair loops, the real BYO runtime stays inside credential/network/
+exec boundaries, over-budget traffic receives a machine-verifiable denial,
+audit integrity is checked without confusing it with persistence, the workload
+recovers with a new Pod UID, GPT-5.6-Sol succeeds afterward, and a release
+record pins the exact software and policy inputs.
 
 ## Official references
 
-- [Security](https://github.com/Azure/kars/blob/main/docs/security.md)
-- [Feature maturity](https://github.com/Azure/kars/blob/main/docs/maturity.md)
-- [CLI reference](https://github.com/Azure/kars/blob/main/docs/cli-reference.md)
+- [KARS security](https://github.com/Azure/kars/blob/main/docs/security.md)
+- [KARS maturity](https://github.com/Azure/kars/blob/main/docs/maturity.md)
+- [KARS operations](https://github.com/Azure/kars/tree/main/docs/operations)
+- [Secret rotation](https://github.com/Azure/kars/blob/main/docs/operations/secret-rotation.md)
+- [Upgrades](https://github.com/Azure/kars/blob/main/docs/operations/upgrades.md)
+- [Chaos tier](https://github.com/Azure/kars/blob/main/docs/operations/chaos-tier.md)
+- [SRE runbook](https://github.com/Azure/kars/blob/main/docs/runbooks/sre.md)
+- [Microsoft Agent Framework GitHub Copilot samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
+- [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)

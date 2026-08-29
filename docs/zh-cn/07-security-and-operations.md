@@ -1,181 +1,251 @@
-# 7. 测试：阻止 Forge 无限修复同一个测试
+# 7. 安全与运维：限制、观测并恢复 Forge
 
-> **交付阶段：** 测试与发布资格
-> **新问题：** Patch 可以编译通过，却仍然不安全、浪费资源或伪造测试证据。
-> 创业团队部署前必须测试什么？
-> **交付物：** 分层 MAF 测试套件，以及 KARS 策略与安全测试。
+> **交付阶段：** 运维第 6 章的 BYO 生产候选
+> **起点：** OpenClaw Forge 行为，现在运行于 KARS BYO Workload，并使用
+> GitHub Copilot GPT-5.6-Sol
+> **可执行实验：** [`code/06`](../../code/06/)
 
-## 一场没有攻击者的事故
+## 一切仍然从 OpenClaw 开始
 
-MAF 候选版本通过首批单元测试后，ByteCraft 开启夜间 Staging Eval。凌晨 02:13，
-Forge 遇到一个 Flaky Integration Test。它修改 Timeout、
-运行测试、看到另一种失败，再次修改 Timeout，修复循环不断重复。
+第 1 章定义 OpenClaw Issue-to-Patch Workflow；第 2 到第 5 章依次限制 Filesystem、
+Kubernetes API、Tool 与 Policy；第 6 章保留相同 Forge Contract，同时加入
+Host-side Microsoft Agent Framework Canary 和 Cluster 内 KARS BYO Runtime。
 
-Token 预算阻止后续推理，速率限制减慢工具循环，值班工程师在路由器流中看到被
-拒绝的决定。
+第 7 章直接运维这套真实 Runtime：
 
-这次没有提示注入，但限制恶意行为的控制，同样限制了普通软件故障。
-
-## 还原时间线
-
-值班工程师从 Owner Resource 开始：
-
-```bash
-kars status forge
-kars inspect forge
-kubectl get events -n kars-system --sort-by=.lastTimestamp
+```text
+OpenClaw FORMAT-482 Workflow
+    -> Application Repair Guard
+    -> BYO Agent，UID 1000，无 Provider Credential
+    -> Localhost KARS Router，UID 1001
+    -> GitHub Copilot GPT-5.6-Sol
+    -> Policy Decision、Audit Chain、Metrics、Recovery Evidence
 ```
 
-然后沿代理路径排查：
+目标不是证明 Agent 永不失败，而是确保失败的 Agent 会停止、留下证据、不越过权限
+边界，并通过明确的 Procedure 恢复。
+
+## 运行真实实验
+
+先完成 [`code/05`](../../code/05/)，然后执行：
 
 ```bash
-kars logs forge --service router
-kars audit tail forge --decision deny
-kars trace forge --network
+cd code/06
+make test
 ```
 
-证据显示：
+完整运行已经在 macOS arm64 验证。脚本也支持 macOS amd64 和 Linux amd64。
+Windows amd64 请使用启用 Docker Desktop WSL Integration 的 Ubuntu WSL2。
 
-1. 一个任务反复调用 `apply_patch` 和 `run_tests`；
-2. 测试工具被限流；
-3. 推理 Token 使用持续增加；
-4. 预算拒绝后续请求；
-5. 没有未知主机出口成功。
+实验强制 npm、PyPI、NuGet 使用 Microsoft Package Feed Proxy，复用已认证的
+GitHub Copilot CLI，并固定模型为 `gpt-5.6-sol`。
 
-这些信息比 Agent 最终回答“出了点问题”更有价值。
+## 在应用层停止 Repair Loop
 
-## 理解每一层
+Platform Budget 可以限制成本，但不能判断两个 Patch 是否等价，也不能判断任务是否
+超过业务 Deadline。`code/06/operations/repair_guard.py` 的 `RepairGuard` 会在以下
+情况返回明确的 Human Escalation Decision：
 
-不同控制回答不同问题：
+- 同一个 Patch Digest 出现两次；
+- 超过配置的 Repair Attempt；
+- 新尝试开始前任务已到 Deadline。
 
-| 控制层 | 回答的问题 |
+确定性测试会在任何 Live Model Call 之前运行。源自 OpenClaw 的 Workflow 仍然结束
+于 `STOP_FOR_HUMAN_REVIEW`，不会加入 Merge 或 Deploy Action。
+
+## 改变 Workload 前先收集证据
+
+Incident Inventory 会记录：
+
+- `KarsSandbox` 与 `InferencePolicy` 状态；
+- 脱敏 Deployment Security Context 和 Environment Variable 名称；
+- Pod Image ID、UID、Readiness 与 Restart Count；
+- Namespace Event；
+- Admission Policy；
+- Least-privilege RBAC 结果。
+
+Live Sandbox ServiceAccount 返回：
+
+```json
+{
+  "canGetSecrets": "no",
+  "canCreatePods": "no"
+}
+```
+
+Evidence 不包含 Secret Value。
+
+## 补齐 BYO Exec Policy 缺口
+
+已安装的上游 `kars-sandbox-exec-ban` 匹配 OpenClaw Container 名称
+`openclaw`。第 6 章 BYO Runtime 使用 Container 名称 `agent`，因此最初无副作用的
+`kubectl exec ... -- true` 可以成功。
+
+`code/06/manifests/byo-agent-exec-ban.yaml` 为标记
+`kars.azure.com/isolated=strict` 的 Namespace 中 `agent` Container 加入同等的
+Fail-closed 控制。没有 Break-glass Label 时，API Server 返回：
+
+```text
+ValidatingAdmissionPolicy 'kars-byo-agent-exec-ban' ... denied request:
+exec/attach into the BYO agent runtime is denied
+```
+
+这说明安全测试必须针对真实 Runtime Shape，不能只检查最初的 OpenClaw Container
+名称。
+
+## 验证 Mediated Path
+
+Boundary Phase 证明：
+
+- Runtime Contract 仍然指定 `gpt-5.6-sol`；
+- Agent Environment 中没有 Provider Credential 名称；
+- Agent 直接访问 Internet 会 Timeout；
+- 对 BYO Agent 的 Exec/Attach 被拒绝；
+- 正常请求仍通过 `127.0.0.1:8443` 成功。
+
+Router 提供以下运维证据：
+
+```bash
+curl http://127.0.0.1:18444/agt/audit
+curl http://127.0.0.1:18444/agt/audit/verify
+curl http://127.0.0.1:18444/agt/status
+curl http://127.0.0.1:18444/metrics
+```
+
+完成的运行返回 `integrity: valid`、`Hash chain verified`、Native
+Governance、Loaded Policy，以及 KARS Audit/Inference Metrics。
+
+## 演练 Token Budget Incident
+
+实验临时修改：
+
+```yaml
+spec:
+  tokenBudget:
+    perRequestTokens: 16
+```
+
+当前 Router Fast-fail 实现会在 Chat Completions Path 检查请求声明的输出上限。
+带有 `max_tokens: 17` 的请求返回：
+
+```json
+{
+  "error": {
+    "message": "Requested max_tokens=17 exceeds InferencePolicy tokenBudget.perRequestTokens=16",
+    "type": "token_budget_exceeded",
+    "code": "per_request_tokens_exceeded"
+  }
+}
+```
+
+HTTP Status 是 429。实验随后恢复 `1024`，并通过 BYO 应用的
+`/v1/responses` Path 再次运行 GPT-5.6-Sol。
+
+这是两个独立且已验证的结论；本实验不会声称 Responses Route 有完全相同的声明
+Token Preflight Enforcement。
+
+## 把 Policy Activation 当作 Rollout
+
+实验中生成的 ConfigMap 已更新，但运行中的 Router Pod 继续使用旧 Mounted
+Profile，因此 Loaded Digest 在 Pod 重启前不会收敛。
+
+Runbook 执行：
+
+```bash
+kubectl -n kars-forge-byo-copilot-claw rollout restart \
+  deployment/forge-byo-copilot-claw
+kubectl -n kars-forge-byo-copilot-claw rollout status \
+  deployment/forge-byo-copilot-claw
+```
+
+随后等待：
+
+- Policy Generation 等于 `status.observedGeneration`；
+- `compiledDigest` 等于 `loadedDigest`；
+- Phase 是 `Ready`。
+
+恢复原始 Policy 时使用相同 Procedure；即使后续步骤失败，Exit Trap 也会执行恢复与
+Rollout。
+
+## 从 Pod 丢失中恢复
+
+收集 Volatile Evidence 后，实验只按准确名称删除当前 Pod。Deployment 创建具有新
+UID 的 Replacement 并恢复 Ready。Port-forward 重新建立后，BYO Endpoint 再次调用
+GPT-5.6-Sol，Router 验证一条新的 Audit Chain。
+
+这证明的是 Pod Self-healing，不代表已经验证 Controller Upgrade、Cluster Restore
+或跨区域 Disaster Recovery；这些场景需要独立 Runbook 和测试。
+
+## Audit Integrity 不等于 Audit Persistence
+
+Pod 替换前 Router 有 2 条 Audit Entry，替换后立即变成 0：
+
+```json
+{
+  "beforeRestart": 2,
+  "immediatelyAfterRestart": 0,
+  "persisted": false
+}
+```
+
+下一次请求启动新的 Chain，`/agt/audit/verify` 再次返回 Valid。这证明当前
+In-memory Chain 生命周期内可以检测篡改，但不能在 Pod 丢失后保存 Incident
+History。
+
+生产运维必须在删除可疑 Pod 前，把 Audit Record 持续输出到独立控制的 Durable
+Backend。Chain-head Signing 与更强 Non-repudiation 也必须结合 KARS Maturity
+文档评估。
+
+## 记录 Release，而不只记录 Response
+
+最终记录包含：
+
+| 字段 | 已验证值 |
 | --- | --- |
-| 容器/机密隔离 | 进程能在本地影响什么？ |
-| NetworkPolicy 与路由器 | 流量可以去哪里？ |
-| 工作负载身份 | 可以使用哪个外部身份？ |
-| 推理策略 | 使用哪个模型、允许多少推理？ |
-| 工具策略 | 允许哪些操作、速率是多少？ |
-| 内容安全观测 | 提供商返回了哪些安全信号？ |
-| 审计链 | 记录了哪些决定，记录是否被修改？ |
+| KARS | `0.1.25` |
+| Model | `gpt-5.6-sol` |
+| Runtime | `BYO` |
+| Repository | 准确 Git Commit |
+| Workload | 准确 Image Digest |
+| Policy | 准确 Loaded Digest |
 
-没有一层能够证明 Agent 输出一定真实。重要决定仍需要评估和人工批准。
+Agent 说“测试通过”不是 Release Evidence。必须关联 Response、Policy Decision、
+Runtime Identity、Image 和 Source Revision。
 
-## 响应事故但不破坏证据
+## Provider Telemetry 限制
 
-事件 Runbook 规定：
+GitHub Copilot 会应用 Provider-side Safety Control，但本实验使用的 Router Path
+不会收到 Azure AI Foundry 风格、具有相同 Category 与 Severity 可见性的
+`prompt_filter_results`。运维 Dashboard 必须展示所选 Provider 实际提供的
+Telemetry，不能假设所有 Provider 一致。
 
-1. 捕获沙箱状态、事件、策略版本和路由器日志。
-2. 移除外部暴露或撤销临时 Approval。
-3. 收集易失证据前不要删除沙箱。
-4. 确认 Prompt、Task ID、工具、身份、目标和决定。
-5. 轮换任何可能泄露的外部 Secret。
-6. 修复 Parser 或 Planner。
-7. 重新运行回归、预算和出口拒绝测试。
-8. 通过正常部署路径恢复服务。
+## 生产 Checklist
 
-团队把审计数据导出到独立控制的系统。KARS 审计记录可防篡改，但链头签名和完整
-不可否认性仍在路线图中。
-
-## 修复产品，而不只提高阈值
-
-Arun 建议将预算翻倍，让 Pull Request 能够完成。Maya 拒绝把它作为唯一修复。
-循环还需要：
-
-- 每个失败测试的最大修复次数；
-- 检测重复等价 Patch；
-- 任务 Deadline；
-- 幂等重试行为；
-- 使用 Flaky Test 的回归用例。
-
-平台预算负责限制故障，应用逻辑负责消除根因。
-
-## 构建运维视图
-
-实时检查：
-
-```bash
-kars operator
-kars headlamp --install
-```
-
-Dashboard 与警报跟踪：
-
-- 沙箱 Ready 状态和重启次数；
-- 路由器错误与延迟；
-- 允许和拒绝的工具调用；
-- Token 使用与预算对比；
-- 未知或被拒绝的出口；
-- 仓库与测试工具可用性；
-- 已加载的镜像与策略 Digest。
-
-团队不会对每次 Deny 都发警报。Deny 可能表示控制成功。他们关注模式：重复拒绝、
-预算耗尽、新目标或工具调用量突然变化。
-
-## 提供商遥测限制
-
-Azure AI Foundry 可以返回详细 Prompt Filter 结果。Copilot 与 GitHub Models
-在服务端过滤，却不提供同等的路由器可见类别和严重级别数据。运维设计必须反映
-实际提供商，不能假设安全遥测完全一致。
-
-## 把事故变成评估
-
-Flaky Test 成为 `karsEval` 回归场景。模型、Prompt、Runtime 或策略推广前，团队
-执行：
-
-```bash
-kars eval run forge-regression
-```
-
-测试确认：
-
-- 任务在设定次数后停止；
-- 不生成无来源支持的结论；
-- 工具调用保持在阈值内；
-- 未知主机测试被拒绝；
-- 正常 Bug 仍能生成最小 Patch，并通过目标测试。
-
-## 构建创业团队的测试金字塔
-
-团队按层分离失败：
-
-| 层级 | ByteCraft 测试内容 | 示例 |
-| --- | --- | --- |
-| MAF 单元测试 | 状态转换与纯决策逻辑 | 第三次等价失败返回 `needs_human` |
-| 工具契约测试 | 输入、输出、Timeout 与 Redaction | `run_tests` 返回 Exit Code 和有限日志 |
-| Sandbox 集成 | Router 路径、UID、Mount 与出口拒绝 | 直接访问 Package Host 失败 |
-| Policy 测试 | Token、速率、工具与主机决定 | 32k 单请求上限产生明确拒绝 |
-| `karsEval` 回归 | 固定 Corpus 的端到端行为 | Issue #482 产生最小 Patch |
-| 安全测试 | 仓库提示注入与数据外泄 | 恶意 README 无法上传源码 |
-| 部署冒烟测试 | AKS 身份与已加载策略 Digest | Rollout 后一个已知任务成功 |
-
-迁移期间 OpenClaw 与 MAF 使用同一高层 Corpus，但 MAF 还可以直接单元测试工作流
-状态转换。这种额外测试能力才是框架决策的理由，而不只是语言偏好。
-
-## 生产加固评审
-
-- 固定 KARS、工作负载镜像和策略 Artifact。
-- 强制执行出口，不让生产停留在学习模式。
-- 用具名授权替换工具通配符。
-- 设置单请求和每日预算。
-- 使用工作负载身份而非长期 Secret。
-- 应用命名空间配额和 Pod 安全控制。
-- 导出审计、指标与 Trace。
-- 测试升级、回滚、恢复和事件响应。
-- 每次升级都查看 KARS 成熟度矩阵。
-
-## 本章结果
-
-02:13 的事故结束时没有数据丢失，也没有不受控成本。更重要的是，团队能够解释
-原因。Forge 已从“聪明的进程”变成可运维服务。
+- 除 Platform Budget 外，保留应用层 Attempt、Deadline 与 Duplicate Guard。
+- 新 Runtime 改变 Container 名称或 Resource Shape 时，扩展 Admission Control。
+- 执行破坏性响应前，把 Audit 与 Metrics 外送到 Workload 之外。
+- 针对 Denial Pattern 和 Budget Exhaustion 告警，而不是对每次成功拒绝告警。
+- 使用 Workload Identity 或 Router-owned Credential，不把 Credential 交给 Agent。
+- 固定 KARS、Image、Model 与 Policy Artifact。
+- 分别测试 Policy Activation、Rollback、Pod Recovery、Upgrade 与 Restore。
+- Merge、Release 或 Deploy 前继续保留 Human Approval。
 
 ## 完成定义
 
-当正常、模糊、恶意、超预算、工具故障和 Flaky Test 场景都产生预期且受限的结果，
-没有测试只依赖 Agent 自然语言宣称“已经通过”，并且 Release 记录 Corpus、模型、
-Prompt、Image、Policy 与 KARS 版本时，测试才算完成。
+当源自 OpenClaw 的 Workflow 能停止错误 Repair Loop，真实 BYO Runtime 不越过
+Credential、Network 与 Exec Boundary，超预算流量返回机器可验证的 Denial，
+Audit Integrity 已检查且没有与 Persistence 混淆，Workload 使用新 Pod UID
+恢复，GPT-5.6-Sol 在恢复后成功，并且 Release Record 固定准确 Software 与 Policy
+输入时，安全与运维测试才算完成。
 
 ## 官方参考
 
-- [安全](https://github.com/Azure/kars/blob/main/docs/security.md)
-- [功能成熟度](https://github.com/Azure/kars/blob/main/docs/maturity.md)
-- [CLI 参考](https://github.com/Azure/kars/blob/main/docs/cli-reference.md)
+- [KARS Security](https://github.com/Azure/kars/blob/main/docs/security.md)
+- [KARS Maturity](https://github.com/Azure/kars/blob/main/docs/maturity.md)
+- [KARS Operations](https://github.com/Azure/kars/tree/main/docs/operations)
+- [Secret Rotation](https://github.com/Azure/kars/blob/main/docs/operations/secret-rotation.md)
+- [Upgrades](https://github.com/Azure/kars/blob/main/docs/operations/upgrades.md)
+- [Chaos Tier](https://github.com/Azure/kars/blob/main/docs/operations/chaos-tier.md)
+- [SRE Runbook](https://github.com/Azure/kars/blob/main/docs/runbooks/sre.md)
+- [Microsoft Agent Framework GitHub Copilot Samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
+- [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
