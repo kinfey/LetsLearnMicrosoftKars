@@ -1,0 +1,107 @@
+# Forge sandbox boundary lab
+
+[English](README.md) | [简体中文](README.zh.md)
+
+This lab turns Chapter 3's sandbox claims into executable checks against the
+Forge deployment from [`code/01`](../01/). Its design follows the
+[Azure/KARS security model](https://github.com/Azure/kars/blob/main/docs/security.md)
+and [runtime contract](https://github.com/Azure/kars/blob/main/docs/runtimes.md).
+
+## What this lab proves
+
+| Boundary | Executable evidence |
+|----------|---------------------|
+| Desired state | `KarsSandbox/forge` is `Running`; a deleted Pod is reconciled |
+| Process | OpenClaw runs as UID 1000 and the inference router as UID 1001 |
+| Operator access | normal `kubectl exec` into OpenClaw is denied by KARS admission policy |
+| Filesystem | OpenClaw has a read-only root filesystem and no hostPath; the repository lives in the MCP Pod's disposable `emptyDir` |
+| Identity | OpenClaw has no GitHub/Copilot provider credential reference; the router owns it |
+| Network | direct Agent HTTPS fails while `127.0.0.1:8443` inference succeeds |
+| Policy reconciliation | a missing `InferencePolicy` produces `Degraded/InferencePolicyNotFound` |
+| Evidence lifecycle | YAML, JSON, and logs are copied to `.evidence/` outside the sandbox |
+
+The live deployment reveals an important refinement to the chapter: Forge does
+not mount the repository directly. The hardened `forge-workspace-mcp` Pod owns
+the fixed-revision disposable workspace and exposes only seven narrow tools.
+
+## Prerequisites
+
+1. Deploy and validate `code/01`.
+2. Keep the `kars-dev` kind cluster running.
+3. Install `kubectl`, `jq`, `curl`, Docker, and Node.js 22.
+
+All package restore configuration comes from `code/01` and is verified before
+the lab runs:
+
+- npm: `https://packagefeedproxy.microsoft.io/npm/`
+- PyPI: `https://packagefeedproxy.microsoft.io/pypi/simple/`
+- NuGet: `https://packagefeedproxy.microsoft.io/nuget/v3/index.json`
+
+## Run
+
+The non-disruptive checks inspect resources, verify the exec denial, and test a
+temporary missing-policy sandbox:
+
+```bash
+cd code/02
+make test
+```
+
+Run the complete lab, including an audited short-lived break-glass probe and a
+Forge Pod restart:
+
+```bash
+make test-full
+```
+
+`test-full` temporarily labels namespace `kars-forge` with
+`kars.azure.com/break-glass=true`, probes only UID, filesystem writability,
+credential variable names, direct HTTPS, and the loopback router, then removes
+the label through a shell trap. It never prints credential values.
+
+The Pod restart deletes only the current Forge Pod. The KARS-managed Deployment
+creates a replacement and the script verifies a new Pod UID and a `Running`
+Sandbox phase.
+
+## Evidence
+
+Each run writes a timestamped directory:
+
+```text
+.evidence/<UTC timestamp>/
+├── README.md
+├── transcript.log
+├── forge-sandbox.yaml
+├── forge-pod.json
+├── pod-summary.json
+├── network-policies.yaml
+├── workspace-deployment.yaml
+├── exec-admission-policy.yaml
+├── controller.log
+├── router.log
+├── missing-policy-sandbox.json
+└── reconciliation.json
+```
+
+This directory is intentionally outside Kubernetes and ignored by Git. It
+survives Pod and workspace cleanup without committing cluster-specific logs.
+
+## Individual experiments
+
+```bash
+make inspect
+make degraded
+make reconcile
+make clean
+```
+
+`make reconcile` requires the explicit restart opt-in already set by the
+Makefile target. `make clean` removes temporary cluster state but preserves
+local evidence.
+
+## Platform notes
+
+The validated environment is macOS arm64. The same scripts use the platform
+detection from `code/01` and support macOS amd64, Linux amd64, and Windows
+amd64 through Ubuntu WSL2. Run Windows commands inside WSL2, not native
+PowerShell or CMD.

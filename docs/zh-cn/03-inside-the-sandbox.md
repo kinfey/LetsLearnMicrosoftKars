@@ -4,6 +4,7 @@
 > **新问题：** Forge 如何执行客户代码，却看不到无关源码、开发者凭据或不受限制
 > 的网络？
 > **交付物：** 经过测试的 Sandbox 边界与一次性 Workspace 设计。
+> **配套实验：** [`code/02`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/02)
 
 ## “Sandbox”背后的问题
 
@@ -45,8 +46,8 @@ Sandbox 不是一个有魔力的标签。对 Forge 而言，它必须保护私�
 ```text
 karsSandbox: forge
 └── Pod
-    ├── init: egress-guard
-    ├── agent             UID 1000
+    ├── init: egress-guard  UID 0，仅初始化期间拥有 NET_ADMIN
+    ├── openclaw           UID 1000
     └── inference-router  UID 1001
 ```
 
@@ -57,8 +58,9 @@ Init Container 安装网络规则，使 Agent UID 可以通过 Loopback 到达�
 
 ### `agent`
 
-Forge 与 Runtime 以 UID 1000 运行。Agent 可以读取分配的 Workspace 并调用本地
-路由器，但不应持有提供商凭据或直接出口。
+Forge 与 OpenClaw Runtime 以 UID 1000 运行。在 `code/01` 的实际实现中，
+OpenClaw 不会直接挂载代码仓库，而是调用本地 Router，由 Router 代理访问独立的
+Workspace MCP Service。OpenClaw 既不持有 Provider 凭据，也没有直接出口。
 
 ### `inference-router`
 
@@ -81,9 +83,13 @@ Forge 以非 root Agent 进程运行，路由器使用不同 UID。研发 Agent 
 
 ### 2. 文件系统边界
 
-Agent 只获得任务需要的 Workspace 与 Runtime 文件。良好的研发 Sandbox 使用
-固定 Revision 的临时 Checkout 或 Worktree，不会挂载开发者 Home、SSH 目录、
-全局 Git Credential Store 或无关仓库。
+Agent 只获得任务需要的 Runtime 文件。良好的研发 Sandbox 使用固定 Revision 的
+临时 Checkout 或 Worktree，不会挂载开发者 Home、SSH 目录、全局 Git Credential
+Store 或无关仓库。
+
+Forge 采用了更强的分离：经过加固的 `forge-workspace-mcp` Pod 使用有大小限制的
+`emptyDir` 管理固定 Revision 仓库；OpenClaw Pod 没有仓库或 `hostPath` 挂载。
+MCP Deployment 同时关闭自动 Service Account Token 挂载，并且只暴露七个受限工具。
 
 KARS 定义 Runtime Sandbox，但平台团队仍需谨慎设计 Volume 与 Secret。
 NetworkPolicy 无法保护被错误挂载到 Agent 容器中的 Secret。
@@ -117,55 +123,76 @@ Controller 观察 `karsSandbox`、创建或更新资源，并报告 Conditions�
 
 ## 检查 Sandbox，而不是假设
 
-启动第 2 章的本地 Kubernetes 环境，然后定位 Sandbox：
+先启动第 2 章的 Forge 部署，再运行可执行实验：
 
 ```bash
-kubectl get karssandboxes -n kars-system
-kubectl get karssandbox dev-agent -n kars-system -o yaml
-kars inspect dev-agent
+cd code/02
+make inspect
 ```
 
-定位生成的 Pod 并检查形态：
+脚本会从 `KarsSandbox/forge` 自动发现生成的 Namespace 与 Pod，不会写死 Pod 名称。
+它会导出：
+
+- Sandbox 期望状态与 Conditions；
+- Pod Spec 与精简的 UID/挂载摘要；
+- NetworkPolicy；
+- Workspace MCP Deployment；
+- KARS Exec Admission Policy；
+- 最近的 Controller 与 Router 日志。
+
+输出保存在 Kubernetes 外部的 `.evidence/<UTC timestamp>/`，因此 Pod 重新协调或
+Workspace 清理后，证据仍然存在。
+
+普通运维人员也不能假设自己拥有交互式 Shell：
 
 ```bash
-kubectl get pods -A
-kubectl describe pod <sandbox-pod> -n <sandbox-namespace>
-kubectl get pod <sandbox-pod> -n <sandbox-namespace> \
-  -o jsonpath='{range .spec.initContainers[*]}init:{.name}{"\n"}{end}{range .spec.containers[*]}container:{.name} uid:{.securityContext.runAsUser}{"\n"}{end}'
+kubectl -n kars-forge exec <forge-pod> -c openclaw -- id
 ```
 
-检查网络 Safety Net：
-
-```bash
-kubectl get networkpolicy -A
-kubectl describe networkpolicy <sandbox-policy> -n <sandbox-namespace>
-```
-
-然后关联一次请求：
-
-```bash
-kars connect dev-agent
-kars logs dev-agent --service router -f
-```
-
-证据应连接 Sandbox 资源、多容器 Pod、不同 UID、NetworkPolicy 和路由器事件。
+KARS 会通过 `kars-sandbox-exec-ban` 拒绝该请求。完整实验可以短时启用可审计的
+Namespace Break-glass Label，只执行范围明确的只读探测，并通过 Shell Trap 删除标签。
 
 ## 使用 Forge 测试边界
 
-请创建一次性测试仓库，绝不要使用生产 Checkout 进行以下实验。
+`code/01` 中的 Fixture 仓库就是专门准备的一次性测试仓库。绝不要使用生产 Checkout
+进行以下实验。
 
 | 测试 | 预期结果 |
 | --- | --- |
-| 读取分配 Workspace 中的文件 | 允许 |
-| 读取开发者 Home 中的 Secret | 文件未挂载或不可访问 |
+| 检查 Forge 与分配的 Workspace | 通过 KARS 资源和受限 MCP 工具允许 |
+| 读取开发者 Home 中的 Secret | 没有挂载 Host 文件系统或 Home 目录 |
 | 通过路由器调用模型 | 在推理策略范围内允许 |
-| 直接访问未知主机 | Block/Deny |
-| 以 root 执行进程 | 被 Security Context 阻止 |
+| 从 OpenClaw 直接访问未知主机 | 超时并返回 HTTP `000` |
+| 从 OpenClaw 写入 `/etc` | 被只读根文件系统拒绝 |
+| 在 OpenClaw 中查找 Copilot 凭据 | 不存在 Provider 凭据变量 |
+| 对 OpenClaw 使用普通 `kubectl exec` | 被 KARS Admission Policy 拒绝 |
 | 重启 Agent | Controller 将工作负载恢复到期望状态 |
-| 引用不存在的推理策略 | Sandbox Condition 变为 Degraded |
+| 引用不存在的推理策略 | 得到 `Degraded/InferencePolicyNotFound` |
 
-每项结果都要记录产生它的控制。“命令失败”还不够；需要判断原因是文件系统布局、
-UID、Egress Guard、NetworkPolicy、路由器策略还是协调。
+运行非破坏性检查：
+
+```bash
+make test
+```
+
+运行完整实验，包括短时 Break-glass 探测与 Forge Pod 替换：
+
+```bash
+make test-full
+```
+
+经过验证的 macOS arm64 运行结果包括：OpenClaw UID 1000、Router UID 1001、
+根文件系统写入被拒绝、OpenClaw 中没有 Provider 凭据、直接 HTTPS 被阻断、
+通过 `127.0.0.1:8443` 返回 HTTP 200、缺失 Policy 时出现 Degraded Condition，
+以及删除 Forge Pod 后 Controller 成功创建替代 Pod。
+
+实验开始前会强制检查 `code/01` 使用的 Microsoft Package Feed Proxy：
+
+```text
+https://packagefeedproxy.microsoft.io/npm/
+https://packagefeedproxy.microsoft.io/pypi/simple/
+https://packagefeedproxy.microsoft.io/nuget/v3/index.json
+```
 
 ## 选择正确隔离级别
 
@@ -195,24 +222,26 @@ Sandbox 负责限制权限；测试、评估、评审和部署策略仍然决定
 
 ```text
 Workload：一次 Forge Builder 任务
-Source：固定 Revision 的临时 Checkout
+Source：Workspace MCP Pod 的 emptyDir 中保存固定 Revision Checkout
 Agent User：UID 1000
 Router User：UID 1001
 外部路径：仅 Router
 Agent 中的凭据：无
-可写范围：仅任务 Workspace
+OpenClaw 可写范围：/sandbox 与 /tmp
+仓库写入：仅受限 Workspace MCP 工具
 生命周期 Owner：KARS Controller
-证据目标：外部 Audit Store
-清理：导出证据和 Patch 后删除 Workspace
+证据目标：code/02/.evidence，然后进入外部 Audit Store
+清理：删除 Pod 或 Workspace 前先导出证据
 ```
 
 下一章会把已经理解的 Runtime 边界转化为可评审的 Kubernetes 契约。
 
 ## 完成定义
 
-只有固定 Revision 的一次性 Checkout 被挂载到 Forge、Agent 不持有可复用 Git
-或模型凭据、直接访问未知目标失败、UID 隔离清晰可见，并且 Workspace 清理后审计
-证据仍保留时，开发环境才算 Ready。
+只有固定 Revision 的一次性 Checkout 被隔离在 Workspace MCP Pod、OpenClaw 没有
+仓库挂载或可复用 Git/模型凭据、直接访问未知目标失败、UID 分离与 Exec 限制清晰
+可见、Controller Reconciliation 得到验证，并且导出的证据在 Workspace 清理后仍然
+保留时，开发环境才算 Ready。
 
 ## 官方参考
 

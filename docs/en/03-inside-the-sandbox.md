@@ -4,6 +4,7 @@
 > **New problem:** How can Forge execute customer code without seeing unrelated
 > source, developer credentials, or an unrestricted network?
 > **Deliverable:** A tested Sandbox boundary and disposable workspace design.
+> **Working lab:** [`code/02`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/02)
 
 ## The question behind the word
 
@@ -48,8 +49,8 @@ In local Kubernetes and AKS, the important pod shape is:
 ```text
 karsSandbox: forge
 └── Pod
-    ├── init: egress-guard
-    ├── agent             UID 1000
+    ├── init: egress-guard  UID 0, NET_ADMIN during initialization
+    ├── openclaw           UID 1000
     └── inference-router  UID 1001
 ```
 
@@ -61,9 +62,10 @@ net, not the policy decision point.
 
 ### `agent`
 
-Forge and its runtime execute as UID 1000. The Agent can read its assigned
-workspace and call the local router, but it should not own provider credentials
-or direct egress.
+Forge and its OpenClaw runtime execute as UID 1000. In the `code/01`
+implementation, OpenClaw does not mount the repository directly. It calls the
+local router, which mediates access to the separate workspace MCP service.
+OpenClaw owns neither provider credentials nor direct egress.
 
 ### `inference-router`
 
@@ -91,10 +93,15 @@ is not production-equivalent.
 
 ### 2. Filesystem boundary
 
-The Agent receives only the workspace and runtime files required for the task.
-A good development sandbox uses an ephemeral checkout or worktree at a pinned
-revision. It does not mount a developer's home directory, SSH directory,
+The Agent receives only the runtime files required for the task. A good
+development sandbox uses an ephemeral checkout or worktree at a pinned
+revision and does not mount a developer's home directory, SSH directory,
 global Git credential store, or unrelated repositories.
+
+Forge applies a stronger split. The hardened `forge-workspace-mcp` Pod owns the
+fixed-revision repository in a size-limited `emptyDir`; the OpenClaw Pod has no
+repository or `hostPath` mount. The MCP Deployment also disables automatic
+service-account token mounting and exposes only seven bounded tools.
 
 KARS defines the runtime sandbox, but the platform team still owns careful
 volume and secret design. A NetworkPolicy cannot protect a Secret that was
@@ -135,58 +142,79 @@ exporting evidence can also destroy useful incident context.
 
 ## Inspect the sandbox rather than assuming
 
-Start the local Kubernetes environment from Chapter 2, then locate the sandbox:
+Start with the Forge deployment from Chapter 2, then use the executable lab:
 
 ```bash
-kubectl get karssandboxes -n kars-system
-kubectl get karssandbox dev-agent -n kars-system -o yaml
-kars inspect dev-agent
+cd code/02
+make inspect
 ```
 
-Locate the generated pod and inspect its shape:
+The script discovers the generated namespace and Pod from
+`KarsSandbox/forge`; it does not hard-code a Pod name. It exports:
+
+- the Sandbox desired state and Conditions;
+- the Pod specification and a compact UID/mount summary;
+- NetworkPolicy;
+- the workspace MCP Deployment;
+- the KARS exec Admission Policy;
+- recent controller and router logs.
+
+The output is written to `.evidence/<UTC timestamp>/` outside Kubernetes, so it
+survives Pod reconciliation and workspace cleanup.
+
+Normal operators also cannot assume interactive shell access:
 
 ```bash
-kubectl get pods -A
-kubectl describe pod <sandbox-pod> -n <sandbox-namespace>
-kubectl get pod <sandbox-pod> -n <sandbox-namespace> \
-  -o jsonpath='{range .spec.initContainers[*]}init:{.name}{"\n"}{end}{range .spec.containers[*]}container:{.name} uid:{.securityContext.runAsUser}{"\n"}{end}'
+kubectl -n kars-forge exec <forge-pod> -c openclaw -- id
 ```
 
-Inspect the network safety net:
-
-```bash
-kubectl get networkpolicy -A
-kubectl describe networkpolicy <sandbox-policy> -n <sandbox-namespace>
-```
-
-Then correlate one request:
-
-```bash
-kars connect dev-agent
-kars logs dev-agent --service router -f
-```
-
-The evidence should connect a sandbox resource, a multi-container pod, distinct
-UIDs, network policy, and a router event.
+KARS rejects this request through `kars-sandbox-exec-ban`. The complete lab can
+temporarily enable the audited namespace break-glass label, run narrowly scoped
+read-only probes, and remove the label through a shell trap.
 
 ## Test the boundaries with Forge
 
-Create a disposable test repository; never use a production checkout for these
-experiments.
+The fixture repository from `code/01` is intentionally disposable. Never use a
+production checkout for these experiments.
 
 | Test | Expected result |
 | --- | --- |
-| Read a file in the assigned workspace | Allowed |
-| Read a developer home-directory Secret | File is not mounted or accessible |
+| Inspect Forge and its assigned workspace | Allowed through KARS resources and bounded MCP tools |
+| Read a developer home-directory Secret | No host filesystem or home directory is mounted |
 | Call the model through the router | Allowed under inference policy |
-| Reach an unknown host directly | Blocked/denied |
-| Execute a process as root | Prevented by the security context |
+| Reach an unknown host directly from OpenClaw | Times out with HTTP `000` |
+| Write to `/etc` from OpenClaw | Denied by the read-only root filesystem |
+| Find a Copilot credential in OpenClaw | No provider credential variable is present |
+| Use ordinary `kubectl exec` on OpenClaw | Denied by KARS Admission Policy |
 | Restart the Agent | Controller returns workload to desired state |
-| Reference a missing inference policy | Sandbox condition becomes Degraded |
+| Reference a missing inference policy | `Degraded/InferencePolicyNotFound` |
 
-For every result, record the control that produced it. "The command failed" is
-not enough; determine whether the cause was filesystem layout, UID, egress
-guard, NetworkPolicy, router policy, or reconciliation.
+Run the non-disruptive checks:
+
+```bash
+make test
+```
+
+Run the complete experiment, including short-lived break-glass probes and a
+Forge Pod replacement:
+
+```bash
+make test-full
+```
+
+The verified macOS arm64 run showed OpenClaw UID 1000, router UID 1001, denied
+root-filesystem writes, no provider credential in OpenClaw, blocked direct
+HTTPS, HTTP 200 through `127.0.0.1:8443`, a missing-policy Degraded condition,
+and successful controller replacement of the deleted Forge Pod.
+
+Before running, the lab enforces the Microsoft package sources used by
+`code/01`:
+
+```text
+https://packagefeedproxy.microsoft.io/npm/
+https://packagefeedproxy.microsoft.io/pypi/simple/
+https://packagefeedproxy.microsoft.io/nuget/v3/index.json
+```
 
 ## Choose the right isolation level
 
@@ -220,15 +248,16 @@ Before continuing, the team records:
 
 ```text
 Workload: one Forge Builder task
-Source: ephemeral checkout at a pinned revision
+Source: fixed-revision checkout in the workspace MCP Pod's emptyDir
 Agent user: UID 1000
 Router user: UID 1001
 External path: router only
 Credentials in Agent: none
-Writable scope: task workspace only
+OpenClaw writable scope: /sandbox and /tmp
+Repository writes: bounded workspace MCP tools only
 Lifecycle owner: KARS controller
-Evidence destination: external audit store
-Cleanup: workspace removed after evidence and patch export
+Evidence destination: code/02/.evidence, then an external audit store
+Cleanup: export evidence before Pod or workspace removal
 ```
 
 The next chapter turns this understood runtime boundary into a reviewable
@@ -236,10 +265,11 @@ Kubernetes contract.
 
 ## Definition of done
 
-The development environment is ready when a disposable checkout at a pinned
-revision is the only source mounted into Forge, the Agent has no reusable Git
-or model credential, direct unknown egress fails, UID separation is visible,
-and audit evidence survives workspace cleanup.
+The development environment is ready when the disposable fixed-revision
+checkout is isolated in the workspace MCP Pod, OpenClaw has no repository mount
+or reusable Git/model credential, direct unknown egress fails, UID separation
+and exec restrictions are visible, controller reconciliation is proven, and
+exported evidence survives workspace cleanup.
 
 ## Official references
 
