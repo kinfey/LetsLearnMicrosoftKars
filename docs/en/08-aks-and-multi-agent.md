@@ -41,8 +41,8 @@ The default run creates no Azure resources. It:
 5. renders two independent KARS Sandboxes and Policies;
 6. validates them with the live KARS API server using Server-side Dry-run;
 7. executes the official KARS `up --dry-run`;
-8. proves that real deployment requires explicit opt-in and a digest-pinned
-   ACR image;
+8. proves that real deployment requires explicit opt-in and an upstream KARS
+   source checkout;
 9. creates a promotion record linking source image and policy digests.
 
 The completed macOS arm64 run passed every phase without creating Azure

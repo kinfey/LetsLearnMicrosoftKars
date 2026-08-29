@@ -34,7 +34,7 @@ CRD 验证 GitOps Resource，不创建任何 Azure Resource。真实 AKS Deploym
 | `KARS_MESH_TRUST` | `anonymous` | 初始 Mesh Trust Mode |
 | `GITHUB_COPILOT_MODEL` | `gpt-5.6-sol` | 指定模型 |
 | `DEPLOY_AKS` | `false` | 真实 Azure 创建开关 |
-| `FORGE_IMAGE` | Local Development Image | BYO Image；部署时必须使用 ACR Digest |
+| `FORGE_IMAGE` | Local Development Image | Plan-only Image Placeholder；真实部署会在 ACR 构建并固定 Digest |
 
 `rg-kinfey` 被解释为 Resource Group 名称，而不是 Azure Region。完整运行中，这个
 已存在的 Resource Group 自动解析到 `swedencentral`。
@@ -66,7 +66,7 @@ cp config/aks.env.example config/aks.env
 - Live KARS API Server 使用 `kubectl apply --dry-run=server` 接受全部六个
   Resource。
 - KARS `0.1.25` 针对目标 Azure 参数完成 `kars up --dry-run`。
-- 真实部署必须明确启用，并使用按 SHA-256 Digest 固定的 ACR Image，否则会被拒绝。
+- 真实部署必须明确启用，并提供上游 KARS Source Checkout，否则会被拒绝。
 - Promotion Record 关联 Source Git Commit、code/05 Image Digest、code/06
   Loaded Policy Digest 与目标 AKS 参数。
 

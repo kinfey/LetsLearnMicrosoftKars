@@ -40,7 +40,7 @@ make test
 5. 渲染两个独立的 KARS Sandbox 与 Policy；
 6. 使用 Live KARS API Server 执行 Server-side Dry-run；
 7. 执行官方 KARS `up --dry-run`；
-8. 证明真实部署必须明确 Opt-in，并使用按 Digest 固定的 ACR Image；
+8. 证明真实部署必须明确 Opt-in，并提供上游 KARS Source Checkout；
 9. 创建关联 Source Image 与 Policy Digest 的 Promotion Record。
 
 完整 macOS arm64 运行全部通过，且没有创建 Azure Resource。

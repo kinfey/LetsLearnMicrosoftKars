@@ -35,7 +35,7 @@ opt-in because it creates billable infrastructure.
 | `KARS_MESH_TRUST` | `anonymous` | Initial mesh trust mode |
 | `GITHUB_COPILOT_MODEL` | `gpt-5.6-sol` | Required model |
 | `DEPLOY_AKS` | `false` | Real Azure creation switch |
-| `FORGE_IMAGE` | local development image | BYO image; deployment requires an ACR digest |
+| `FORGE_IMAGE` | local development image | Plan-only image placeholder; real deployment builds and pins it in ACR |
 
 `rg-kinfey` is treated as the resource-group name, not an Azure region. In the
 completed run, the existing group resolved the location to `swedencentral`.
@@ -67,8 +67,8 @@ cp config/aks.env.example config/aks.env
 - The live KARS API server accepts all six rendered resources using
   `kubectl apply --dry-run=server`.
 - KARS `0.1.25` completes `kars up --dry-run` for the selected Azure target.
-- Real deployment is denied unless it is explicitly enabled and the ACR image
-  is pinned by SHA-256 digest.
+- Real deployment is denied unless it is explicitly enabled and an upstream
+  KARS source checkout is available.
 - A promotion record links the source Git commit, code/05 image digest,
   code/06 loaded policy digest, and target AKS parameters.
 
