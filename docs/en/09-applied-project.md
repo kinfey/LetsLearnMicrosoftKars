@@ -1,7 +1,7 @@
 # 9. Applied Project: Release an Issue-to-PR Pilot on AKS
 
 > **Delivery stage:** Customer release
-> **Starting point:** OpenClaw Intake, the Chapter 6 BYO runtime, Chapter 7
+> **Starting point:** OpenClaw Intake, the Chapter 6 MAF pattern, Chapter 7
 > controls, and the Chapter 8 AKS environment
 > **Executable project:** [`code/08`](../../code/08/)
 
@@ -35,10 +35,14 @@ test evidence, and a digest-pinned handoff for independent review.
 
 The project combines the earlier labs into one operable release unit:
 
-- a non-root BYO Runtime that calls GPT-5.6-Sol only through the KARS Router;
+- a non-root `MicrosoftAgentFramework/python` Runtime;
+- a real MAF `Agent` using `OpenAIChatClient` and one
+  `@tool`-decorated `inspect_release_contract` function;
+- the KARS MAF adapter, which pins the MAF client to the local Router before
+  GitHub Copilot GPT-5.6-Sol inference;
 - a separate `InferencePolicy` with per-request and daily Token budgets;
 - a named-tool `ToolPolicy` that excludes shell, merge, and deployment;
-- strict egress and the Chapter 7 BYO exec guard;
+- strict egress and the Chapter 7 execution guard;
 - task concurrency and daily task limits;
 - per-customer usage reporting;
 - application and Router tamper-evident audit checks;
@@ -49,6 +53,22 @@ The project combines the earlier labs into one operable release unit:
 The GitHub Copilot provider credential remains in the Router path. The Agent
 contract check confirms that no Copilot or GitHub Token/Key environment
 variable reaches the Agent container.
+
+```text
+OpenClaw Intake
+  -> MAF Agent
+  -> inspect_release_contract @tool
+  -> KARS MAF Python adapter
+  -> 127.0.0.1:8443 KARS Router
+  -> GitHub Copilot GPT-5.6-Sol
+```
+
+There is no application-level `httpx` call to `/v1/responses`.
+The MAF Agent sets `store: false`, so the Responses API function loop carries
+tool history inline and avoids the unsupported `previous_response_id` field
+during the post-tool model turn on KARS `v0.1.25`. A narrow MAF client
+compatibility subclass removes the provider's overlong encrypted Function
+Call item ID before inline replay while retaining the standard `call_id`.
 
 ## Azure parameters remain optional
 
@@ -114,9 +134,17 @@ The script does not recreate AKS. It:
 1. verifies that the selected AKS and KARS Controller are Ready;
 2. builds `pilot_agent` in ACR Tasks with `--platform linux/amd64`;
 3. resolves the SHA-256 image digest;
-4. renders and Server-side validates the resources;
-5. deploys the Pilot, MCP metadata, and Eval declaration;
-6. runs one real success path and three denied paths.
+4. pins the KARS Controller `MAF_RUNTIME_IMAGE` override to that digest;
+5. renders and Server-side validates the first-class MAF Sandbox;
+6. deploys the Pilot, MCP metadata, and Eval declaration;
+7. runs one real success path and three denied paths.
+
+KARS `v0.1.25` carries `agentCode.oci` through its runtime plan but does not
+yet materialize that code mount in the Pod. The lab therefore extends the
+official KARS MAF Python image, bakes the application into
+`/opt/fabrikam-agent`, and copies it as UID 1000 into the writable
+`/sandbox/agent` volume at startup. This is a version-specific packaging
+workaround; the Sandbox runtime remains `MicrosoftAgentFramework`, not BYO.
 
 ## Invoke the Azure Pilot
 
@@ -158,7 +186,15 @@ KARS_APPLIED_PROJECT_GPT_5_6_SOL_OK FAB-482 READY_FOR_HUMAN_REVIEW
 ```
 
 It also contains independent SHA-256 digests for the patch, targeted tests,
-and handoff envelope.
+and handoff envelope, plus:
+
+```json
+{
+  "mafAgent": "FabrikamReleaseBuilder",
+  "mafTool": "inspect_release_contract",
+  "mafToolCalls": 1
+}
+```
 
 ## Exercise negative controls
 
@@ -180,7 +216,9 @@ drafts.
 The real run completed on the existing `aks-kars-demo` cluster:
 
 - `fabrikam-release-pilot` is `Running` on the amd64 `clawpool`;
+- the Sandbox reports `MicrosoftAgentFramework/python`;
 - the ACR image is pinned by SHA-256 digest;
+- the MAF Builder invoked exactly one bounded `@tool`;
 - GPT-5.6-Sol returned the expected release marker;
 - the application audit chain and Router audit chain are valid;
 - the Agent contains no provider credential environment variable;

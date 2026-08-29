@@ -26,7 +26,9 @@ It stops new work without deleting the CR or the exported evidence. Use
 ## Rollback
 
 Set `ROLLBACK_IMAGE` in the ignored `config/azure.env` to a previously approved
-ACR `@sha256:` reference, run `make rollback`, and then run `make verify`.
+MAF runtime ACR `@sha256:` reference, run `make rollback`, and then run
+`make verify`. The rollback updates the Controller's `MAF_RUNTIME_IMAGE`
+override and triggers Sandbox reconciliation.
 
 ## Ownership
 

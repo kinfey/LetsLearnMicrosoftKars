@@ -1,7 +1,7 @@
 # 9. 应用项目：在 AKS 发布 Issue-to-PR Pilot
 
 > **交付阶段：** 客户发布
-> **起点：** OpenClaw Intake、第 6 章 BYO Runtime、第 7 章安全控制，以及第 8
+> **起点：** OpenClaw Intake、第 6 章 MAF 模式、第 7 章安全控制，以及第 8
 > 章 AKS 环境
 > **可执行项目：** [`code/08`](../../code/08/)
 
@@ -35,10 +35,14 @@ Pilot 不会 Merge 或部署 Source。它只生成 Patch、目标测试 Evidence
 
 项目把前面实验组合成一个可运维 Release Unit：
 
-- 非 root BYO Runtime，只能通过 KARS Router 调用 GPT-5.6-Sol；
+- 非 root `MicrosoftAgentFramework/python` Runtime；
+- 真实 MAF `Agent`、`OpenAIChatClient` 与唯一一个使用 `@tool` 装饰的
+  `inspect_release_contract` Function；
+- KARS MAF Adapter 把 MAF Client 固定到 Local Router，再调用 GitHub Copilot
+  GPT-5.6-Sol；
 - 独立 `InferencePolicy`，包含单请求与每日 Token Budget；
 - 只允许具名工具的 `ToolPolicy`，不包含 Shell、Merge 或 Deployment；
-- Strict Egress 与第 7 章 BYO Exec Guard；
+- Strict Egress 与第 7 章 Execution Guard；
 - Task Concurrency 与每日 Task Limit；
 - Per-customer Usage Report；
 - Application 与 Router Tamper-evident Audit；
@@ -48,6 +52,22 @@ Pilot 不会 Merge 或部署 Source。它只生成 Patch、目标测试 Evidence
 
 GitHub Copilot Provider Credential 仍只在 Router Path 中。Agent Contract 检查确认
 Agent Container 不包含 Copilot 或 GitHub Token/Key Environment Variable。
+
+```text
+OpenClaw Intake
+  -> MAF Agent
+  -> inspect_release_contract @tool
+  -> KARS MAF Python Adapter
+  -> 127.0.0.1:8443 KARS Router
+  -> GitHub Copilot GPT-5.6-Sol
+```
+
+应用代码中不存在直接访问 `/v1/responses` 的 `httpx` 调用。
+MAF Agent 设置 `store: false`，让 Responses API Function Loop 内联 Tool
+History，避免 KARS `v0.1.25` 在 Tool 执行后的 Model Turn 中不支持
+`previous_response_id` 的兼容性问题。一个范围严格的 MAF Client 兼容子类会在
+内联重放前移除 Provider 过长的加密 Function Call Item ID，同时保留标准
+`call_id`。
 
 ## Azure 参数仍由用户选填
 
@@ -111,9 +131,16 @@ make deploy
 1. 验证目标 AKS 与 KARS Controller 已 Ready；
 2. 使用 ACR Tasks 和 `--platform linux/amd64` 构建 `pilot_agent`；
 3. 解析 SHA-256 Image Digest；
-4. 渲染并执行 Server-side Validation；
-5. 部署 Pilot、MCP Metadata 和 Eval 声明；
-6. 运行一个真实成功流程与三个拒绝流程。
+4. 把 KARS Controller 的 `MAF_RUNTIME_IMAGE` 固定到该 Digest；
+5. 渲染并执行 First-class MAF Sandbox 的 Server-side Validation；
+6. 部署 Pilot、MCP Metadata 和 Eval 声明；
+7. 运行一个真实成功流程与三个拒绝流程。
+
+KARS `v0.1.25` 会把 `agentCode.oci` 传入 Runtime Plan，但还不会在 Pod 中实际生成
+Code Mount。因此本实验扩展官方 KARS MAF Python Image，把应用烘焙到
+`/opt/fabrikam-agent`，启动时由 UID 1000 复制到 Writable `/sandbox/agent`
+Volume。这是当前版本的 Packaging Workaround；Sandbox Runtime 仍是
+`MicrosoftAgentFramework`，不是 BYO。
 
 ## 调用 Azure Pilot
 
@@ -154,7 +181,16 @@ curl -sS -H 'content-type: application/json' \
 KARS_APPLIED_PROJECT_GPT_5_6_SOL_OK FAB-482 READY_FOR_HUMAN_REVIEW
 ```
 
-Response 还包含 Patch、目标测试和 Handoff Envelope 各自的 SHA-256 Digest。
+Response 还包含 Patch、目标测试和 Handoff Envelope 各自的 SHA-256 Digest，
+并明确返回：
+
+```json
+{
+  "mafAgent": "FabrikamReleaseBuilder",
+  "mafTool": "inspect_release_contract",
+  "mafToolCalls": 1
+}
+```
 
 ## 执行负向控制
 
@@ -175,7 +211,9 @@ Runtime 还为重复 Repair Loop、Development MCP 不可用、Reviewer 修改 S
 真实运行已在现有 `aks-kars-demo` 完成：
 
 - `fabrikam-release-pilot` 在 amd64 `clawpool` 中为 `Running`；
+- Sandbox 报告 `MicrosoftAgentFramework/python`；
 - ACR Image 按 SHA-256 Digest 固定；
+- MAF Builder 恰好调用一次受限 `@tool`；
 - GPT-5.6-Sol 返回预期 Release Marker；
 - Application Audit Chain 与 Router Audit Chain 均为 Valid；
 - Agent 不包含 Provider Credential Environment Variable；

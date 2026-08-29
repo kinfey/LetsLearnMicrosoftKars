@@ -17,11 +17,28 @@ cleanup() {
 }
 trap cleanup EXIT
 
-pod="$(kubectl --context "${KARS_KUBE_CONTEXT}" -n "${namespace}" get pod \
-  -l "kars.azure.com/sandbox=${KARS_SANDBOX_NAME}" \
-  -o jsonpath='{.items[0].metadata.name}')"
-node="$(kubectl --context "${KARS_KUBE_CONTEXT}" -n "${namespace}" get pod \
-  "${pod}" -o jsonpath='{.spec.nodeName}')"
+pod=""
+node=""
+for _ in $(seq 1 60); do
+  pod="$(kubectl --context "${KARS_KUBE_CONTEXT}" -n "${namespace}" get pod \
+    -l "kars.azure.com/sandbox=${KARS_SANDBOX_NAME}" -o json |
+    jq -r '
+      [.items[]
+        | select(.metadata.deletionTimestamp == null)
+        | select(any(.status.conditions[]?; .type == "Ready" and .status == "True"))
+      ]
+      | sort_by(.metadata.creationTimestamp)
+      | last
+      | .metadata.name // empty
+    ')"
+  if [[ -n "${pod}" ]]; then
+    node="$(kubectl --context "${KARS_KUBE_CONTEXT}" -n "${namespace}" get pod \
+      "${pod}" -o jsonpath='{.spec.nodeName}' 2>/dev/null || true)"
+  fi
+  [[ -n "${node}" ]] && break
+  sleep 2
+done
+[[ -n "${node}" ]] || fail "No stable Ready Pilot Pod was found"
 arch="$(kubectl --context "${KARS_KUBE_CONTEXT}" get node "${node}" \
   -o jsonpath='{.metadata.labels.kubernetes\.io/arch}')"
 [[ "${arch}" == "amd64" ]] || fail "Pilot is not running on amd64"
@@ -51,6 +68,9 @@ curl -fsS -H 'content-type: application/json' \
 jq -e '
   .model == "gpt-5.6-sol"
   and (.reply | contains("KARS_APPLIED_PROJECT_GPT_5_6_SOL_OK"))
+  and .mafAgent == "FabrikamReleaseBuilder"
+  and .mafTool == "inspect_release_contract"
+  and .mafToolCalls == 1
   and .nextAction == "STOP_FOR_HUMAN_PR_APPROVAL"
   and (.handoff.digest | startswith("sha256:"))
 ' "${EVIDENCE_DIR}/success.json" >/dev/null
@@ -67,7 +87,7 @@ curl -fsS "http://127.0.0.1:${port}/contract" |
   jq . >"${EVIDENCE_DIR}/contract.json"
 jq -e '
   .model == "gpt-5.6-sol"
-  and .runtimeKind == "BYO"
+  and .runtimeKind == "MicrosoftAgentFramework"
   and .contractVersion == "v1"
   and (.providerCredentialNames | length == 0)
 ' "${EVIDENCE_DIR}/contract.json" >/dev/null
@@ -85,8 +105,13 @@ jq -e '.integrity == "valid" and .entries >= 1' \
 
 kubectl --context "${KARS_KUBE_CONTEXT}" -n kars-system get \
   "karssandbox/${KARS_SANDBOX_NAME}" -o json |
-  jq '{name:.metadata.name,phase:.status.phase,image:.spec.runtime.byo.image,suspended:.spec.suspended}' \
+  jq '{name:.metadata.name,phase:.status.phase,runtime:.spec.runtime.kind,language:.spec.runtime.microsoftAgentFramework.language,suspended:.spec.suspended}' \
   >"${EVIDENCE_DIR}/sandbox.json"
+jq -e '
+  .phase == "Running"
+  and .runtime == "MicrosoftAgentFramework"
+  and .language == "python"
+' "${EVIDENCE_DIR}/sandbox.json" >/dev/null
 kubectl --context "${KARS_KUBE_CONTEXT}" -n kars-system get \
   inferencepolicy/fabrikam-release-inference -o json |
   jq '{generation:.metadata.generation,observedGeneration:.status.observedGeneration,compiledDigest:.status.compiledDigest,loadedDigest:.status.loadedDigest}' \

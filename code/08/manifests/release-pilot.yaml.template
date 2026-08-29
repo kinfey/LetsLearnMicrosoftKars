@@ -41,11 +41,7 @@ spec:
           type: capability
           allowed_actions:
             - "inference:responses:*"
-            - "tool:issue_read:*"
-            - "tool:repository_read:*"
-            - "tool:patch_propose:*"
-            - "tool:targeted_test_run:*"
-            - "tool:evidence_write:*"
+            - "tool:inspect_release_contract:*"
           priority: 100
   rateLimit:
     rps: 1
@@ -65,17 +61,13 @@ metadata:
     forge.bytecraft.dev/customer: fabrikam
 spec:
   runtime:
-    kind: BYO
-    byo:
-      image: __IMAGE__
-      contractVersion: v1
-      env:
-        - name: SUPPORT_OWNER
-          value: __SUPPORT_OWNER__
-        - name: TASK_CONCURRENCY_LIMIT
-          value: "__CONCURRENCY__"
-        - name: DAILY_TASK_LIMIT
-          value: "__DAILY_LIMIT__"
+    kind: MicrosoftAgentFramework
+    microsoftAgentFramework:
+      language: python
+      extraEnv:
+        SUPPORT_OWNER: __SUPPORT_OWNER__
+        TASK_CONCURRENCY_LIMIT: "__CONCURRENCY__"
+        DAILY_TASK_LIMIT: "__DAILY_LIMIT__"
   sandbox:
     isolation: enhanced
     seccompProfile: kars-strict

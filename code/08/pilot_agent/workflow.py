@@ -10,11 +10,7 @@ WORKFLOW = [
 ]
 
 APPROVED_TOOLS = [
-    "issue_read",
-    "repository_read",
-    "patch_propose",
-    "targeted_test_run",
-    "evidence_write",
+    "inspect_release_contract",
 ]
 
 FORBIDDEN_ACTIONS = [

@@ -21,17 +21,22 @@ documents = [doc for doc in yaml.safe_load_all(open(sys.argv[1])) if doc]
 kinds = [doc["kind"] for doc in documents]
 assert kinds == ["InferencePolicy", "ToolPolicy", "KarsSandbox"]
 sandbox = documents[2]
-assert ".azurecr.io/" in sandbox["spec"]["runtime"]["byo"]["image"]
-assert "@sha256:" in sandbox["spec"]["runtime"]["byo"]["image"]
+runtime = sandbox["spec"]["runtime"]
+assert runtime["kind"] == "MicrosoftAgentFramework"
+assert runtime["microsoftAgentFramework"]["language"] == "python"
+assert int(runtime["microsoftAgentFramework"]["extraEnv"]["TASK_CONCURRENCY_LIMIT"]) > 0
 assert sandbox["spec"]["sandbox"]["runAsNonRoot"] is True
 assert sandbox["spec"]["networkPolicy"]["egressMode"] == "Strict"
 assert sandbox["spec"]["suspended"] is False
 assert documents[0]["spec"]["modelPreference"]["primary"]["deployment"] == "gpt-5.6-sol"
 PY
 
-kubectl --context "${KARS_KUBE_CONTEXT}" apply \
-  --server-side --dry-run=server \
-  -f "${RENDERED_DIR}/release-pilot.yaml" >/dev/null
+# Validate a create-shaped copy so the existing BYO object's field ownership
+# cannot preserve stale runtime fields during Server-side Dry-run.
+sed 's/fabrikam-release/fabrikam-maf-validation/g' \
+  "${RENDERED_DIR}/release-pilot.yaml" |
+  kubectl --context "${KARS_KUBE_CONTEXT}" apply \
+    --server-side --dry-run=server -f - >/dev/null
 kubectl --context "${KARS_KUBE_CONTEXT}" apply \
   --server-side --dry-run=server \
   -f "${RENDERED_DIR}/mcp-and-eval.yaml" >/dev/null
