@@ -12,7 +12,7 @@ agent. The implementation starts with **OpenClaw**, not with a collection of
 Kubernetes resources.
 
 OpenClaw is the conversational runtime that receives the developer's request,
-plans the work, calls tools, and coordinates specialist agents. KARS supplies
+plans the work, calls tools, and coordinates specialist agents. kars supplies
 the boundaries around that runtime: mediated inference, governed tools,
 isolated sandboxes, NetworkPolicy, budgets, and audit evidence.
 
@@ -39,8 +39,8 @@ Developer
    |
    v
 OpenClaw Forge coordinator (KarsSandbox)
-   |-- inference --> KARS router --> GitHub Copilot / GPT-5.6-Sol
-   |-- tools ------> KARS router --> forge-workspace MCP
+   |-- inference --> kars router --> GitHub Copilot / GPT-5.6-Sol
+   |-- tools ------> kars router --> forge-workspace MCP
    `-- specialists -> kars_spawn + encrypted AGT mesh
                        analyst / patch author / test verifier
 ```
@@ -54,7 +54,7 @@ OpenClaw remains the center of the workflow:
    tools, while spawned specialists receive inference and mesh capabilities
    only.
 4. `workspace-mcp/` owns the repository, patch operation, and named test.
-5. KARS routes model and tool calls without exposing the Copilot credential to
+5. kars routes model and tool calls without exposing the Copilot credential to
    the OpenClaw container.
 
 This separation is important. OpenClaw reasons about the task, but authority
@@ -178,19 +178,19 @@ make build-kars
 
 This command does more than install a published CLI:
 
-1. It clones or updates the `main` branches of KARS and Microsoft Agent
+1. It clones or updates the `main` branches of kars and Microsoft Agent
    Governance Toolkit.
-2. It builds and links the KARS CLI with Node.js 22.
+2. It builds and links the kars CLI with Node.js 22.
 3. It records the resolved commits and package sources in
    `.kars-source-version`.
 4. During deployment, `scripts/build-openclaw-source.sh` builds a pinned
    OpenClaw source image from `v2026.5.27`.
 
 The pinned OpenClaw image makes the agent runtime repeatable, while the recorded
-KARS and AGT commits make the control-plane build traceable.
+kars and AGT commits make the control-plane build traceable.
 
 GPT-5.6-Sol uses the Responses API. This source-built path configures the main
-OpenClaw runtime for `openai-responses` and includes the KARS router adaptation
+OpenClaw runtime for `openai-responses` and includes the kars router adaptation
 that translates the specialist task loop when GitHub Copilot reports
 `unsupported_api_for_model`.
 
@@ -201,11 +201,11 @@ make deploy
 make status
 ```
 
-On the first deployment, select **GitHub Copilot** in the KARS provider picker
+On the first deployment, select **GitHub Copilot** in the kars provider picker
 and complete device-code login. The deployment script then:
 
 - creates or reuses the `kars-dev` kind cluster;
-- installs KARS and AGT components;
+- installs kars and AGT components;
 - builds the pinned OpenClaw and workspace MCP images;
 - deploys the MCP service in namespace `kars-mcp`;
 - creates the OpenClaw `forge` sandbox;
@@ -365,7 +365,7 @@ make destroy
 ```
 
 This removes only the Forge example resources and the `kars-mcp` namespace. To
-also remove the shared local KARS cluster:
+also remove the shared local kars cluster:
 
 ```bash
 kars dev down --target local-k8s

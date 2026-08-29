@@ -38,7 +38,7 @@ Pilot 不会 Merge 或部署 Source。它只生成 Patch、目标测试 Evidence
 - 非 root `MicrosoftAgentFramework/python` Runtime；
 - 真实 MAF `Agent`、`OpenAIChatClient` 与唯一一个使用 `@tool` 装饰的
   `inspect_release_contract` Function；
-- KARS MAF Adapter 把 MAF Client 固定到 Local Router，再调用 GitHub Copilot
+- kars MAF Adapter 把 MAF Client 固定到 Local Router，再调用 GitHub Copilot
   GPT-5.6-Sol；
 - 独立 `InferencePolicy`，包含单请求与每日 Token Budget；
 - 只允许具名工具的 `ToolPolicy`，不包含 Shell、Merge 或 Deployment；
@@ -48,7 +48,7 @@ Pilot 不会 Merge 或部署 Source。它只生成 Patch、目标测试 Evidence
 - Application 与 Router Tamper-evident Audit；
 - 使用 `spec.suspended`、不删除 CR/Evidence 的 Kill Switch；
 - Digest-based Rollback；
-- 内部 Development MCP 声明与 KARS Eval 声明。
+- 内部 Development MCP 声明与 kars Eval 声明。
 
 GitHub Copilot Provider Credential 仍只在 Router Path 中。Agent Contract 检查确认
 Agent Container 不包含 Copilot 或 GitHub Token/Key Environment Variable。
@@ -57,14 +57,14 @@ Agent Container 不包含 Copilot 或 GitHub Token/Key Environment Variable。
 OpenClaw Intake
   -> MAF Agent
   -> inspect_release_contract @tool
-  -> KARS MAF Python Adapter
-  -> 127.0.0.1:8443 KARS Router
+  -> kars MAF Python Adapter
+  -> 127.0.0.1:8443 kars Router
   -> GitHub Copilot GPT-5.6-Sol
 ```
 
 应用代码中不存在直接访问 `/v1/responses` 的 `httpx` 调用。
 MAF Agent 设置 `store: false`，让 Responses API Function Loop 内联 Tool
-History，避免 KARS `v0.1.25` 在 Tool 执行后的 Model Turn 中不支持
+History，避免 kars `v0.1.25` 在 Tool 执行后的 Model Turn 中不支持
 `previous_response_id` 的兼容性问题。一个范围严格的 MAF Client 兼容子类会在
 内联重放前移除 Provider 过长的加密 Function Call Item ID，同时保留标准
 `call_id`。
@@ -103,7 +103,7 @@ make test
 ```
 
 它会通过 Microsoft Package Feed Proxy 安装 Python Package、运行控制测试、渲染
-KARS Resource，并使用 Live CRD Server-side Dry-run 验证，不修改 Azure。
+kars Resource，并使用 Live CRD Server-side Dry-run 验证，不修改 Azure。
 
 三个生态统一使用 Microsoft Source：
 
@@ -129,16 +129,16 @@ make deploy
 
 脚本不会重建 AKS。它会：
 
-1. 验证目标 AKS 与 KARS Controller 已 Ready；
+1. 验证目标 AKS 与 kars Controller 已 Ready；
 2. 使用 ACR Tasks 和 `--platform linux/amd64` 构建 `pilot_agent`；
 3. 解析 SHA-256 Image Digest；
-4. 把 KARS Controller 的 `MAF_RUNTIME_IMAGE` 固定到该 Digest；
+4. 把 kars Controller 的 `MAF_RUNTIME_IMAGE` 固定到该 Digest；
 5. 渲染并执行 First-class MAF Sandbox 的 Server-side Validation；
 6. 部署 Pilot、MCP Metadata 和 Eval 声明；
 7. 运行一个真实成功流程与三个拒绝流程。
 
-KARS `v0.1.25` 会把 `agentCode.oci` 传入 Runtime Plan，但还不会在 Pod 中实际生成
-Code Mount。因此本实验扩展官方 KARS MAF Python Image，把应用烘焙到
+kars `v0.1.25` 会把 `agentCode.oci` 传入 Runtime Plan，但还不会在 Pod 中实际生成
+Code Mount。因此本实验扩展官方 kars MAF Python Image，把应用烘焙到
 `/opt/fabrikam-agent`，启动时由 UID 1000 复制到 Writable `/sandbox/agent`
 Volume。这是当前版本的 Packaging Workaround；Sandbox Runtime 仍是
 `MicrosoftAgentFramework`，不是 BYO。
@@ -226,7 +226,7 @@ Runtime 还为重复 Repair Loop、Development MCP 不可用、Reviewer 修改 S
 
 ## Kill Switch 与 Rollback
 
-停止新任务但不删除 KARS Resource：
+停止新任务但不删除 kars Resource：
 
 ```bash
 make suspend
@@ -255,7 +255,7 @@ Ownership 与 Evidence Procedure 请参阅
 
 ## KarsEval 兼容性 Evidence
 
-`KarsEval` CR 与 `jailbreak-baseline` Corpus 可以成功解析，但上游 KARS
+`KarsEval` CR 与 `jailbreak-baseline` Corpus 可以成功解析，但上游 kars
 `v0.1.25` 生成的 Eval Runner Job 被当前 AKS Namespace 的 `restricted` Pod
 Security 拒绝，因为 Runner 缺少：
 
@@ -272,12 +272,12 @@ Promotion Gate 前，需要先解决这个上游兼容性问题。
 
 Operator Command 从 macOS arm64 执行。ACR Tasks 明确构建 Linux amd64，Azure
 Pod 也运行在 amd64 Node。macOS amd64 与 Linux amd64 使用相同脚本。Windows
-amd64 请在 Ubuntu WSL2 中运行，并把 Azure、Kubernetes 与 KARS CLI 全部安装在
+amd64 请在 Ubuntu WSL2 中运行，并把 Azure、Kubernetes 与 kars CLI 全部安装在
 WSL2 内。
 
 ## 官方参考
 
-- [KARS](https://github.com/Azure/kars)
-- [KARS Examples](https://github.com/Azure/kars/tree/main/examples)
+- [kars](https://github.com/Azure/kars)
+- [kars Examples](https://github.com/Azure/kars/tree/main/examples)
 - [Microsoft Agent Framework GitHub Copilot Samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)

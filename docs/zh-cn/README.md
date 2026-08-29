@@ -1,4 +1,4 @@
-# 一起学习 Microsoft KARS
+# 一起学习 Microsoft kars
 
 本教程以九章连续故事跟随四人创业团队 **ByteCraft AI**：他们必须在不赌上公司
 现金流和首位客户源码安全的前提下，发布从 Issue 到 Pull Request 的研发 Agent
@@ -10,12 +10,12 @@ Forge。每章从一个新的交付问题开始，以工程决策或可验证产
 - 当流程需要成为明确、可测试的应用代码时，切换到
   **Microsoft Agent Framework（MAF）Python**。
 
-应用框架发生变化时，KARS 仍保持一致的 Sandbox、Router、Policy、Audit 和网络
+应用框架发生变化时，kars 仍保持一致的 Sandbox、Router、Policy、Audit 和网络
 控制。
 
-## KARS 的运行原理
+## kars 的运行原理
 
-KARS 把每个 Agent 视为受治理的 Kubernetes 工作负载。Agent 不拥有独立的外部
+kars 把每个 Agent 视为受治理的 Kubernetes 工作负载。Agent 不拥有独立的外部
 网络路径，也不持有生产 Azure 凭据。Sidecar Router 会在转发前评估每项外部操作。
 
 ```text
@@ -23,7 +23,7 @@ KARS 把每个 Agent 视为受治理的 Kubernetes 工作负载。Agent 不拥�
       |
       | 提交 karsSandbox 与 Policy CRD
       v
-Kubernetes API <------> KARS Controller
+Kubernetes API <------> kars Controller
                             |
                             | 持续协调
                             v
@@ -50,7 +50,7 @@ Kubernetes API <------> KARS Controller
 | 组件 | 负责什么 | 不负责什么 |
 | --- | --- | --- |
 | `karsSandbox` | 声明一个 Agent Runtime、隔离、资源和 Policy 引用 | 不直接决定某次请求是否允许 |
-| KARS Controller | 监听 CRD，创建 Namespace、Pod、配置、身份资源与 NetworkPolicy | 不位于模型/工具请求数据路径中 |
+| kars Controller | 监听 CRD，创建 Namespace、Pod、配置、身份资源与 NetworkPolicy | 不位于模型/工具请求数据路径中 |
 | Agent Container | 以 UID 1000 运行 OpenClaw、MAF Python 或其他支持的 Runtime | 不应持有生产提供商凭据或直接出口 |
 | Egress Guard | 安装规则，强制 Agent 流量进入本地 Router | 是 Safety Net，而不是语义策略引擎 |
 | Inference Router | 执行推理、工具、Token 预算、身份、出口与审计决定 | 不判断生成代码是否正确 |

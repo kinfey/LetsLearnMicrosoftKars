@@ -17,7 +17,7 @@ OpenClaw Intake
     -> Patch Digest + Test-evidence Digest
     -> Forge Reviewer
     -> Human-reviewed GitOps Change
-    -> KARS on AKS
+    -> kars on AKS
 ```
 
 Multi-Agent Design 不是两个 Prompt 互相聊天，而是 Identity、Tool、Budget、Data 与
@@ -39,10 +39,10 @@ make test
 3. 运行确定性的 Builder/Reviewer Authorization Test；
 4. 通过 Host Microsoft Agent Framework `GitHubCopilotAgent` 调用
    GPT-5.6-Sol；
-5. 渲染两个独立的 KARS Sandbox 与 Policy；
-6. 使用 Live KARS API Server 执行 Server-side Dry-run；
-7. 执行官方 KARS `up --dry-run`；
-8. 证明真实部署必须明确 Opt-in，并提供上游 KARS Source Checkout；
+5. 渲染两个独立的 kars Sandbox 与 Policy；
+6. 使用 Live kars API Server 执行 Server-side Dry-run；
+7. 执行官方 kars `up --dry-run`；
+8. 证明真实部署必须明确 Opt-in，并提供上游 kars Source Checkout；
 9. 创建关联 Source Image 与 Policy Digest 的 Promotion Record。
 
 完整 macOS arm64 运行全部通过，且没有创建 Azure Resource。
@@ -59,7 +59,7 @@ make test
 | Log Analytics | 必填：你的 Workspace 名称 |
 | Azure Location | 选填：已存在 Resource Group 的 Location，否则 `eastus2` |
 | Model | `gpt-5.6-sol` |
-| KARS Release | `v0.1.25` |
+| kars Release | `v0.1.25` |
 | Isolation | `enhanced` |
 
 请复制
@@ -86,9 +86,9 @@ kars up \
   --yes
 ```
 
-KARS 报告真实运行将检查 Azure Credential，部署 AKS、ACR、Key Vault、Model
+kars 报告真实运行将检查 Azure Credential，部署 AKS、ACR、Key Vault、Model
 Infrastructure、Azure Monitor 与 Workload Identity，配置 Firewall 与 ACR
-Attachment，安装 KARS Control Plane，创建 Federated Credential，并等待初始
+Attachment，安装 kars Control Plane，创建 Federated Credential，并等待初始
 Sandbox。
 
 Dry-run 证明 Command Resolution 与 Preflight，不证明未来 Cluster 的 Quota、
@@ -108,7 +108,7 @@ Capacity、Model Availability、Network Routing 或 Runtime Health。
 Handoff 只包含 Reference 与 Digest，不包含可复用 Credential 或 Builder 的可写
 Workspace。
 
-## 渲染独立 KARS Resource
+## 渲染独立 kars Resource
 
 GitOps Template 生成：
 
@@ -133,7 +133,7 @@ GitOps Template 生成：
 - Strict、Default-deny Egress；
 - Local Registry Mode。
 
-Live KARS CRD 在 Server-side Dry-run 中接受全部六个 Resource。实验没有 Apply，
+Live kars CRD 在 Server-side Dry-run 中接受全部六个 Resource。实验没有 Apply，
 因此不会创建额外 Local Agent Pod。
 
 ## 把第 7 章 Evidence 带入 Promotion
@@ -141,7 +141,7 @@ Live KARS CRD 在 Server-side Dry-run 中接受全部六个 Resource。实验没
 Promotion Record 包含：
 
 - Repository Commit；
-- KARS Version `0.1.25`；
+- kars Version `0.1.25`；
 - Model `gpt-5.6-sol`；
 - 正在运行的 [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
   BYO Image Digest；
@@ -171,7 +171,7 @@ Promotion 必须从已知 Runtime 与 Policy Artifact 开始，不能在生产�
 Azure CNI Overlay + Cilium、Workload Identity、Multi-zone 和非 Burstable VM
 Family，除非环境存在明确记录的限制。
 
-本实验由 KARS 管理 Infrastructure Workflow。部署后必须检查实际 AKS
+本实验由 kars 管理 Infrastructure Workflow。部署后必须检查实际 AKS
 Configuration，不能根据成功的 CLI Dry-run 推断每个 Network Property 都已验证。
 
 ## 规划 Day-1 Operation
@@ -211,9 +211,9 @@ make deploy
 ```
 
 如果 Switch 不严格等于 `true`，脚本会拒绝执行。真实部署使用 Azure CLI，而
-不是非 Dry-run `kars up`，因为 KARS `0.1.25` 会在请求名称后追加 `-aks`。
+不是非 Dry-run `kars up`，因为 kars `0.1.25` 会在请求名称后追加 `-aks`。
 脚本创建 `AKS_NAME` 指定的准确名称，通过 ACR Tasks 和
-`--platform linux/amd64` 构建 BYO Image，解析其 Digest，安装 KARS 与 AGT，
+`--platform linux/amd64` 构建 BYO Image，解析其 Digest，安装 kars 与 AGT，
 并应用经过评审的 Resource。
 
 Repository 不会写入 Subscription ID 或 Credential。
@@ -226,7 +226,7 @@ Repository 不会写入 Subscription ID 或 Credential。
 - OIDC Issuer 与 Workload Identity 已启用。
 - 单 Node `system` Pool 使用 `Standard_D2as_v5`，单 Node `clawpool` 使用
   `Standard_D4as_v5`；两个 Node 均报告 `amd64`。
-- KARS Controller 与 AGT Registry/Relay 均已 Ready。
+- kars Controller 与 AGT Registry/Relay 均已 Ready。
 - OpenClaw Intake、Builder 与 Reviewer Sandbox 均为 Running。
 - Builder 与 Reviewer 使用相同的、按 SHA-256 Digest 固定的 ACR Image。
 - 真实 `gpt-5.6-sol` 请求返回
@@ -236,7 +236,7 @@ Repository 不会写入 Subscription ID 或 Credential。
 
 ## 不夸大 Mesh 或 A2A
 
-KARS `0.1.25` 提供 `mesh`、`pair` 与 `a2a` CLI Surface，当前上游 Blueprint
+kars `0.1.25` 提供 `mesh`、`pair` 与 `a2a` CLI Surface，当前上游 Blueprint
 也记录 Federation。本实验有意使用 `registryMode: local` 和 Reviewed
 Application Handoff Contract。
 
@@ -261,10 +261,10 @@ Post-deployment Test 证明一条允许 Workflow 与一条被拒绝的 Authority
 
 ## 官方参考
 
-- [KARS Getting Started](https://github.com/Azure/kars/blob/main/docs/getting-started.md)
+- [kars Getting Started](https://github.com/Azure/kars/blob/main/docs/getting-started.md)
 - [Enterprise Self-hosted Blueprint](https://github.com/Azure/kars/blob/main/docs/blueprints/03-enterprise-self-hosted.md)
 - [Cross-org Federation Blueprint](https://github.com/Azure/kars/blob/main/docs/blueprints/05-cross-org-federation.md)
-- [KARS CRD Reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
+- [kars CRD Reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
 - [Microsoft Agent Framework GitHub Copilot Samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
 - [Azure CNI Overlay](https://learn.microsoft.com/azure/aks/azure-cni-overlay)

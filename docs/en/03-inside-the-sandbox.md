@@ -25,7 +25,7 @@ This chapter pauses the feature work and opens the sandbox layer by layer.
 
 ## `karsSandbox` is the unit of work
 
-In KARS, one `karsSandbox` represents one Agent workload. It connects:
+In kars, one `karsSandbox` represents one Agent workload. It connects:
 
 - a runtime such as OpenClaw, Hermes, an adapter, or BYO;
 - a required `InferencePolicy`;
@@ -104,7 +104,7 @@ fixed-revision repository in a size-limited `emptyDir`; the OpenClaw Pod has no
 repository or `hostPath` mount. The MCP Deployment also disables automatic
 service-account token mounting and exposes only seven bounded tools.
 
-KARS defines the runtime sandbox, but the platform team still owns careful
+kars defines the runtime sandbox, but the platform team still owns careful
 volume and secret design. A NetworkPolicy cannot protect a Secret that was
 mounted directly into the Agent container.
 
@@ -157,7 +157,7 @@ The script discovers the generated namespace and Pod from
 - the Pod specification and a compact UID/mount summary;
 - NetworkPolicy;
 - the workspace MCP Deployment;
-- the KARS exec Admission Policy;
+- the kars exec Admission Policy;
 - recent controller and router logs.
 
 The output is written to `.evidence/<UTC timestamp>/` outside Kubernetes, so it
@@ -169,7 +169,7 @@ Normal operators also cannot assume interactive shell access:
 kubectl -n kars-forge exec <forge-pod> -c openclaw -- id
 ```
 
-KARS rejects this request through `kars-sandbox-exec-ban`. The complete lab can
+kars rejects this request through `kars-sandbox-exec-ban`. The complete lab can
 temporarily enable the audited namespace break-glass label, run narrowly scoped
 read-only probes, and remove the label through a shell trap.
 
@@ -180,13 +180,13 @@ production checkout for these experiments.
 
 | Test | Expected result |
 | --- | --- |
-| Inspect Forge and its assigned workspace | Allowed through KARS resources and bounded MCP tools |
+| Inspect Forge and its assigned workspace | Allowed through kars resources and bounded MCP tools |
 | Read a developer home-directory Secret | No host filesystem or home directory is mounted |
 | Call the model through the router | Allowed under inference policy |
 | Reach an unknown host directly from OpenClaw | Times out with HTTP `000` |
 | Write to `/etc` from OpenClaw | Denied by the read-only root filesystem |
 | Find a Copilot credential in OpenClaw | No provider credential variable is present |
-| Use ordinary `kubectl exec` on OpenClaw | Denied by KARS Admission Policy |
+| Use ordinary `kubectl exec` on OpenClaw | Denied by kars Admission Policy |
 | Restart the Agent | Controller returns workload to desired state |
 | Reference a missing inference policy | `Degraded/InferencePolicyNotFound` |
 
@@ -219,7 +219,7 @@ https://packagefeedproxy.microsoft.io/nuget/v3/index.json
 
 ## Choose the right isolation level
 
-KARS uses secure sandbox defaults, including enhanced isolation, a strict
+kars uses secure sandbox defaults, including enhanced isolation, a strict
 seccomp profile, and default-deny networking. AKS can optionally use
 Kata/AMD SEV-SNP-backed confidential isolation for stronger workload
 separation.
@@ -256,7 +256,7 @@ External path: router only
 Credentials in Agent: none
 OpenClaw writable scope: /sandbox and /tmp
 Repository writes: bounded workspace MCP tools only
-Lifecycle owner: KARS controller
+Lifecycle owner: kars controller
 Evidence destination: code/02/.evidence, then an external audit store
 Cleanup: export evidence before Pod or workspace removal
 ```

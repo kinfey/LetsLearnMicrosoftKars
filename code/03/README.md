@@ -1,4 +1,4 @@
-# KARS Kubernetes API contract lab
+# kars Kubernetes API contract lab
 
 [English](README.md) | [简体中文](README.zh.md)
 
@@ -7,7 +7,7 @@ Forge environment from [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftK
 and the evidence practices from
 [`code/02`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/02).
 It follows the upstream
-[KARS CRD reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md),
+[kars CRD reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md),
 [basic agent example](https://github.com/Azure/kars/tree/main/examples/basic-agent),
 and [architecture](https://github.com/Azure/kars/blob/main/docs/architecture.md).
 
@@ -65,7 +65,7 @@ The command:
 8. Breaks and restores `inferenceRef`.
 9. Proves cross-namespace references remain unresolved.
 10. Proves an invalid provider deployment fails only when inference is called.
-11. Deletes all temporary resources through KARS finalizers.
+11. Deletes all temporary resources through kars finalizers.
 
 ## Evidence
 

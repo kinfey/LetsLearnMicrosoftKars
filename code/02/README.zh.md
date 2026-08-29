@@ -6,7 +6,7 @@
 [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
 Forge 部署的
 可执行检查。设计依据包括
-[Azure/KARS 安全模型](https://github.com/Azure/kars/blob/main/docs/security.md)
+[Azure/kars 安全模型](https://github.com/Azure/kars/blob/main/docs/security.md)
 与 [Runtime Contract](https://github.com/Azure/kars/blob/main/docs/runtimes.md)。
 
 ## 实验要证明什么
@@ -15,7 +15,7 @@ Forge 部署的
 |------|------------|
 | 期望状态 | `KarsSandbox/forge` 为 `Running`；删除 Pod 后 Controller 会重新协调 |
 | 进程 | OpenClaw 使用 UID 1000，Inference Router 使用 UID 1001 |
-| 运维访问 | KARS Admission Policy 拒绝普通 `kubectl exec` 进入 OpenClaw |
+| 运维访问 | kars Admission Policy 拒绝普通 `kubectl exec` 进入 OpenClaw |
 | 文件系统 | OpenClaw 根文件系统只读且没有 hostPath；仓库位于 MCP Pod 的一次性 `emptyDir` |
 | 身份 | OpenClaw 没有 GitHub/Copilot Provider 凭据引用，凭据只属于 Router |
 | 网络 | Agent 直接 HTTPS 失败，但通过 `127.0.0.1:8443` 推理成功 |
@@ -60,7 +60,7 @@ make test-full
 直接 HTTPS 与 Loopback Router，然后通过 Shell Trap 立即删除标签。脚本不会输出
 任何凭据值。
 
-Pod 重启只删除当前 Forge Pod。KARS 管理的 Deployment 会创建替代 Pod，脚本随后
+Pod 重启只删除当前 Forge Pod。kars 管理的 Deployment 会创建替代 Pod，脚本随后
 验证新的 Pod UID 与 Sandbox 的 `Running` 状态。
 
 ## 证据

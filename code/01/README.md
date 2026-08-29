@@ -1,22 +1,22 @@
-# Forge: bounded Issue-to-Patch agent on OpenClaw and KARS
+# Forge: bounded Issue-to-Patch agent on OpenClaw and kars
 
 [English](README.md) | [简体中文](README.zh.md)
 
 This demo implements the product boundary from
-[Why KARS](https://kinfey.github.io/LetsLearnMicrosoftKars/zh-cn/01-why-kars/):
+[Why kars](https://kinfey.github.io/LetsLearnMicrosoftKars/zh-cn/01-why-kars/):
 
 > Given an approved Issue and a fixed repository revision, Forge may inspect its
 > assigned workspace, propose a minimal patch, and run named tests. It may not
 > merge, publish, modify CI, read unrelated repositories, or create credentials.
 
-The demo runs on a local kind cluster using a **source build of the latest KARS
+The demo runs on a local kind cluster using a **source build of the latest kars
 `main` branch**. OpenClaw uses GitHub Copilot model **GPT-5.6-Sol**
-(`gpt-5.6-sol`) through KARS' native `github-copilot` provider path:
+(`gpt-5.6-sol`) through kars' native `github-copilot` provider path:
 the Copilot OAuth token is mounted for the inference router, while the agent
 calls only the loopback router.
 
 GPT-5.6-Sol is Responses-API-only. The source-build adaptation configures the
-main OpenClaw runtime for `openai-responses` and teaches the KARS router to
+main OpenClaw runtime for `openai-responses` and teaches the kars router to
 recognize GitHub Copilot's `unsupported_api_for_model` response, so the
 specialist task loop is transparently translated from Chat Completions to
 Responses API.
@@ -93,9 +93,9 @@ Developer
    |
    v
 OpenClaw Forge coordinator (KarsSandbox)
-   |-- inference --> KARS router --> GitHub Copilot
-   |-- tools ------> KARS router --> forge-workspace MCP
-   `-- specialists -> KARS spawn + AGT encrypted mesh
+   |-- inference --> kars router --> GitHub Copilot
+   |-- tools ------> kars router --> forge-workspace MCP
+   `-- specialists -> kars spawn + AGT encrypted mesh
                        analyst / patch author / test verifier
 
 forge-workspace MCP
@@ -119,8 +119,8 @@ Issue, source excerpts, proposed edits, and test evidence over the AGT mesh.
 | Unapproved tests | `workspace_run_test` accepts only `format-user` |
 | CI tampering | Writes under `.github/` and CI files are rejected |
 | Merge/release | No PR, merge, publish, or release tool is exposed |
-| Runaway inference | KARS per-request and daily token budgets |
-| Missing evidence | KARS audit plus MCP tool results and unified diff |
+| Runaway inference | kars per-request and daily token budgets |
+| Missing evidence | kars audit plus MCP tool results and unified diff |
 
 ## Prerequisites
 
@@ -137,14 +137,14 @@ Package restore is pinned to Microsoft's proxy:
 
 ## Run
 
-### 1. Build the latest KARS source
+### 1. Build the latest kars source
 
 ```bash
 make build-kars
 ```
 
-This clones or updates the KARS and Microsoft Agent Governance Toolkit `main`
-branches, builds the KARS CLI with Node.js 22, and records the resolved commits
+This clones or updates the kars and Microsoft Agent Governance Toolkit `main`
+branches, builds the kars CLI with Node.js 22, and records the resolved commits
 in `.kars-source-version`.
 
 The build scripts force npm, pnpm, PyPI, and NuGet restores through the
@@ -158,12 +158,12 @@ make deploy
 make status
 ```
 
-The first `make deploy` runs the KARS provider picker. Choose **GitHub Copilot**
+The first `make deploy` runs the kars provider picker. Choose **GitHub Copilot**
 and complete the device-code login. Forge is pinned to `gpt-5.6-sol`; set
 `FORGE_MODEL` only when intentionally testing another Copilot model.
 
 The deployment creates or reuses the `kars-dev` kind cluster, builds the
-OpenClaw and workspace MCP images, installs the KARS and AGT components, and
+OpenClaw and workspace MCP images, installs the kars and AGT components, and
 applies the Forge sandbox, inference policy, coordinator policy, specialist
 policy, MCP server, and NetworkPolicy resources.
 
@@ -263,9 +263,9 @@ Validation checks the coordinator and specialist policies, the local kind
 API-server NetworkPolicy path used by `kars_spawn`, and a live GPT-5.6-Sol
 Chat-Completions-to-Responses fallback request.
 
-`destroy` removes only this demo's KARS resources and the `kars-mcp` namespace.
+`destroy` removes only this demo's kars resources and the `kars-mcp` namespace.
 Use `kars dev down --target local-k8s` separately if you also want to remove the
-shared local KARS kind cluster.
+shared local kars kind cluster.
 
 ## Troubleshooting
 

@@ -38,7 +38,7 @@ The project combines the earlier labs into one operable release unit:
 - a non-root `MicrosoftAgentFramework/python` Runtime;
 - a real MAF `Agent` using `OpenAIChatClient` and one
   `@tool`-decorated `inspect_release_contract` function;
-- the KARS MAF adapter, which pins the MAF client to the local Router before
+- the kars MAF adapter, which pins the MAF client to the local Router before
   GitHub Copilot GPT-5.6-Sol inference;
 - a separate `InferencePolicy` with per-request and daily Token budgets;
 - a named-tool `ToolPolicy` that excludes shell, merge, and deployment;
@@ -48,7 +48,7 @@ The project combines the earlier labs into one operable release unit:
 - application and Router tamper-evident audit checks;
 - a `spec.suspended` Kill Switch that preserves the CR and exported evidence;
 - digest-based rollback;
-- an internal development MCP declaration and a KARS Eval declaration.
+- an internal development MCP declaration and a kars Eval declaration.
 
 The GitHub Copilot provider credential remains in the Router path. The Agent
 contract check confirms that no Copilot or GitHub Token/Key environment
@@ -58,15 +58,15 @@ variable reaches the Agent container.
 OpenClaw Intake
   -> MAF Agent
   -> inspect_release_contract @tool
-  -> KARS MAF Python adapter
-  -> 127.0.0.1:8443 KARS Router
+  -> kars MAF Python adapter
+  -> 127.0.0.1:8443 kars Router
   -> GitHub Copilot GPT-5.6-Sol
 ```
 
 There is no application-level `httpx` call to `/v1/responses`.
 The MAF Agent sets `store: false`, so the Responses API function loop carries
 tool history inline and avoids the unsupported `previous_response_id` field
-during the post-tool model turn on KARS `v0.1.25`. A narrow MAF client
+during the post-tool model turn on kars `v0.1.25`. A narrow MAF client
 compatibility subclass removes the provider's overlong encrypted Function
 Call item ID before inline replay while retaining the standard `call_id`.
 
@@ -104,7 +104,7 @@ make test
 ```
 
 This installs Python packages from Microsoft Package Feed Proxy, runs the
-control tests, renders the KARS resources, and validates them against the live
+control tests, renders the kars resources, and validates them against the live
 CRDs with Server-side Dry-run. It does not change Azure.
 
 Microsoft sources are committed for all three ecosystems:
@@ -131,17 +131,17 @@ make deploy
 
 The script does not recreate AKS. It:
 
-1. verifies that the selected AKS and KARS Controller are Ready;
+1. verifies that the selected AKS and kars Controller are Ready;
 2. builds `pilot_agent` in ACR Tasks with `--platform linux/amd64`;
 3. resolves the SHA-256 image digest;
-4. pins the KARS Controller `MAF_RUNTIME_IMAGE` override to that digest;
+4. pins the kars Controller `MAF_RUNTIME_IMAGE` override to that digest;
 5. renders and Server-side validates the first-class MAF Sandbox;
 6. deploys the Pilot, MCP metadata, and Eval declaration;
 7. runs one real success path and three denied paths.
 
-KARS `v0.1.25` carries `agentCode.oci` through its runtime plan but does not
+kars `v0.1.25` carries `agentCode.oci` through its runtime plan but does not
 yet materialize that code mount in the Pod. The lab therefore extends the
-official KARS MAF Python image, bakes the application into
+official kars MAF Python image, bakes the application into
 `/opt/fabrikam-agent`, and copies it as UID 1000 into the writable
 `/sandbox/agent` volume at startup. This is a version-specific packaging
 workaround; the Sandbox runtime remains `MicrosoftAgentFramework`, not BYO.
@@ -231,7 +231,7 @@ The real run completed on the configured existing AKS cluster:
 
 ## Kill Switch and rollback
 
-Stop new work without deleting the KARS resource:
+Stop new work without deleting the kars resource:
 
 ```bash
 make suspend
@@ -262,7 +262,7 @@ procedures.
 ## KarsEval compatibility evidence
 
 The `KarsEval` CR and `jailbreak-baseline` corpus resolve successfully, but the
-upstream KARS `v0.1.25` Eval Runner Job is rejected by this AKS namespace's
+upstream kars `v0.1.25` Eval Runner Job is rejected by this AKS namespace's
 `restricted` Pod Security policy because the generated Runner lacks:
 
 - `runAsNonRoot: true`;
@@ -280,11 +280,11 @@ using it as a production promotion gate.
 The operator command ran from macOS arm64. ACR Tasks explicitly built Linux
 amd64, and the Azure Pod runs on an amd64 node. macOS amd64 and Linux amd64 use
 the same scripts. On Windows amd64, run them inside Ubuntu WSL2 with all Azure,
-Kubernetes, and KARS CLIs installed in WSL2.
+Kubernetes, and kars CLIs installed in WSL2.
 
 ## Official references
 
-- [KARS](https://github.com/Azure/kars)
-- [KARS examples](https://github.com/Azure/kars/tree/main/examples)
+- [kars](https://github.com/Azure/kars)
+- [kars examples](https://github.com/Azure/kars/tree/main/examples)
 - [Microsoft Agent Framework GitHub Copilot samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)

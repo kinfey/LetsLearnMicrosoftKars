@@ -1,7 +1,7 @@
 # 7. 安全与运维：限制、观测并恢复 Forge
 
 > **交付阶段：** 运维第 6 章的 BYO 生产候选
-> **起点：** OpenClaw Forge 行为，现在运行于 KARS BYO Workload，并使用
+> **起点：** OpenClaw Forge 行为，现在运行于 kars BYO Workload，并使用
 > GitHub Copilot GPT-5.6-Sol
 > **可执行实验：** [`code/06`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/06)
 
@@ -9,7 +9,7 @@
 
 第 1 章定义 OpenClaw Issue-to-Patch Workflow；第 2 到第 5 章依次限制 Filesystem、
 Kubernetes API、Tool 与 Policy；第 6 章保留相同 Forge Contract，同时加入
-Host-side Microsoft Agent Framework Canary 和 Cluster 内 KARS BYO Runtime。
+Host-side Microsoft Agent Framework Canary 和 Cluster 内 kars BYO Runtime。
 
 第 7 章直接运维这套真实 Runtime：
 
@@ -17,7 +17,7 @@ Host-side Microsoft Agent Framework Canary 和 Cluster 内 KARS BYO Runtime。
 OpenClaw FORMAT-482 Workflow
     -> Application Repair Guard
     -> BYO Agent，UID 1000，无 Provider Credential
-    -> Localhost KARS Router，UID 1001
+    -> Localhost kars Router，UID 1001
     -> GitHub Copilot GPT-5.6-Sol
     -> Policy Decision、Audit Chain、Metrics、Recovery Evidence
 ```
@@ -116,7 +116,7 @@ curl http://127.0.0.1:18444/metrics
 ```
 
 完成的运行返回 `integrity: valid`、`Hash chain verified`、Native
-Governance、Loaded Policy，以及 KARS Audit/Inference Metrics。
+Governance、Loaded Policy，以及 kars Audit/Inference Metrics。
 
 ## 演练 Token Budget Incident
 
@@ -196,7 +196,7 @@ In-memory Chain 生命周期内可以检测篡改，但不能在 Pod 丢失后�
 History。
 
 生产运维必须在删除可疑 Pod 前，把 Audit Record 持续输出到独立控制的 Durable
-Backend。Chain-head Signing 与更强 Non-repudiation 也必须结合 KARS Maturity
+Backend。Chain-head Signing 与更强 Non-repudiation 也必须结合 kars Maturity
 文档评估。
 
 ## 记录 Release，而不只记录 Response
@@ -205,7 +205,7 @@ Backend。Chain-head Signing 与更强 Non-repudiation 也必须结合 KARS Matu
 
 | 字段 | 已验证值 |
 | --- | --- |
-| KARS | `0.1.25` |
+| kars | `0.1.25` |
 | Model | `gpt-5.6-sol` |
 | Runtime | `BYO` |
 | Repository | 准确 Git Commit |
@@ -229,7 +229,7 @@ Telemetry，不能假设所有 Provider 一致。
 - 执行破坏性响应前，把 Audit 与 Metrics 外送到 Workload 之外。
 - 针对 Denial Pattern 和 Budget Exhaustion 告警，而不是对每次成功拒绝告警。
 - 使用 Workload Identity 或 Router-owned Credential，不把 Credential 交给 Agent。
-- 固定 KARS、Image、Model 与 Policy Artifact。
+- 固定 kars、Image、Model 与 Policy Artifact。
 - 分别测试 Policy Activation、Rollback、Pod Recovery、Upgrade 与 Restore。
 - Merge、Release 或 Deploy 前继续保留 Human Approval。
 
@@ -243,9 +243,9 @@ Audit Integrity 已检查且没有与 Persistence 混淆，Workload 使用新 Po
 
 ## 官方参考
 
-- [KARS Security](https://github.com/Azure/kars/blob/main/docs/security.md)
-- [KARS Maturity](https://github.com/Azure/kars/blob/main/docs/maturity.md)
-- [KARS Operations](https://github.com/Azure/kars/tree/main/docs/operations)
+- [kars Security](https://github.com/Azure/kars/blob/main/docs/security.md)
+- [kars Maturity](https://github.com/Azure/kars/blob/main/docs/maturity.md)
+- [kars Operations](https://github.com/Azure/kars/tree/main/docs/operations)
 - [Secret Rotation](https://github.com/Azure/kars/blob/main/docs/operations/secret-rotation.md)
 - [Upgrades](https://github.com/Azure/kars/blob/main/docs/operations/upgrades.md)
 - [Chaos Tier](https://github.com/Azure/kars/blob/main/docs/operations/chaos-tier.md)

@@ -4,7 +4,7 @@
 
 This lab turns Chapter 3's sandbox claims into executable checks against the
 Forge deployment from [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01). Its design follows the
-[Azure/KARS security model](https://github.com/Azure/kars/blob/main/docs/security.md)
+[Azure/kars security model](https://github.com/Azure/kars/blob/main/docs/security.md)
 and [runtime contract](https://github.com/Azure/kars/blob/main/docs/runtimes.md).
 
 ## What this lab proves
@@ -13,7 +13,7 @@ and [runtime contract](https://github.com/Azure/kars/blob/main/docs/runtimes.md)
 |----------|---------------------|
 | Desired state | `KarsSandbox/forge` is `Running`; a deleted Pod is reconciled |
 | Process | OpenClaw runs as UID 1000 and the inference router as UID 1001 |
-| Operator access | normal `kubectl exec` into OpenClaw is denied by KARS admission policy |
+| Operator access | normal `kubectl exec` into OpenClaw is denied by kars admission policy |
 | Filesystem | OpenClaw has a read-only root filesystem and no hostPath; the repository lives in the MCP Pod's disposable `emptyDir` |
 | Identity | OpenClaw has no GitHub/Copilot provider credential reference; the router owns it |
 | Network | direct Agent HTTPS fails while `127.0.0.1:8443` inference succeeds |
@@ -61,7 +61,7 @@ make test-full
 credential variable names, direct HTTPS, and the loopback router, then removes
 the label through a shell trap. It never prints credential values.
 
-The Pod restart deletes only the current Forge Pod. The KARS-managed Deployment
+The Pod restart deletes only the current Forge Pod. The kars-managed Deployment
 creates a replacement and the script verifies a new Pod UID and a `Running`
 Sandbox phase.
 

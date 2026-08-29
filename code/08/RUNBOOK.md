@@ -34,5 +34,5 @@ override and triggers Sandbox reconciliation.
 
 - Support owner: configured by `SUPPORT_OWNER`.
 - Application changes: Pull Request review.
-- KARS policy changes: platform/security review.
+- kars policy changes: platform/security review.
 - Production deployment: CI/GitOps, never the Builder Agent.

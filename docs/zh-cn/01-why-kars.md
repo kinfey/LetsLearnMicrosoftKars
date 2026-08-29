@@ -51,7 +51,7 @@ Forge 可以检查分配的 Workspace、提出最小 Patch，并运行具名测�
 负向约束与成功路径同样重要。它避免“AI Developer”在实现过程中变成不断扩张、
 无法验收的承诺。
 
-KARS（Agent Reference Stack for Kubernetes）提供了一种围绕更强原则构建的
+kars（Agent Reference Stack for Kubernetes）提供了一种围绕更强原则构建的
 参考架构：
 
 > Agent 不拥有访问外部服务或 Azure 凭据的独立路径。
@@ -79,14 +79,14 @@ Forge 将运行在 `karsSandbox` 中。专属路由器负责代理推理、工�
 
 ## 从团队问题认识组件
 
-| 团队问题 | KARS 组件 |
+| 团队问题 | kars 组件 |
 | --- | --- |
 | “运行什么？”——Maya | `karsSandbox` 与 Runtime Adapter |
 | “使用什么模型和预算？”——产品负责人 Arun | `InferencePolicy` |
 | “可以调用哪些工具？”——Lina | `ToolPolicy` 与 `McpServer` |
 | “可以访问哪些目标？”——平台工程师 Ethan | 出口策略与 Approval |
 | “实际发生了什么？”——运维团队 | 路由器日志、审计、Trace 与状态 |
-| “谁让 Kubernetes 保持一致？” | KARS Controller |
+| “谁让 Kubernetes 保持一致？” | kars Controller |
 
 Controller 持续将自定义资源协调为 Pod、Service、配置、身份资源和策略。路由器
 则执行请求期间的控制。两者相关，但职责并不相同。
@@ -109,7 +109,7 @@ Agent 与路由器位于同一容器。启动很快，但不能证明生产容�
 kars dev --release v0.1.25 --target local-k8s
 ```
 
-KARS 创建 kind 集群并部署接近生产形态的 Pod。团队将在这里学习、破坏、检查并
+kars 创建 kind 集群并部署接近生产形态的 Pod。团队将在这里学习、破坏、检查并
 修复 Forge。
 
 ### 阶段 3：AKS
@@ -122,7 +122,7 @@ AKS 增加 Azure 身份选项和生产基础设施。只有本地验收测试通
 
 ## 对成熟度保持诚实
 
-KARS 是开源 alpha 参考实现，不是 Microsoft 托管服务。其 API 为
+kars 是开源 alpha 参考实现，不是 Microsoft 托管服务。其 API 为
 `kars.azure.com/v1alpha1`，小版本之间也可能出现破坏性变化。高级信任、A2A
 验证、Attestation 和供应链准入能力仍有成熟度限制。
 
@@ -163,7 +163,7 @@ KARS 是开源 alpha 参考实现，不是 Microsoft 托管服务。其 API 为
 
 ## 官方参考
 
-- [KARS README](https://github.com/Azure/kars/blob/main/README.md)
+- [kars README](https://github.com/Azure/kars/blob/main/README.md)
 - [架构](https://github.com/Azure/kars/blob/main/docs/architecture.md)
 - [安全模型](https://github.com/Azure/kars/blob/main/docs/security.md)
 - [功能成熟度](https://github.com/Azure/kars/blob/main/docs/maturity.md)

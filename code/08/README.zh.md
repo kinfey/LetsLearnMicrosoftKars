@@ -6,15 +6,15 @@
 ```text
 OpenClaw Intake
   -> MAF Agent + OpenAIChatClient + inspect_release_contract @tool
-  -> KARS MAF Adapter
-  -> Local KARS Router
+  -> kars MAF Adapter
+  -> Local kars Router
   -> GitHub Copilot GPT-5.6-Sol
 ```
 
-应用代码不直接调用 Router HTTP API。KARS Adapter 把 MAF OpenAI Client 固定到
+应用代码不直接调用 Router HTTP API。kars Adapter 把 MAF OpenAI Client 固定到
 `127.0.0.1:8443`，Provider Credential 仍只存在于 Router Path。MAF Agent 设置
 `store: false`，让 Responses API Function Loop 内联 Tool History，而不是发送
-KARS `v0.1.25` GitHub Copilot Adapter 不支持的 `previous_response_id` 字段。一个
+kars `v0.1.25` GitHub Copilot Adapter 不支持的 `previous_response_id` 字段。一个
 小型 MAF Client 兼容子类还会在内联重放前移除 Provider 过长的加密 Function
 Call Item ID，同时保留标准 `call_id`。
 
@@ -38,8 +38,8 @@ Azure Resource 名称是用户必填参数，Repository 不会绑定或公开真
 脚本会验证现有 AKS 的实际 Location。ACR Task 明确构建 Linux amd64，并按
 Digest 选择 MAF Runtime。
 
-KARS `v0.1.25` 已在 CRD/Runtime Plan 中提供 `agentCode.oci`，但还没有把该 Code
-Mount 真正生成到 Pod。本实验因此扩展官方 KARS MAF Python Image，把应用烘焙到
+kars `v0.1.25` 已在 CRD/Runtime Plan 中提供 `agentCode.oci`，但还没有把该 Code
+Mount 真正生成到 Pod。本实验因此扩展官方 kars MAF Python Image，把应用烘焙到
 `/opt/fabrikam-agent`，启动时由 UID 1000 复制到 Writable `/sandbox/agent`
 Volume，并通过 Controller 的 `MAF_RUNTIME_IMAGE` 指向 Digest。Sandbox 仍是正式
 的 `MicrosoftAgentFramework/python` Runtime，不是 BYO。

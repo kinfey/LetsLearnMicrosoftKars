@@ -17,7 +17,7 @@
 
 - Git 保存预期的 Workload 与权限；
 - Kubernetes 验证 Object Shape；
-- KARS 协调请求状态；
+- kars 协调请求状态；
 - `status.conditions` 解释请求是否成功；
 - `metadata.generation` 与 `status.observedGeneration` 显示 Controller 是否已经
   处理最新变更。
@@ -25,7 +25,7 @@
 [`code/03`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/03)
 会在正在运行的 `kars-dev` 集群中执行完整生命周期。
 
-## 使用准确的 KARS API 标识
+## 使用准确的 kars API 标识
 
 Kubernetes API 名称区分大小写。已经安装的 CRD 是：
 
@@ -49,7 +49,7 @@ kubectl get crd karssandboxes.kars.azure.com -o yaml
 
 ## 分离 Workload 与推理权限
 
-最小可部署 KARS Agent 包含：
+最小可部署 kars Agent 包含：
 
 1. 同一个 Namespace 中的 `InferencePolicy`。
 2. 一个 `KarsSandbox`，其必需字段 `spec.inferenceRef.name` 指向该 Policy。
@@ -178,7 +178,7 @@ status.conditions[type=Ready].status == True
 generation=1 observedGeneration=1 phase=Running
 ```
 
-实验还确认 KARS 添加了 Finalizer：
+实验还确认 kars 添加了 Finalizer：
 
 ```text
 kars.azure.com/namespace-cleanup
@@ -310,11 +310,11 @@ https://packagefeedproxy.microsoft.io/pypi/simple/
 https://packagefeedproxy.microsoft.io/nuget/v3/index.json
 ```
 
-退出时会恢复上游 KARS 与 OpenClaw 源码文件。
+退出时会恢复上游 kars 与 OpenClaw 源码文件。
 
 ## 只根据需求增加资源
 
-当前安装的 KARS API 提供以下相关 Resource Kind：
+当前安装的 kars API 提供以下相关 Resource Kind：
 
 | 需求 | Resource Kind |
 | --- | --- |
@@ -330,7 +330,7 @@ https://packagefeedproxy.microsoft.io/nuget/v3/index.json
 | 暴露 A2A Endpoint | `A2AAgent` |
 
 不要为了“完整”而创建所有 CRD。每个 Object 都必须对应真实的产品或运维需求，并根据
-当前安装的 KARS Revision 检查成熟度。
+当前安装的 kars Revision 检查成熟度。
 
 ## 完成定义
 
@@ -341,7 +341,7 @@ https://packagefeedproxy.microsoft.io/nuget/v3/index.json
 
 ## 官方参考
 
-- [KARS CRD 参考](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
-- [KARS Basic Agent 示例](https://github.com/Azure/kars/tree/main/examples/basic-agent)
-- [KARS 架构](https://github.com/Azure/kars/blob/main/docs/architecture.md)
-- [KARS 源码仓库](https://github.com/Azure/kars)
+- [kars CRD 参考](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
+- [kars Basic Agent 示例](https://github.com/Azure/kars/tree/main/examples/basic-agent)
+- [kars 架构](https://github.com/Azure/kars/blob/main/docs/architecture.md)
+- [kars 源码仓库](https://github.com/Azure/kars)

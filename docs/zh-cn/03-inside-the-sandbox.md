@@ -24,7 +24,7 @@ Sandbox 不是一个有魔力的标签。对 Forge 而言，它必须保护私�
 
 ## `karsSandbox` 是工作单元
 
-在 KARS 中，一个 `karsSandbox` 代表一个 Agent 工作负载。它连接：
+在 kars 中，一个 `karsSandbox` 代表一个 Agent 工作负载。它连接：
 
 - OpenClaw、Hermes、其他 Adapter 或 BYO Runtime；
 - 必需的 `InferencePolicy`；
@@ -92,7 +92,7 @@ Forge 采用了更强的分离：经过加固的 `forge-workspace-mcp` Pod 使�
 `emptyDir` 管理固定 Revision 仓库；OpenClaw Pod 没有仓库或 `hostPath` 挂载。
 MCP Deployment 同时关闭自动 Service Account Token 挂载，并且只暴露七个受限工具。
 
-KARS 定义 Runtime Sandbox，但平台团队仍需谨慎设计 Volume 与 Secret。
+kars 定义 Runtime Sandbox，但平台团队仍需谨慎设计 Volume 与 Secret。
 NetworkPolicy 无法保护被错误挂载到 Agent 容器中的 Secret。
 
 ### 3. 网络边界
@@ -138,7 +138,7 @@ make inspect
 - Pod Spec 与精简的 UID/挂载摘要；
 - NetworkPolicy；
 - Workspace MCP Deployment；
-- KARS Exec Admission Policy；
+- kars Exec Admission Policy；
 - 最近的 Controller 与 Router 日志。
 
 输出保存在 Kubernetes 外部的 `.evidence/<UTC timestamp>/`，因此 Pod 重新协调或
@@ -150,7 +150,7 @@ Workspace 清理后，证据仍然存在。
 kubectl -n kars-forge exec <forge-pod> -c openclaw -- id
 ```
 
-KARS 会通过 `kars-sandbox-exec-ban` 拒绝该请求。完整实验可以短时启用可审计的
+kars 会通过 `kars-sandbox-exec-ban` 拒绝该请求。完整实验可以短时启用可审计的
 Namespace Break-glass Label，只执行范围明确的只读探测，并通过 Shell Trap 删除标签。
 
 ## 使用 Forge 测试边界
@@ -161,13 +161,13 @@ Namespace Break-glass Label，只执行范围明确的只读探测，并通过 S
 
 | 测试 | 预期结果 |
 | --- | --- |
-| 检查 Forge 与分配的 Workspace | 通过 KARS 资源和受限 MCP 工具允许 |
+| 检查 Forge 与分配的 Workspace | 通过 kars 资源和受限 MCP 工具允许 |
 | 读取开发者 Home 中的 Secret | 没有挂载 Host 文件系统或 Home 目录 |
 | 通过路由器调用模型 | 在推理策略范围内允许 |
 | 从 OpenClaw 直接访问未知主机 | 超时并返回 HTTP `000` |
 | 从 OpenClaw 写入 `/etc` | 被只读根文件系统拒绝 |
 | 在 OpenClaw 中查找 Copilot 凭据 | 不存在 Provider 凭据变量 |
-| 对 OpenClaw 使用普通 `kubectl exec` | 被 KARS Admission Policy 拒绝 |
+| 对 OpenClaw 使用普通 `kubectl exec` | 被 kars Admission Policy 拒绝 |
 | 重启 Agent | Controller 将工作负载恢复到期望状态 |
 | 引用不存在的推理策略 | 得到 `Degraded/InferencePolicyNotFound` |
 
@@ -200,7 +200,7 @@ https://packagefeedproxy.microsoft.io/nuget/v3/index.json
 
 ## 选择正确隔离级别
 
-KARS 使用安全的 Sandbox 默认值，包括 Enhanced Isolation、严格 Seccomp Profile
+kars 使用安全的 Sandbox 默认值，包括 Enhanced Isolation、严格 Seccomp Profile
 和 Default-Deny 网络。AKS 可以选择由 Kata/AMD SEV-SNP 支持的 Confidential
 Isolation，进一步加强工作负载隔离。
 
@@ -233,7 +233,7 @@ Router User：UID 1001
 Agent 中的凭据：无
 OpenClaw 可写范围：/sandbox 与 /tmp
 仓库写入：仅受限 Workspace MCP 工具
-生命周期 Owner：KARS Controller
+生命周期 Owner：kars Controller
 证据目标：code/02/.evidence，然后进入外部 Audit Store
 清理：删除 Pod 或 Workspace 前先导出证据
 ```

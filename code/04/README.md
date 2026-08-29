@@ -1,4 +1,4 @@
-# KARS policy and tools lab
+# kars policy and tools lab
 
 [English](README.md) | [简体中文](README.zh.md)
 
@@ -9,7 +9,7 @@ using the boundary and evidence patterns from
 [`code/02`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/02)
 and [`code/03`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/03).
 It follows the upstream
-[KARS MCP guide](https://github.com/Azure/kars/blob/main/docs/mcp.md),
+[kars MCP guide](https://github.com/Azure/kars/blob/main/docs/mcp.md),
 [CRD reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md),
 and [security model](https://github.com/Azure/kars/blob/main/docs/security.md).
 

@@ -1,7 +1,7 @@
 # 7. Security and Operations: Contain, Observe, and Recover Forge
 
 > **Delivery stage:** Operate the Chapter 6 BYO production candidate
-> **Starting point:** OpenClaw Forge behavior, now running as a KARS BYO
+> **Starting point:** OpenClaw Forge behavior, now running as a kars BYO
 > workload with GitHub Copilot GPT-5.6-Sol
 > **Executable lab:** [`code/06`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/06)
 
@@ -10,7 +10,7 @@
 Chapter 1 defined the OpenClaw issue-to-patch workflow. Chapters 2 through 5
 bounded its filesystem, Kubernetes API, tools, and policies. Chapter 6 kept the
 same Forge contract while adding a host-side Microsoft Agent Framework canary
-and an in-cluster KARS BYO runtime.
+and an in-cluster kars BYO runtime.
 
 Chapter 7 operates that real runtime:
 
@@ -18,7 +18,7 @@ Chapter 7 operates that real runtime:
 OpenClaw FORMAT-482 workflow
     -> application Repair Guard
     -> BYO agent, UID 1000, no provider credential
-    -> localhost KARS Router, UID 1001
+    -> localhost kars Router, UID 1001
     -> GitHub Copilot GPT-5.6-Sol
     -> policy decisions, audit chain, metrics, recovery evidence
 ```
@@ -121,7 +121,7 @@ curl http://127.0.0.1:18444/metrics
 ```
 
 The completed run reported `integrity: valid`, `Hash chain verified`, native
-governance, a loaded policy, and KARS audit/inference metrics.
+governance, a loaded policy, and kars audit/inference metrics.
 
 ## Exercise a token-budget incident
 
@@ -206,7 +206,7 @@ not preserve incident history across Pod loss.
 
 Production operation must stream audit records to an independently controlled,
 durable backend before deleting a suspect Pod. Chain-head signing and stronger
-non-repudiation must also be evaluated against the KARS maturity documentation.
+non-repudiation must also be evaluated against the kars maturity documentation.
 
 ## Record the release, not only the response
 
@@ -214,7 +214,7 @@ The final record includes:
 
 | Field | Validated value |
 | --- | --- |
-| KARS | `0.1.25` |
+| kars | `0.1.25` |
 | Model | `gpt-5.6-sol` |
 | Runtime | `BYO` |
 | Repository | exact Git commit |
@@ -242,7 +242,7 @@ the telemetry that the selected provider actually exposes.
 - Alert on denial patterns and budget exhaustion, not every successful denial.
 - Use workload identity or Router-owned credentials; keep credentials out of
   the Agent.
-- Pin KARS, images, models, and policy artifacts.
+- Pin kars, images, models, and policy artifacts.
 - Test policy activation, rollback, Pod recovery, upgrades, and restore
   separately.
 - Preserve human approval before merge, release, or deployment.
@@ -258,9 +258,9 @@ record pins the exact software and policy inputs.
 
 ## Official references
 
-- [KARS security](https://github.com/Azure/kars/blob/main/docs/security.md)
-- [KARS maturity](https://github.com/Azure/kars/blob/main/docs/maturity.md)
-- [KARS operations](https://github.com/Azure/kars/tree/main/docs/operations)
+- [kars security](https://github.com/Azure/kars/blob/main/docs/security.md)
+- [kars maturity](https://github.com/Azure/kars/blob/main/docs/maturity.md)
+- [kars operations](https://github.com/Azure/kars/tree/main/docs/operations)
 - [Secret rotation](https://github.com/Azure/kars/blob/main/docs/operations/secret-rotation.md)
 - [Upgrades](https://github.com/Azure/kars/blob/main/docs/operations/upgrades.md)
 - [Chaos tier](https://github.com/Azure/kars/blob/main/docs/operations/chaos-tier.md)

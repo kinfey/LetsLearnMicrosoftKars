@@ -7,16 +7,16 @@ cluster:
 ```text
 OpenClaw Intake
   -> MAF Agent + OpenAIChatClient + inspect_release_contract @tool
-  -> KARS MAF adapter
-  -> local KARS Router
+  -> kars MAF adapter
+  -> local kars Router
   -> GitHub Copilot GPT-5.6-Sol
 ```
 
-The application contains no direct Router HTTP call. The KARS adapter pins the
+The application contains no direct Router HTTP call. The kars adapter pins the
 MAF OpenAI client to `127.0.0.1:8443`, while the provider credential remains
 only in the Router path. The MAF Agent sets `store: false`, so its Responses
 API function loop carries tool history inline instead of sending the
-`previous_response_id` field that the KARS `v0.1.25` GitHub Copilot adapter
+`previous_response_id` field that the kars `v0.1.25` GitHub Copilot adapter
 does not support. A small MAF client compatibility subclass also removes the
 provider's overlong encrypted Function Call item ID before inline replay while
 preserving the standard `call_id`.
@@ -42,9 +42,9 @@ deployment in this repository. The script verifies the existing AKS location.
 The ACR Task explicitly builds Linux amd64 and the MAF runtime is selected by
 digest.
 
-KARS `v0.1.25` exposes `agentCode.oci` in the CRD/runtime plan but does not yet
+kars `v0.1.25` exposes `agentCode.oci` in the CRD/runtime plan but does not yet
 materialize that code mount in the Pod. This lab therefore extends the official
-KARS MAF Python image, bakes the application into `/opt/fabrikam-agent`, copies
+kars MAF Python image, bakes the application into `/opt/fabrikam-agent`, copies
 it as UID 1000 into the writable `/sandbox/agent` volume at startup, and sets
 the Controller `MAF_RUNTIME_IMAGE` override. The Sandbox remains a first-class
 `MicrosoftAgentFramework/python` runtime, not BYO.

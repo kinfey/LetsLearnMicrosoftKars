@@ -57,7 +57,7 @@ read unrelated repositories, or create new credentials.
 The negative clauses matter as much as the happy path. They keep "AI developer"
 from becoming an undefined promise that expands during implementation.
 
-KARS—Agent Reference Stack for Kubernetes—offers a reference architecture built
+kars—Agent Reference Stack for Kubernetes—offers a reference architecture built
 around a stronger invariant:
 
 > The agent has no independent path to external services or Azure credentials.
@@ -86,14 +86,14 @@ what a bad decision can do and makes the decision observable.
 
 ## Meet the components through the team
 
-| Team question | KARS component |
+| Team question | kars component |
 | --- | --- |
 | "What should run?" — Maya | `karsSandbox` and a runtime adapter |
 | "What model and budget?" — Arun, product owner | `InferencePolicy` |
 | "Which tools?" — Lina | `ToolPolicy` and `McpServer` |
 | "Which destinations?" — Ethan, platform engineer | Egress policy and approvals |
 | "What actually happened?" — Operations | Router logs, audit, traces, and status |
-| "Who keeps Kubernetes aligned?" | KARS controller |
+| "Who keeps Kubernetes aligned?" | kars controller |
 
 The controller continuously reconciles custom resources into pods, services,
 configuration, identity resources, and policies. The router enforces the
@@ -118,7 +118,7 @@ production container or NetworkPolicy boundary.
 kars dev --release v0.1.25 --target local-k8s
 ```
 
-KARS creates a kind cluster and deploys a production-shaped pod. This is where
+kars creates a kind cluster and deploys a production-shaped pod. This is where
 the team will learn, break, inspect, and repair Forge.
 
 ### Stage 3: AKS
@@ -132,7 +132,7 @@ after the local acceptance tests pass.
 
 ## Keep expectations honest
 
-KARS is an open-source alpha reference implementation, not a managed Microsoft
+kars is an open-source alpha reference implementation, not a managed Microsoft
 service. Its API is `kars.azure.com/v1alpha1`, and breaking changes can occur
 between minor releases. Advanced trust, A2A verification, attestation, and
 supply-chain admission capabilities have maturity caveats.
@@ -177,7 +177,7 @@ control.
 
 ## Official references
 
-- [KARS README](https://github.com/Azure/kars/blob/main/README.md)
+- [kars README](https://github.com/Azure/kars/blob/main/README.md)
 - [Architecture](https://github.com/Azure/kars/blob/main/docs/architecture.md)
 - [Security model](https://github.com/Azure/kars/blob/main/docs/security.md)
 - [Feature maturity](https://github.com/Azure/kars/blob/main/docs/maturity.md)

@@ -1,7 +1,7 @@
 # 5. Governance: Control Tokens and Tools
 
 > **Delivery stage:** Feature development
-> **Starting point:** OpenClaw coordinates FORMAT-482, but KARS decides which
+> **Starting point:** OpenClaw coordinates FORMAT-482, but kars decides which
 > inference and workspace capabilities that workflow may use.
 > **Executable lab:** [`code/04`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/04)
 
@@ -9,14 +9,14 @@
 
 The Forge example does not begin with a generic shell. OpenClaw receives the
 FORMAT-482 issue, plans the work, and delegates bounded operations through the
-KARS Router and Workspace MCP:
+kars Router and Workspace MCP:
 
 ```text
 FORMAT-482
     |
     v
 OpenClaw coordinator (KarsSandbox/forge)
-    |-- inference --> 127.0.0.1:8443 KARS Router
+    |-- inference --> 127.0.0.1:8443 kars Router
     |-- MCP --------> forge-workspace-mcp:8931/mcp
     `-- specialists -> inference and mesh only
 ```
@@ -96,7 +96,7 @@ not the security boundary. Its AGT profile deliberately contains no
 
 ## Verify policy is loaded, not merely submitted
 
-KARS compiles the inline AGT profile into a ConfigMap. The Router echoes the
+kars compiles the inline AGT profile into a ConfigMap. The Router echoes the
 loaded digest, and the controller reports:
 
 ```text
@@ -209,6 +209,6 @@ runtime behavior agree.
 
 ## Official references
 
-- [Azure/KARS MCP guide](https://github.com/Azure/kars/blob/main/docs/mcp.md)
-- [Azure/KARS CRD reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
-- [Azure/KARS security model](https://github.com/Azure/kars/blob/main/docs/security.md)
+- [Azure/kars MCP guide](https://github.com/Azure/kars/blob/main/docs/mcp.md)
+- [Azure/kars CRD reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
+- [Azure/kars security model](https://github.com/Azure/kars/blob/main/docs/security.md)

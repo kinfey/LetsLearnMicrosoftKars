@@ -1,4 +1,4 @@
-# KARS AKS and multi-agent promotion lab
+# kars AKS and multi-agent promotion lab
 
 [English](README.md) | [简体中文](README.zh.md)
 
@@ -18,11 +18,11 @@ OpenClaw Intake
     -> digest-pinned handoff envelope
     -> Forge Reviewer (read evidence + approve/reject)
     -> human-reviewed GitOps promotion
-    -> KARS on AKS
+    -> kars on AKS
 ```
 
-The default run is intentionally **plan-only**. It executes KARS
-`up --dry-run`, validates the GitOps resources against the live local KARS
+The default run is intentionally **plan-only**. It executes kars
+`up --dry-run`, validates the GitOps resources against the live local kars
 CRDs, and creates no Azure resources. Real AKS deployment is an explicit
 opt-in because it creates billable infrastructure.
 
@@ -36,8 +36,8 @@ opt-in because it creates billable infrastructure.
 | `LOG_ANALYTICS_WORKSPACE` | required | Your Log Analytics workspace |
 | `AZURE_LOCATION` | existing resource-group location, otherwise `eastus2` | Azure region |
 | `KARS_SANDBOX_NAME` | `forge-intake` | Initial OpenClaw sandbox created by `kars up` |
-| `KARS_RELEASE` | `v0.1.25` | Pinned KARS release |
-| `KARS_ISOLATION` | `enhanced` | KARS isolation level |
+| `KARS_RELEASE` | `v0.1.25` | Pinned kars release |
+| `KARS_ISOLATION` | `enhanced` | kars isolation level |
 | `KARS_MESH_TRUST` | `anonymous` | Initial mesh trust mode |
 | `GITHUB_COPILOT_MODEL` | `gpt-5.6-sol` | Required model |
 | `DEPLOY_AKS` | `false` | Real Azure creation switch |
@@ -69,11 +69,11 @@ cp config/aks.env.example config/aks.env
 - Reviewer has the smaller inference budget.
 - Both roles retain the BYO v1 contract, strict egress, enhanced isolation,
   read-only root filesystems, and GPT-5.6-Sol.
-- The live KARS API server accepts all six rendered resources using
+- The live kars API server accepts all six rendered resources using
   `kubectl apply --dry-run=server`.
-- KARS `0.1.25` completes `kars up --dry-run` for the selected Azure target.
+- kars `0.1.25` completes `kars up --dry-run` for the selected Azure target.
 - Real deployment is denied unless it is explicitly enabled and an upstream
-  KARS source checkout is available.
+  kars source checkout is available.
 - A promotion record links the source Git commit,
   [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
   image digest,
@@ -94,7 +94,7 @@ Resource group: <your-resource-group>
 AKS cluster:    <your-aks-cluster>
 Location:       <your-azure-region>
 Model:          gpt-5.6-sol
-KARS release:   v0.1.25
+kars release:   v0.1.25
 Azure created:  no
 ```
 
@@ -133,7 +133,7 @@ credential, or tool authority to the Reviewer.
 
 ## AKS Day-0 and Day-1 decisions
 
-The plan delegates infrastructure creation to the current KARS `up` workflow,
+The plan delegates infrastructure creation to the current kars `up` workflow,
 which reports AKS, ACR, Key Vault, model infrastructure, Azure Monitor,
 Workload Identity, firewall configuration, Helm, and the initial sandbox.
 
@@ -149,14 +149,14 @@ Review these before real deployment:
 
 Use Azure CNI Overlay/Cilium and Workload Identity for production unless the
 environment has a documented reason to choose another Day-0 design. Verify the
-actual KARS-provisioned cluster rather than assuming a CLI plan proves every
+actual kars-provisioned cluster rather than assuming a CLI plan proves every
 network setting.
 
 ## Real Azure deployment
 
 Review `.evidence/<run>/aks-plan.json`, the rendered manifests, quota, and
 cost. The real deployment uses Azure CLI instead of non-dry-run `kars up`
-because KARS `0.1.25` would append `-aks` to the requested cluster name.
+because kars `0.1.25` would append `-aks` to the requested cluster name.
 
 ```bash
 cp config/aks.env.example config/aks.env
@@ -167,8 +167,8 @@ make deploy
 ```
 
 `make deploy` creates the cluster named by `AKS_NAME`, plus the configured ACR
-and Log Analytics workspace; imports KARS `v0.1.25`; builds the BYO image through ACR Tasks with
-`--platform linux/amd64`; pins the image by digest; installs KARS and AGT; and
+and Log Analytics workspace; imports kars `v0.1.25`; builds the BYO image through ACR Tasks with
+`--platform linux/amd64`; pins the image by digest; installs kars and AGT; and
 applies the reviewed Builder/Reviewer resources. It refuses to deploy unless
 `DEPLOY_AKS` is exactly `true`.
 
@@ -180,7 +180,7 @@ No subscription ID is stored in the repository or evidence.
 - The `system` pool uses one `Standard_D2as_v5` node and `clawpool` uses one
   `Standard_D4as_v5` node; both report `amd64`.
 - Azure CNI Overlay, Cilium, OIDC issuer, and Workload Identity are enabled.
-- KARS Controller, AGT Registry/Relay, OpenClaw Intake, Builder, and Reviewer
+- kars Controller, AGT Registry/Relay, OpenClaw Intake, Builder, and Reviewer
   are Running.
 - The Builder and Reviewer use the same digest-pinned Linux amd64 image.
 - A real Router call returned `KARS_BYO_GPT_5_6_SOL_OK` from
@@ -189,8 +189,8 @@ No subscription ID is stored in the repository or evidence.
 
 ## Mesh and A2A scope
 
-The installed KARS CLI exposes `mesh`, `pair`, and `a2a` commands, and current
-upstream KARS documents cluster federation and A2A ingress. This lab uses
+The installed kars CLI exposes `mesh`, `pair`, and `a2a` commands, and current
+upstream kars documents cluster federation and A2A ingress. This lab uses
 `registryMode: local` and a deterministic reviewed handoff envelope. It does
 not claim that cross-cluster pairing, public A2A ingress, Entra mesh trust, or
 encrypted relay delivery was exercised.
@@ -225,14 +225,14 @@ Secret values.
 The completed run was validated on macOS arm64. The inherited scripts support
 macOS amd64 and Linux amd64. On Windows amd64, run inside Ubuntu WSL2 with
 Docker Desktop WSL integration and Azure CLI, kubectl, Helm, Node.js 22, and
-the KARS CLI installed inside WSL2.
+the kars CLI installed inside WSL2.
 
 ## References
 
-- [Azure/KARS getting started](https://github.com/Azure/kars/blob/main/docs/getting-started.md)
-- [Azure/KARS enterprise self-hosted blueprint](https://github.com/Azure/kars/blob/main/docs/blueprints/03-enterprise-self-hosted.md)
-- [Azure/KARS cross-org federation blueprint](https://github.com/Azure/kars/blob/main/docs/blueprints/05-cross-org-federation.md)
-- [Azure/KARS CRD reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
+- [Azure/kars getting started](https://github.com/Azure/kars/blob/main/docs/getting-started.md)
+- [Azure/kars enterprise self-hosted blueprint](https://github.com/Azure/kars/blob/main/docs/blueprints/03-enterprise-self-hosted.md)
+- [Azure/kars cross-org federation blueprint](https://github.com/Azure/kars/blob/main/docs/blueprints/05-cross-org-federation.md)
+- [Azure/kars CRD reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
 - [Microsoft Agent Framework GitHub Copilot samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
 - [Azure CNI Overlay](https://learn.microsoft.com/azure/aks/azure-cni-overlay)

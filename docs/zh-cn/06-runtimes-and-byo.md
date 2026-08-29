@@ -1,7 +1,7 @@
 # 6. Runtime 与 BYO：从 OpenClaw 转向明确代码
 
 > **交付阶段：** 生产实现
-> **起点：** 保留已经验证的 OpenClaw 行为，再决定哪个应用循环运行在 KARS Security
+> **起点：** 保留已经验证的 OpenClaw 行为，再决定哪个应用循环运行在 kars Security
 > Shell 内部或旁边。
 > **可执行实验：** [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
 
@@ -48,7 +48,7 @@ RECEIVE_REQUIREMENT
 | --- | --- | --- |
 | Agent Framework | Microsoft Agent Framework | Agent API、Tool、Session 与应用结构 |
 | Model Provider Path | GitHub Copilot / GPT-5.6-Sol | 模型访问与 Host-side Copilot Session |
-| KARS Runtime | `OpenClaw`、`MicrosoftAgentFramework` 或 `BYO` | Governed Sandbox 内的 Container Plan |
+| kars Runtime | `OpenClaw`、`MicrosoftAgentFramework` 或 `BYO` | Governed Sandbox 内的 Container Plan |
 
 修改 `KarsSandbox.spec.runtime.kind` 会切换 Runtime Container Producer，但不会自动把
 OpenClaw Prompt 转换为经过测试的 Python 代码。
@@ -111,15 +111,15 @@ COPILOT_GPT_5_6_SOL_OK FORMAT-482 <random-nonce> STOP_FOR_HUMAN_REVIEW
 这样可以避免把只复述文字的回答误认为 Tool 已经执行。
 
 路径 A 使用 Host 已认证的 Copilot CLI；它是 Framework/Provider Canary，不是
-KARS 隔离工作负载。
+kars 隔离工作负载。
 
-## 路径 B：KARS BYO 生产候选
+## 路径 B：kars BYO 生产候选
 
 ```text
 KarsSandbox/runtime.kind=BYO
     -> BYO Python Application
     -> http://127.0.0.1:8443/v1/responses
-    -> KARS Router
+    -> kars Router
     -> GitHub Copilot GPT-5.6-Sol
 ```
 
@@ -136,7 +136,7 @@ spec:
     dailyTokens: 4096
 ```
 
-在本教程的 Local KARS 配置中，Router Provider Override 是 `github-copilot`，
+在本教程的 Local kars 配置中，Router Provider Override 是 `github-copilot`，
 `deployment` 承载模型 ID。BYO Agent 可以看到 `KARS_MODEL=gpt-5.6-sol`，但不会
 获得 Copilot Token。
 
@@ -160,7 +160,7 @@ LABEL org.kars.runtime.contract="v1"
 USER 1000
 ```
 
-KARS 会在 `/sandbox` 挂载 `emptyDir`。不可变应用代码不能写入会被 Runtime Mount
+kars 会在 `/sandbox` 挂载 `emptyDir`。不可变应用代码不能写入会被 Runtime Mount
 覆盖的路径。
 [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
 把代码放在 `/app`，只把 `/sandbox` 和 `/tmp` 用作可写
@@ -258,8 +258,8 @@ NuGet  https://packagefeedproxy.microsoft.io/nuget/v3/index.json
 
 ## 官方参考
 
-- [Azure/KARS Runtime Catalog](https://github.com/Azure/kars/blob/main/docs/runtimes.md)
-- [Azure/KARS Runtime Contract](https://github.com/Azure/kars/blob/main/docs/runtimes/CONTRACT.md)
-- [Azure/KARS BYO Quickstart](https://github.com/Azure/kars/tree/main/examples/byo-quickstart)
+- [Azure/kars Runtime Catalog](https://github.com/Azure/kars/blob/main/docs/runtimes.md)
+- [Azure/kars Runtime Contract](https://github.com/Azure/kars/blob/main/docs/runtimes/CONTRACT.md)
+- [Azure/kars BYO Quickstart](https://github.com/Azure/kars/tree/main/examples/byo-quickstart)
 - [Microsoft Agent Framework GitHub Copilot Samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)

@@ -1,4 +1,4 @@
-# KARS Policy 与工具实验
+# kars Policy 与工具实验
 
 [English](README.md) | [简体中文](README.zh.md)
 
@@ -8,7 +8,7 @@ Forge 环境的可执行治理检查，并复用
 [`code/02`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/02)
 与 [`code/03`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/03)
 的边界和证据模式。设计参考上游
-[KARS MCP Guide](https://github.com/Azure/kars/blob/main/docs/mcp.md)、
+[kars MCP Guide](https://github.com/Azure/kars/blob/main/docs/mcp.md)、
 [CRD Reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
 和 [Security Model](https://github.com/Azure/kars/blob/main/docs/security.md)。
 

@@ -2,7 +2,7 @@
 
 > **Delivery stage:** Production implementation
 > **Starting point:** Keep the validated OpenClaw behavior, then decide which
-> application loop runs inside or beside the KARS security shell.
+> application loop runs inside or beside the kars security shell.
 > **Executable lab:** [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
 
 ## Everything still starts from OpenClaw
@@ -50,7 +50,7 @@ Three names that sound interchangeable are different layers:
 | --- | --- | --- |
 | Agent framework | Microsoft Agent Framework | Agent API, tools, sessions, application structure |
 | Model provider path | GitHub Copilot / GPT-5.6-Sol | Model access and host-side Copilot session |
-| KARS runtime | `OpenClaw`, `MicrosoftAgentFramework`, or `BYO` | Container plan inside the governed Sandbox |
+| kars runtime | `OpenClaw`, `MicrosoftAgentFramework`, or `BYO` | Container plan inside the governed Sandbox |
 
 Changing `KarsSandbox.spec.runtime.kind` changes the runtime container producer.
 It does not automatically convert an OpenClaw prompt into tested Python code.
@@ -116,15 +116,15 @@ This prevents a text-only response from being mistaken for proof that the tool
 ran.
 
 Lane A uses the host's authenticated Copilot CLI. It is a framework/provider
-canary, not a KARS-isolated workload.
+canary, not a kars-isolated workload.
 
-## Lane B: KARS BYO production candidate
+## Lane B: kars BYO production candidate
 
 ```text
 KarsSandbox/runtime.kind=BYO
     -> BYO Python application
     -> http://127.0.0.1:8443/v1/responses
-    -> KARS Router
+    -> kars Router
     -> GitHub Copilot GPT-5.6-Sol
 ```
 
@@ -141,7 +141,7 @@ spec:
     dailyTokens: 4096
 ```
 
-In this local KARS configuration, the Router's provider override is
+In this local kars configuration, the Router's provider override is
 `github-copilot`; `deployment` carries the model ID. The BYO Agent sees
 `KARS_MODEL=gpt-5.6-sol`, but it does not receive the Copilot token.
 
@@ -165,7 +165,7 @@ LABEL org.kars.runtime.contract="v1"
 USER 1000
 ```
 
-KARS mounts an `emptyDir` at `/sandbox`. Immutable application code must not be
+kars mounts an `emptyDir` at `/sandbox`. Immutable application code must not be
 baked into a path that the runtime mount hides.
 [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
 keeps code under
@@ -269,8 +269,8 @@ values.
 
 ## Official references
 
-- [Azure/KARS runtime catalog](https://github.com/Azure/kars/blob/main/docs/runtimes.md)
-- [Azure/KARS runtime contract](https://github.com/Azure/kars/blob/main/docs/runtimes/CONTRACT.md)
-- [Azure/KARS BYO quickstart](https://github.com/Azure/kars/tree/main/examples/byo-quickstart)
+- [Azure/kars runtime catalog](https://github.com/Azure/kars/blob/main/docs/runtimes.md)
+- [Azure/kars runtime contract](https://github.com/Azure/kars/blob/main/docs/runtimes/CONTRACT.md)
+- [Azure/kars BYO quickstart](https://github.com/Azure/kars/tree/main/examples/byo-quickstart)
 - [Microsoft Agent Framework GitHub Copilot samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)

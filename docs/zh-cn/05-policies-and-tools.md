@@ -1,21 +1,21 @@
 # 5. 治理：控制 Token 与工具
 
 > **交付阶段：** 功能开发
-> **起点：** OpenClaw 协调 FORMAT-482，但 KARS 决定这条工作流可以使用哪些推理和
+> **起点：** OpenClaw 协调 FORMAT-482，但 kars 决定这条工作流可以使用哪些推理和
 > Workspace Capability。
 > **可执行实验：** [`code/04`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/04)
 
 ## 一切从 OpenClaw 工作流开始
 
 Forge 示例不是从通用 Shell 开始。OpenClaw 接收 FORMAT-482 Issue、规划任务，再通过
-KARS Router 和 Workspace MCP 委派受限操作：
+kars Router 和 Workspace MCP 委派受限操作：
 
 ```text
 FORMAT-482
     |
     v
 OpenClaw Coordinator（KarsSandbox/forge）
-    |-- 推理 --> 127.0.0.1:8443 KARS Router
+    |-- 推理 --> 127.0.0.1:8443 kars Router
     |-- MCP --> forge-workspace-mcp:8931/mcp
     `-- Specialist -> 只有推理和 Mesh
 ```
@@ -91,7 +91,7 @@ Specialist 只有推理和 Mesh Capability。Specialist Pod 仍可能包含
 
 ## 验证 Policy 已加载，而不只是已提交
 
-KARS 会把内联 AGT Profile 编译为 ConfigMap。Router 回报已加载 Digest，Controller
+kars 会把内联 AGT Profile 编译为 ConfigMap。Router 回报已加载 Digest，Controller
 显示：
 
 ```text
@@ -197,6 +197,6 @@ Controller 与 Router Log，以及准确 Patch Diff 保存到
 
 ## 官方参考
 
-- [Azure/KARS MCP Guide](https://github.com/Azure/kars/blob/main/docs/mcp.md)
-- [Azure/KARS CRD Reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
-- [Azure/KARS Security Model](https://github.com/Azure/kars/blob/main/docs/security.md)
+- [Azure/kars MCP Guide](https://github.com/Azure/kars/blob/main/docs/mcp.md)
+- [Azure/kars CRD Reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
+- [Azure/kars Security Model](https://github.com/Azure/kars/blob/main/docs/security.md)

@@ -11,7 +11,7 @@
 一组 Kubernetes 资源，而是 **OpenClaw**。
 
 OpenClaw 是直接接收开发者请求、规划任务、调用工具并协调 Specialist Agent 的对话式
-运行时。KARS 则围绕 OpenClaw 提供边界：代理推理、受治理工具、隔离 Sandbox、
+运行时。kars 则围绕 OpenClaw 提供边界：代理推理、受治理工具、隔离 Sandbox、
 NetworkPolicy、Token 预算和审计证据。
 
 因此，本地原型要回答的是一个具体问题：
@@ -36,8 +36,8 @@ cd code/01
    |
    v
 OpenClaw Forge 协调器（KarsSandbox）
-   |-- 推理 ------> KARS Router --> GitHub Copilot / GPT-5.6-Sol
-   |-- 工具 ------> KARS Router --> forge-workspace MCP
+   |-- 推理 ------> kars Router --> GitHub Copilot / GPT-5.6-Sol
+   |-- 工具 ------> kars Router --> forge-workspace MCP
    `-- Specialist -> kars_spawn + 加密 AGT Mesh
                        分析员 / 补丁作者 / 测试验证员
 ```
@@ -50,7 +50,7 @@ OpenClaw 始终是工作流中心：
 3. `k8s/policies.yaml` 允许协调器使用受限 Workspace 工具；动态创建的 Specialist
    只能使用推理和 Mesh 能力。
 4. `workspace-mcp/` 独立拥有仓库、补丁操作和具名测试。
-5. KARS 负责路由模型和工具调用，但不会把 Copilot 凭据暴露给 OpenClaw 容器。
+5. kars 负责路由模型和工具调用，但不会把 Copilot 凭据暴露给 OpenClaw 容器。
 
 这层分离非常关键：OpenClaw 负责推理和编排，真正的权限来自外围平台与窄接口 MCP
 实现，而不是来自 Prompt 中的一句“请不要越权”。
@@ -168,17 +168,17 @@ make build-kars
 
 该命令并不只是安装一个已发布的 CLI：
 
-1. 克隆或更新 KARS 与 Microsoft Agent Governance Toolkit 的 `main` 分支。
-2. 使用 Node.js 22 编译并链接 KARS CLI。
+1. 克隆或更新 kars 与 Microsoft Agent Governance Toolkit 的 `main` 分支。
+2. 使用 Node.js 22 编译并链接 kars CLI。
 3. 将最终 Commit 和 Package Source 记录到 `.kars-source-version`。
 4. 部署期间，`scripts/build-openclaw-source.sh` 会从 `v2026.5.27` 构建固定版本
    的 OpenClaw 源码镜像。
 
-固定 OpenClaw 镜像让 Agent Runtime 可重复，记录 KARS 与 AGT Commit 则让控制平面
+固定 OpenClaw 镜像让 Agent Runtime 可重复，记录 kars 与 AGT Commit 则让控制平面
 构建可追踪。
 
 GPT-5.6-Sol 使用 Responses API。这个源码构建路径会将 OpenClaw 主运行时配置为
-`openai-responses`，并包含 KARS Router 适配：当 GitHub Copilot 返回
+`openai-responses`，并包含 kars Router 适配：当 GitHub Copilot 返回
 `unsupported_api_for_model` 时，Specialist Task Loop 会透明转为 Responses API。
 
 ## 部署 OpenClaw Forge Sandbox
@@ -188,11 +188,11 @@ make deploy
 make status
 ```
 
-第一次部署时，在 KARS Provider 选择器中选择 **GitHub Copilot**，并完成设备代码
+第一次部署时，在 kars Provider 选择器中选择 **GitHub Copilot**，并完成设备代码
 登录。随后部署脚本会：
 
 - 创建或复用 `kars-dev` kind 集群；
-- 安装 KARS 和 AGT 组件；
+- 安装 kars 和 AGT 组件；
 - 构建固定版本的 OpenClaw 与 Workspace MCP 镜像；
 - 在 `kars-mcp` Namespace 部署 MCP 服务；
 - 创建 OpenClaw `forge` Sandbox；
@@ -343,7 +343,7 @@ make validate
 make destroy
 ```
 
-该命令只删除 Forge 示例资源和 `kars-mcp` Namespace。如果还要删除共享的本地 KARS
+该命令只删除 Forge 示例资源和 `kars-mcp` Namespace。如果还要删除共享的本地 kars
 集群，请执行：
 
 ```bash

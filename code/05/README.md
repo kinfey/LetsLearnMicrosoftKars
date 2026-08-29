@@ -1,4 +1,4 @@
-# KARS runtimes and BYO lab
+# kars runtimes and BYO lab
 
 [English](README.md) | [简体中文](README.zh.md)
 
@@ -13,14 +13,14 @@ Microsoft Agent Framework GitHubCopilotAgent
     -> GitHub Copilot GPT-5.6-Sol
 
 Lane B: in-cluster production candidate
-KARS KarsSandbox/runtime.kind=BYO
-    -> 127.0.0.1:8443 KARS inference router
+kars KarsSandbox/runtime.kind=BYO
+    -> 127.0.0.1:8443 kars inference router
     -> GitHub Copilot GPT-5.6-Sol
 ```
 
 The two lanes deliberately do not share credentials. Lane A uses the host
 Copilot CLI session. Lane B contains no GitHub or Copilot provider credential;
-the KARS Router owns the provider path.
+the kars Router owns the provider path.
 
 ## Why there are two lanes
 
@@ -47,22 +47,22 @@ claiming a nonexistent drop-in combination.
   `inspect_forge_contract` once and denies every other permission.
 - A random run nonce returned only by that tool is echoed by the model, proving
   the tool actually ran.
-- The live KARS CRD accepts the MAF Python shape and rejects `language: dotnet`.
-- The live KARS CRD rejects BYO without `contractVersion`.
+- The live kars CRD accepts the MAF Python shape and rejects `language: dotnet`.
+- The live kars CRD rejects BYO without `contractVersion`.
 - The BYO image declares `org.kars.runtime.contract=v1` and runs as UID 1000.
-- KARS injects `KARS_MODEL=gpt-5.6-sol`,
+- kars injects `KARS_MODEL=gpt-5.6-sol`,
   `KARS_RUNTIME_KIND=BYO`, and contract version `v1`.
 - No GitHub/Copilot token or key name is present in the BYO agent environment.
 - Direct BYO internet egress times out.
 - The same BYO agent reaches GPT-5.6-Sol successfully through the localhost
-  KARS Router.
+  kars Router.
 - The Router-loaded InferencePolicy digest matches the compiled digest.
-- The BYO Pod keeps the KARS security shell: agent UID 1000, Router UID 1001,
+- The BYO Pod keeps the kars security shell: agent UID 1000, Router UID 1001,
   read-only root filesystem, dropped capabilities, and egress guard.
 
 ## BYO image layout
 
-KARS mounts a disposable `emptyDir` at `/sandbox`. Application code baked into
+kars mounts a disposable `emptyDir` at `/sandbox`. Application code baked into
 `/sandbox` would be hidden by that mount. This image keeps immutable code under
 `/app` and reserves `/sandbox` and `/tmp` for writable runtime state:
 
@@ -100,7 +100,7 @@ restored when the lab exits.
 - Docker Desktop, kind, kubectl, jq, curl, Python 3.11+, and Node.js 22.
 - GitHub Copilot CLI installed and authenticated.
 - A Copilot plan that exposes GPT-5.6-Sol.
-- KARS configured with provider `github-copilot`.
+- kars configured with provider `github-copilot`.
 
 Check the provider:
 
@@ -133,8 +133,8 @@ Evidence: .../code/05/.evidence/<UTC timestamp>
 ```bash
 make unit      # Framework-neutral state-machine tests
 make copilot   # Host GitHubCopilotAgent and GPT-5.6-Sol call
-make deploy    # Build, validate, and deploy the KARS BYO image
-make inspect   # Capture sanitized KARS and Pod evidence
+make deploy    # Build, validate, and deploy the kars BYO image
+make inspect   # Capture sanitized kars and Pod evidence
 ./scripts/port-forward.sh  # Keep this running in a separate terminal
 make runtime              # Test the forwarded BYO endpoint
 make clean     # Delete the code/05 Sandbox and InferencePolicy
@@ -171,8 +171,8 @@ also supports macOS amd64, Linux amd64, and Windows amd64 through Ubuntu WSL2.
 
 ## References
 
-- [Azure/KARS runtime catalog](https://github.com/Azure/kars/blob/main/docs/runtimes.md)
-- [Azure/KARS runtime contract](https://github.com/Azure/kars/blob/main/docs/runtimes/CONTRACT.md)
-- [Azure/KARS BYO quickstart](https://github.com/Azure/kars/tree/main/examples/byo-quickstart)
+- [Azure/kars runtime catalog](https://github.com/Azure/kars/blob/main/docs/runtimes.md)
+- [Azure/kars runtime contract](https://github.com/Azure/kars/blob/main/docs/runtimes/CONTRACT.md)
+- [Azure/kars BYO quickstart](https://github.com/Azure/kars/tree/main/examples/byo-quickstart)
 - [Microsoft Agent Framework GitHub Copilot samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)

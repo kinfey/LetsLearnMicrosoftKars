@@ -1,4 +1,4 @@
-# KARS Kubernetes API 契约实验
+# kars Kubernetes API 契约实验
 
 [English](README.md) | [简体中文](README.zh.md)
 
@@ -7,7 +7,7 @@
 的 Forge 环境与
 [`code/02`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/02)
 的证据方法。设计参考
-上游 [KARS CRD Reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)、
+上游 [kars CRD Reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)、
 [Basic Agent Example](https://github.com/Azure/kars/tree/main/examples/basic-agent)
 和 [Architecture](https://github.com/Azure/kars/blob/main/docs/architecture.md)。
 
@@ -64,7 +64,7 @@ make test
 8. 破坏并恢复 `inferenceRef`。
 9. 证明跨 Namespace 引用无法解析。
 10. 证明无效 Provider Deployment 只会在调用推理时失败。
-11. 通过 KARS Finalizer 删除所有临时资源。
+11. 通过 kars Finalizer 删除所有临时资源。
 
 ## 证据
 

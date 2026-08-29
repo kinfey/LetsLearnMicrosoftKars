@@ -1,21 +1,21 @@
-# Forge：基于 OpenClaw 和 KARS 的受限 Issue-to-Patch Agent
+# Forge：基于 OpenClaw 和 kars 的受限 Issue-to-Patch Agent
 
 [English](README.md) | [简体中文](README.zh.md)
 
-本示例实现了 [为什么需要 KARS](https://kinfey.github.io/LetsLearnMicrosoftKars/zh-cn/01-why-kars/)
+本示例实现了 [为什么需要 kars](https://kinfey.github.io/LetsLearnMicrosoftKars/zh-cn/01-why-kars/)
 中描述的产品边界：
 
 > 对于已经批准的 Issue 和固定的代码仓库版本，Forge 可以检查分配给它的工作区、
 > 提出最小补丁并运行指定测试，但不能合并或发布代码、修改 CI、读取无关代码仓库，
 > 也不能创建凭据。
 
-本示例运行在本地 kind 集群上，并使用从最新 KARS `main` 分支源码编译的版本。
-OpenClaw 通过 KARS 原生的 `github-copilot` Provider 使用 GitHub Copilot 模型
+本示例运行在本地 kind 集群上，并使用从最新 kars `main` 分支源码编译的版本。
+OpenClaw 通过 kars 原生的 `github-copilot` Provider 使用 GitHub Copilot 模型
 **GPT-5.6-Sol**（`gpt-5.6-sol`）。Copilot OAuth Token 仅挂载到推理路由器，
 Agent 只能调用本地回环地址上的路由器。
 
 GPT-5.6-Sol 仅支持 Responses API。源码构建适配会将 OpenClaw 主运行时配置为
-`openai-responses`，并让 KARS 路由器识别 GitHub Copilot 返回的
+`openai-responses`，并让 kars 路由器识别 GitHub Copilot 返回的
 `unsupported_api_for_model` 错误，从而将 specialist task loop 的 Chat Completions
 请求透明转换为 Responses API 请求。
 
@@ -85,9 +85,9 @@ export CONTAINER_PLATFORM=linux/amd64
    |
    v
 OpenClaw Forge 协调器（KarsSandbox）
-   |-- 推理 ------> KARS 路由器 --> GitHub Copilot
-   |-- 工具 ------> KARS 路由器 --> forge-workspace MCP
-   `-- Specialist -> KARS spawn + AGT 加密 Mesh
+   |-- 推理 ------> kars 路由器 --> GitHub Copilot
+   |-- 工具 ------> kars 路由器 --> forge-workspace MCP
+   `-- Specialist -> kars spawn + AGT 加密 Mesh
                        分析员 / 补丁作者 / 测试验证员
 
 forge-workspace MCP
@@ -111,8 +111,8 @@ Specialist Agent 之间不共享文件系统。Forge 只通过 AGT Mesh 传输�
 | 运行未经批准的测试 | `workspace_run_test` 只接受 `format-user` |
 | 篡改 CI | 拒绝写入 `.github/` 和 CI 配置文件 |
 | 合并或发布 | 不暴露 PR、合并、发布或 Release 工具 |
-| 无限制推理 | KARS 设置单次请求和每日 Token 预算 |
-| 缺少执行证据 | 使用 KARS 审计、MCP 工具结果和统一 Diff |
+| 无限制推理 | kars 设置单次请求和每日 Token 预算 |
+| 缺少执行证据 | 使用 kars 审计、MCP 工具结果和统一 Diff |
 
 ## 前置条件
 
@@ -129,14 +129,14 @@ Specialist Agent 之间不共享文件系统。Forge 只通过 AGT Mesh 传输�
 
 ## 运行
 
-### 1. 编译最新 KARS 源码
+### 1. 编译最新 kars 源码
 
 ```bash
 make build-kars
 ```
 
-该命令会克隆或更新 KARS 与 Microsoft Agent Governance Toolkit 的 `main`
-分支，使用 Node.js 22 编译 KARS CLI，并将最终使用的 Commit 记录到
+该命令会克隆或更新 kars 与 Microsoft Agent Governance Toolkit 的 `main`
+分支，使用 Node.js 22 编译 kars CLI，并将最终使用的 Commit 记录到
 `.kars-source-version`。
 
 构建脚本会强制 npm、pnpm、PyPI 和 NuGet 通过上面列出的 Microsoft Package
@@ -150,12 +150,12 @@ make deploy
 make status
 ```
 
-首次运行 `make deploy` 时会启动 KARS Provider 选择器。请选择
+首次运行 `make deploy` 时会启动 kars Provider 选择器。请选择
 **GitHub Copilot**，然后完成设备代码登录。Forge 默认固定使用
 `gpt-5.6-sol`；只有在有意测试其他 Copilot 模型时才应设置 `FORGE_MODEL`。
 
 部署脚本会创建或复用 `kars-dev` kind 集群，构建 OpenClaw 和 workspace MCP
-镜像，安装 KARS 与 AGT 组件，并应用 Forge Sandbox、推理策略、协调器策略、
+镜像，安装 kars 与 AGT 组件，并应用 Forge Sandbox、推理策略、协调器策略、
 specialist 策略、MCP Server 和 NetworkPolicy 资源。
 
 预期状态：
@@ -247,8 +247,8 @@ make destroy
 API Server NetworkPolicy 路径，以及一次真实的 GPT-5.6-Sol
 Chat-Completions-to-Responses fallback 请求。
 
-`destroy` 只会删除本示例创建的 KARS 资源和 `kars-mcp` Namespace。如果还需要删除
-共享的本地 KARS kind 集群，请另外执行：
+`destroy` 只会删除本示例创建的 kars 资源和 `kars-mcp` Namespace。如果还需要删除
+共享的本地 kars kind 集群，请另外执行：
 
 ```bash
 kars dev down --target local-k8s

@@ -1,16 +1,16 @@
-# KARS security and operations lab
+# kars security and operations lab
 
 [English](README.md) | [简体中文](README.zh.md)
 
 This lab starts with the OpenClaw Forge workflow from
 [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
-and operates the GPT-5.6-Sol KARS BYO runtime deployed by
+and operates the GPT-5.6-Sol kars BYO runtime deployed by
 [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05):
 
 ```text
 OpenClaw issue-to-patch contract
     -> bounded repair loop
-    -> KARS BYO agent (UID 1000)
+    -> kars BYO agent (UID 1000)
     -> localhost Inference Router (UID 1001)
     -> GitHub Copilot GPT-5.6-Sol
     -> audit, policy, metrics, recovery, release evidence
@@ -46,7 +46,7 @@ real `forge-byo-copilot-claw` Pod, verifies recovery, and restores the original
 - The local Router audit count changed from two entries to zero immediately
   after Pod replacement. A new valid chain starts after the next request, but
   production history requires external audit export.
-- The release record pins repository commit, KARS version, model, runtime,
+- The release record pins repository commit, kars version, model, runtime,
   image ID, and loaded policy digest.
 
 ## Microsoft package sources
@@ -68,7 +68,7 @@ are restored when the run exits.
   `Running`.
 - Docker Desktop, kind, kubectl, jq, curl, Python 3.11+, and Node.js 22.
 - GitHub Copilot CLI installed and authenticated.
-- KARS provider `github-copilot` with access to `gpt-5.6-sol`.
+- kars provider `github-copilot` with access to `gpt-5.6-sol`.
 
 ## Run
 
@@ -154,7 +154,7 @@ variable names only.
   that route.
 - A valid in-memory audit chain proves mutation detection for its current
   lifetime, not persistence across Pod loss.
-- The lab validates Pod self-healing, not a full KARS controller upgrade or
+- The lab validates Pod self-healing, not a full kars controller upgrade or
   database restore.
 - GitHub Copilot applies provider-side safety controls, but this Router path
   does not expose Azure AI Foundry-style `prompt_filter_results`.
@@ -168,9 +168,9 @@ tools inside WSL2.
 
 ## References
 
-- [KARS security](https://github.com/Azure/kars/blob/main/docs/security.md)
-- [KARS maturity](https://github.com/Azure/kars/blob/main/docs/maturity.md)
-- [KARS operations](https://github.com/Azure/kars/tree/main/docs/operations)
-- [KARS SRE runbook](https://github.com/Azure/kars/blob/main/docs/runbooks/sre.md)
+- [kars security](https://github.com/Azure/kars/blob/main/docs/security.md)
+- [kars maturity](https://github.com/Azure/kars/blob/main/docs/maturity.md)
+- [kars operations](https://github.com/Azure/kars/tree/main/docs/operations)
+- [kars SRE runbook](https://github.com/Azure/kars/blob/main/docs/runbooks/sre.md)
 - [Microsoft Agent Framework GitHub Copilot samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)

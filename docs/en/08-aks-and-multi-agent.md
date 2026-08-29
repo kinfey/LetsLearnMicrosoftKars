@@ -18,7 +18,7 @@ OpenClaw Intake
     -> patch digest + test-evidence digest
     -> Forge Reviewer
     -> human-reviewed GitOps change
-    -> KARS on AKS
+    -> kars on AKS
 ```
 
 The multi-agent design is not two prompts chatting. It is separation of
@@ -40,10 +40,10 @@ The default run creates no Azure resources. It:
 3. runs deterministic Builder/Reviewer authorization tests;
 4. calls GPT-5.6-Sol through the host Microsoft Agent Framework
    `GitHubCopilotAgent`;
-5. renders two independent KARS Sandboxes and Policies;
-6. validates them with the live KARS API server using Server-side Dry-run;
-7. executes the official KARS `up --dry-run`;
-8. proves that real deployment requires explicit opt-in and an upstream KARS
+5. renders two independent kars Sandboxes and Policies;
+6. validates them with the live kars API server using Server-side Dry-run;
+7. executes the official kars `up --dry-run`;
+8. proves that real deployment requires explicit opt-in and an upstream kars
    source checkout;
 9. creates a promotion record linking source image and policy digests.
 
@@ -62,7 +62,7 @@ The lab uses:
 | Log Analytics | required: your workspace name |
 | Azure location | optional: existing resource-group location, otherwise `eastus2` |
 | Model | `gpt-5.6-sol` |
-| KARS release | `v0.1.25` |
+| kars release | `v0.1.25` |
 | Isolation | `enhanced` |
 
 Copy [`code/07/config/aks.env.example`](https://github.com/kinfey/LetsLearnMicrosoftKars/blob/main/code/07/config/aks.env.example)
@@ -89,9 +89,9 @@ kars up \
   --yes
 ```
 
-KARS reported that a real run would check Azure credentials, deploy AKS, ACR,
+kars reported that a real run would check Azure credentials, deploy AKS, ACR,
 Key Vault, model infrastructure, Azure Monitor, and Workload Identity; configure
-firewalls and ACR attachment; install the KARS control plane; create a
+firewalls and ACR attachment; install the kars control plane; create a
 federated credential; and wait for the initial Sandbox.
 
 Dry-run proves command resolution and preflight. It does not prove quota,
@@ -113,7 +113,7 @@ tests require:
 The handoff contains references and digests, not a reusable credential or the
 Builder's writable workspace.
 
-## Render separate KARS resources
+## Render separate kars resources
 
 The GitOps template produces:
 
@@ -138,7 +138,7 @@ Both Sandboxes use:
 - strict, default-deny egress;
 - local registry mode.
 
-The live KARS CRDs accepted all six resources in Server-side Dry-run. They were
+The live kars CRDs accepted all six resources in Server-side Dry-run. They were
 not applied, so no extra local Agent Pods were created.
 
 ## Carry Chapter 7 evidence into promotion
@@ -146,7 +146,7 @@ not applied, so no extra local Agent Pods were created.
 The promotion record includes:
 
 - the repository commit;
-- KARS version `0.1.25`;
+- kars version `0.1.25`;
 - model `gpt-5.6-sol`;
 - the running [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
   BYO image digest;
@@ -177,7 +177,7 @@ production design, prefer Azure CNI Overlay with Cilium, Workload Identity,
 multiple zones, and non-burstable VM families unless the environment has a
 documented constraint.
 
-KARS owns the infrastructure workflow in this lab. Inspect the resulting AKS
+kars owns the infrastructure workflow in this lab. Inspect the resulting AKS
 configuration after deployment; do not infer every network property from a
 successful CLI dry-run.
 
@@ -218,10 +218,10 @@ make deploy
 ```
 
 The script refuses the operation unless the switch is exactly `true`. It uses
-Azure CLI rather than non-dry-run `kars up`, because KARS `0.1.25` appends an
+Azure CLI rather than non-dry-run `kars up`, because kars `0.1.25` appends an
 `-aks` suffix to the requested name. It creates the exact cluster name supplied
 in `AKS_NAME`, builds the BYO image through ACR Tasks with
-`--platform linux/amd64`, resolves its digest, installs KARS and AGT, and
+`--platform linux/amd64`, resolves its digest, installs kars and AGT, and
 applies the reviewed resources.
 
 No subscription ID or credential is written to the repository.
@@ -234,7 +234,7 @@ The real deployment completed on the configured Azure environment:
 - OIDC issuer and Workload Identity are enabled.
 - The one-node `system` pool uses `Standard_D2as_v5`; the one-node
   `clawpool` uses `Standard_D4as_v5`. Both nodes report `amd64`.
-- The KARS Controller and AGT Registry/Relay are Ready.
+- The kars Controller and AGT Registry/Relay are Ready.
 - OpenClaw Intake, Builder, and Reviewer Sandboxes are Running.
 - Builder and Reviewer use the same ACR image pinned by SHA-256 digest.
 - A real `gpt-5.6-sol` request returned
@@ -244,7 +244,7 @@ The real deployment completed on the configured Azure environment:
 
 ## Do not overclaim Mesh or A2A
 
-KARS `0.1.25` exposes `mesh`, `pair`, and `a2a` CLI surfaces, and current
+kars `0.1.25` exposes `mesh`, `pair`, and `a2a` CLI surfaces, and current
 upstream blueprints describe federation. This experiment intentionally uses
 `registryMode: local` plus a reviewed application handoff contract.
 
@@ -271,10 +271,10 @@ violation.
 
 ## Official references
 
-- [KARS getting started](https://github.com/Azure/kars/blob/main/docs/getting-started.md)
+- [kars getting started](https://github.com/Azure/kars/blob/main/docs/getting-started.md)
 - [Enterprise self-hosted blueprint](https://github.com/Azure/kars/blob/main/docs/blueprints/03-enterprise-self-hosted.md)
 - [Cross-org federation blueprint](https://github.com/Azure/kars/blob/main/docs/blueprints/05-cross-org-federation.md)
-- [KARS CRD reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
+- [kars CRD reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
 - [Microsoft Agent Framework GitHub Copilot samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
 - [Azure CNI Overlay](https://learn.microsoft.com/azure/aks/azure-cni-overlay)

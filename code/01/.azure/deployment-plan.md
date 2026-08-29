@@ -1,4 +1,4 @@
-# OpenClaw Forge on KARS Deployment Plan
+# OpenClaw Forge on kars Deployment Plan
 
 > **Status:** Deployed
 
@@ -38,7 +38,7 @@ record their resolved commit SHAs. At planning time:
 | Budget | Cost-optimized local demo |
 | Subscription | N/A — local Kubernetes only |
 | Location | Local Docker Desktop kind cluster |
-| Inference provider | GitHub Copilot through KARS `github-copilot` provider |
+| Inference provider | GitHub Copilot through kars `github-copilot` provider |
 | Model | Selected from the live Copilot catalogue during device login |
 | Compliance | No special regulatory requirement; least privilege and auditability required |
 | Human approval boundary | Humans approve PR creation, merge, release, and production access |
@@ -61,21 +61,21 @@ record their resolved commit SHAs. At planning time:
 | Component | Type | Technology | Path |
 |-----------|------|------------|------|
 | Forge coordinator | Agent | OpenClaw on `KarsSandbox` | `k8s/forge.yaml` |
-| Repository analyst | Specialist agent role | Dynamically spawned KARS/OpenClaw sandbox | Forge system instructions |
-| Patch author | Specialist agent role | Dynamically spawned KARS/OpenClaw sandbox | Forge system instructions |
-| Test verifier | Specialist agent role | Dynamically spawned KARS/OpenClaw sandbox | Forge system instructions |
+| Repository analyst | Specialist agent role | Dynamically spawned kars/OpenClaw sandbox | Forge system instructions |
+| Patch author | Specialist agent role | Dynamically spawned kars/OpenClaw sandbox | Forge system instructions |
+| Test verifier | Specialist agent role | Dynamically spawned kars/OpenClaw sandbox | Forge system instructions |
 | Workspace tool server | MCP service | Node.js 22 + MCP SDK | `workspace-mcp/` |
-| Workspace tool registration | KARS `McpServer` | Kubernetes CR | `k8s/workspace-mcp.yaml` |
-| Tool governance | KARS `ToolPolicy` | Kubernetes CR | `k8s/policies.yaml` |
-| Model governance | KARS `InferencePolicy` | Kubernetes CR | `k8s/policies.yaml` |
+| Workspace tool registration | kars `McpServer` | Kubernetes CR | `k8s/workspace-mcp.yaml` |
+| Tool governance | kars `ToolPolicy` | Kubernetes CR | `k8s/policies.yaml` |
+| Model governance | kars `InferencePolicy` | Kubernetes CR | `k8s/policies.yaml` |
 | Demo runner | Automation | Bash | `scripts/demo.sh` |
-| KARS source bootstrap | Automation | Bash | `scripts/build-kars-latest.sh` |
+| kars source bootstrap | Automation | Bash | `scripts/build-kars-latest.sh` |
 
 ### Dependencies
 
 | Component | Depends On | Type |
 |-----------|------------|------|
-| Forge | GitHub Copilot | Inference through KARS router |
+| Forge | GitHub Copilot | Inference through kars router |
 | Forge | Workspace MCP | Loopback router-mediated MCP tools |
 | Specialist agents | Forge | AGT mesh, E2E encrypted |
 | Workspace MCP | Approved repository/revision | Read-only bootstrap input |
@@ -98,15 +98,15 @@ record their resolved commit SHAs. At planning time:
 
 ## 4. Recipe Selection
 
-**Selected:** KARS source build + `kars dev --target local-k8s --build`
+**Selected:** kars source build + `kars dev --target local-k8s --build`
 
 **Rationale:**
 
-- The user explicitly requested the latest compiled KARS rather than published
+- The user explicitly requested the latest compiled kars rather than published
   release images.
-- `github-copilot` is natively supported by KARS local development, including
+- `github-copilot` is natively supported by kars local development, including
   the full kind-based Kubernetes topology.
-- KARS `kars up` currently emits an `azure-openai` production
+- kars `kars up` currently emits an `azure-openai` production
   `InferencePolicy`; using it for Copilot on AKS would require an unsupported
   override and is intentionally excluded.
 - `local-k8s` preserves the relevant production boundaries: separate OpenClaw
@@ -125,9 +125,9 @@ User / demo request
         v
 OpenClaw Forge coordinator (UID 1000, no provider credential)
         |
-        +-- model calls --> KARS inference router --> GitHub Copilot
+        +-- model calls --> kars inference router --> GitHub Copilot
         |
-        +-- approved tools --> KARS router --> Workspace MCP
+        +-- approved tools --> kars router --> Workspace MCP
         |
         +-- kars_spawn / mesh --> isolated analyst, patcher, tester sandboxes
 
@@ -141,7 +141,7 @@ Workspace MCP
 
 | Requirement | Control |
 |-------------|---------|
-| Agent has no Copilot credential | KARS Secret/router provider path; agent uses loopback only |
+| Agent has no Copilot credential | kars Secret/router provider path; agent uses loopback only |
 | No arbitrary internet | `networkPolicy.defaultDeny: true`, `egressMode: Strict`, empty direct egress |
 | No arbitrary shell | OpenClaw native exec/write tools denied; work occurs through narrow MCP tools |
 | Fixed repository scope | Workspace MCP clones one configured URL at one immutable revision |
@@ -149,12 +149,12 @@ Workspace MCP
 | Minimal patch | Path allowlist, CI path denylist, diff-size guard |
 | Human approval | No PR/merge/release tools are exposed |
 | Budget | Per-request and daily token limits in `InferencePolicy` |
-| Audit | KARS router governance and hash-chained audit records |
+| Audit | kars router governance and hash-chained audit records |
 | Multi-agent isolation | One sandbox/namespace per spawned specialist; AGT mesh is the only exchange path |
 
 ### Resource Mapping
 
-| Component | Kubernetes/KARS Resource | Local Size |
+| Component | Kubernetes/kars Resource | Local Size |
 |-----------|--------------------------|------------|
 | Forge | `KarsSandbox` | 250m/512Mi request, 1 CPU/1Gi limit |
 | Each specialist | Spawned `KarsSandbox` | Inherits cost-aware limits; maximum three, preferably sequential |
@@ -171,7 +171,7 @@ applicable. Local capacity was measured directly.
 | Resource Type | Number to Deploy | Total After Deployment | Limit/Capacity | Notes |
 |---------------|------------------|------------------------|----------------|-------|
 | Azure resources | 0 | 0 | N/A | Local Kubernetes scope |
-| kind clusters | 1 | 1 | Docker Desktop capacity | Created by KARS |
+| kind clusters | 1 | 1 | Docker Desktop capacity | Created by kars |
 | Initial agent sandboxes | 1 | 1 | 10 Docker CPUs / 8.32 GB RAM | Specialists spawn on demand |
 | Concurrent specialist sandboxes | Up to 3 | Up to 4 total agents | Demo defaults to sequential/limited concurrency | Avoid local memory pressure |
 | Workspace MCP pods | 1 | 1 | Same Docker Desktop capacity | 256Mi request |
@@ -190,7 +190,7 @@ consumption.
 - [x] Gather requirements from chapter 01 and user clarification
 - [x] Confirm deployment scope: local Kubernetes only
 - [x] Confirm GitHub Copilot provider support boundary
-- [x] Inspect current KARS examples, CRDs, runtime adapter, and source-build path
+- [x] Inspect current kars examples, CRDs, runtime adapter, and source-build path
 - [x] Measure local capacity and prerequisites
 - [x] Select recipe
 - [x] Plan architecture
@@ -199,26 +199,26 @@ consumption.
 ### Phase 2: Execution
 
 - [x] Select Node.js 22 and configure npm proxy
-- [x] Clone/update KARS and AGT `main`, record resolved SHAs
-- [x] Build and link the latest KARS CLI
+- [x] Clone/update kars and AGT `main`, record resolved SHAs
+- [x] Build and link the latest kars CLI
 - [x] Create the narrow workspace MCP service and container
 - [x] Create Forge prompts, policies, MCP registration, and sandbox manifests
 - [x] Create negative prompt-injection fixture and named-test fixture
-- [x] Start KARS local-k8s with the GitHub Copilot provider
+- [x] Start kars local-k8s with the GitHub Copilot provider
 - [x] Apply demo manifests and wait for readiness
 - [x] Update status to `Ready for Validation`
 
 ### Phase 3: Validation
 
 - [x] Invoke `azure-validate`
-- [x] Validate OpenClaw/KARS configuration schemas
+- [x] Validate OpenClaw/kars configuration schemas
 - [x] Validate Kubernetes manifests with server-side dry run
 - [x] Run the approved patch/test happy path
 - [x] Verify an unapproved test is denied
 - [x] Verify CI-file modification is denied
 - [x] Verify strict egress blocks prompt-injection exfiltration destinations
 - [x] Verify no Copilot token is present in the agent container environment
-- [x] Verify KARS audit evidence is available
+- [x] Verify kars audit evidence is available
 - [x] Update status to `Validated`
 
 ### Phase 4: Deployment
@@ -240,7 +240,7 @@ consumption.
 | GPT-5.6-Sol specialist inference | router fallback request plus full FORMAT-482 run | Copilot `unsupported_api_for_model` triggers Responses API; all three specialists returned encrypted-mesh findings | 2026-08-28 |
 | Spawn lifecycle | full FORMAT-482 run and `kubectl get karssandboxes -n kars-system` | Analyst, patch author, and test verifier reached Running and were deleted after completion | 2026-08-28 |
 | Credential boundary | OpenClaw container env inspection | No GitHub/Copilot credential reference in the OpenClaw container | 2026-08-28 |
-| Audit evidence | KARS controller logs | ToolPolicy/InferencePolicy compiled and Forge reconciled successfully | 2026-08-28 |
+| Audit evidence | kars controller logs | ToolPolicy/InferencePolicy compiled and Forge reconciled successfully | 2026-08-28 |
 
 **Validated by:** GitHub Copilot CLI (`azure-validate`)
 **Validation timestamp:** 2026-08-28
@@ -252,7 +252,7 @@ consumption.
 | File | Purpose | Status |
 |------|---------|--------|
 | `.azure/deployment-plan.md` | Source of truth | Complete |
-| `.gitignore` | Exclude local KARS/AGT clones, credentials, build state | Complete |
+| `.gitignore` | Exclude local kars/AGT clones, credentials, build state | Complete |
 | `README.md` | Architecture, prerequisites, runbook, security boundaries | Complete |
 | `Makefile` | Build, deploy, validate, destroy commands | Complete |
 | `workspace-mcp/package.json` | MCP service dependencies/scripts | Complete |
@@ -262,12 +262,12 @@ consumption.
 | `k8s/workspace-mcp.yaml` | MCP Deployment, Service, and `McpServer` | Complete |
 | `k8s/policies.yaml` | `InferencePolicy` and tool policies | Complete |
 | `k8s/forge.yaml` | OpenClaw Forge `KarsSandbox` | Complete |
-| `scripts/build-kars-latest.sh` | Clone/build current KARS and AGT main | Complete |
+| `scripts/build-kars-latest.sh` | Clone/build current kars and AGT main | Complete |
 | `scripts/deploy.sh` | Start local-k8s and apply manifests | Complete |
 | `scripts/demo.sh` | Run happy-path and negative security scenarios | Complete |
 | `scripts/destroy.sh` | Targeted local demo cleanup | Complete |
 | `workspace-mcp/fixture/` | Approved issue, fixed repo/revision, tests, injection case | Complete |
-| `.kars-source-version` | Resolved KARS and AGT commit SHAs | Complete |
+| `.kars-source-version` | Resolved kars and AGT commit SHAs | Complete |
 
 ---
 

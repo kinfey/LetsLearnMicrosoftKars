@@ -1,4 +1,4 @@
-# KARS 安全与运维实验
+# kars 安全与运维实验
 
 [English](README.md) | [简体中文](README.zh.md)
 
@@ -6,12 +6,12 @@
 [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)
 的 OpenClaw Forge Workflow 开始，并直接运维
 [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
-已部署的 GPT-5.6-Sol KARS BYO Runtime：
+已部署的 GPT-5.6-Sol kars BYO Runtime：
 
 ```text
 OpenClaw Issue-to-Patch Contract
     -> 受限 Repair Loop
-    -> KARS BYO Agent（UID 1000）
+    -> kars BYO Agent（UID 1000）
     -> Localhost Inference Router（UID 1001）
     -> GitHub Copilot GPT-5.6-Sol
     -> Audit、Policy、Metrics、Recovery、Release Evidence
@@ -43,7 +43,7 @@ OpenClaw Issue-to-Patch Contract
   `/v1/responses` 再次成功。
 - Pod 替换后，本地 Router Audit 数量立即从 2 变为 0。下一次请求会启动新的
   Valid Chain，但生产历史必须外送到独立 Audit Backend。
-- Release Record 固定 Repository Commit、KARS Version、Model、Runtime、
+- Release Record 固定 Repository Commit、kars Version、Model、Runtime、
   Image ID 和 Loaded Policy Digest。
 
 ## Microsoft Package Source
@@ -65,7 +65,7 @@ OpenClaw Issue-to-Patch Contract
   `Running`。
 - Docker Desktop、kind、kubectl、jq、curl、Python 3.11+ 和 Node.js 22。
 - GitHub Copilot CLI 已安装并认证。
-- KARS Provider 是 `github-copilot`，并可使用 `gpt-5.6-sol`。
+- kars Provider 是 `github-copilot`，并可使用 `gpt-5.6-sol`。
 
 ## 运行
 
@@ -150,7 +150,7 @@ release-record.json
   `/v1/responses`；本实验不会声称两个 Route 有相同的 Preflight Enforcement。
 - 有效 In-memory Audit Chain 证明当前生命周期内可以发现篡改，不代表 Pod 丢失后
   仍可保留历史。
-- 实验验证的是 Pod Self-healing，不是完整 KARS Controller Upgrade 或 Database
+- 实验验证的是 Pod Self-healing，不是完整 kars Controller Upgrade 或 Database
   Restore。
 - GitHub Copilot 有 Provider-side Safety Control，但此 Router 路径不会暴露
   Azure AI Foundry 风格的 `prompt_filter_results`。
@@ -163,9 +163,9 @@ Windows amd64 请在 Ubuntu WSL2 中运行，并启用 Docker Desktop WSL Integr
 
 ## 参考
 
-- [KARS Security](https://github.com/Azure/kars/blob/main/docs/security.md)
-- [KARS Maturity](https://github.com/Azure/kars/blob/main/docs/maturity.md)
-- [KARS Operations](https://github.com/Azure/kars/tree/main/docs/operations)
-- [KARS SRE Runbook](https://github.com/Azure/kars/blob/main/docs/runbooks/sre.md)
+- [kars Security](https://github.com/Azure/kars/blob/main/docs/security.md)
+- [kars Maturity](https://github.com/Azure/kars/blob/main/docs/maturity.md)
+- [kars Operations](https://github.com/Azure/kars/tree/main/docs/operations)
+- [kars SRE Runbook](https://github.com/Azure/kars/blob/main/docs/runbooks/sre.md)
 - [Microsoft Agent Framework GitHub Copilot Samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw Samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)

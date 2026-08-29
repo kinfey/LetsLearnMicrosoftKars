@@ -1,4 +1,4 @@
-# KARS AKS 与 Multi-Agent Promotion 实验
+# kars AKS 与 Multi-Agent Promotion 实验
 
 [English](README.md) | [简体中文](README.zh.md)
 
@@ -18,10 +18,10 @@ OpenClaw Intake
     -> Digest-pinned Handoff Envelope
     -> Forge Reviewer（读取证据 + Approve/Reject）
     -> Human-reviewed GitOps Promotion
-    -> KARS on AKS
+    -> kars on AKS
 ```
 
-默认运行有意采用 **Plan-only**。它执行 KARS `up --dry-run`，用 Live Local KARS
+默认运行有意采用 **Plan-only**。它执行 kars `up --dry-run`，用 Live Local kars
 CRD 验证 GitOps Resource，不创建任何 Azure Resource。真实 AKS Deployment 必须
 明确 Opt-in，因为它会创建产生费用的基础设施。
 
@@ -35,8 +35,8 @@ CRD 验证 GitOps Resource，不创建任何 Azure Resource。真实 AKS Deploym
 | `LOG_ANALYTICS_WORKSPACE` | 必填 | 你的 Log Analytics Workspace |
 | `AZURE_LOCATION` | 已存在 Resource Group 的 Location，否则 `eastus2` | Azure Region |
 | `KARS_SANDBOX_NAME` | `forge-intake` | `kars up` 创建的初始 OpenClaw Sandbox |
-| `KARS_RELEASE` | `v0.1.25` | 固定 KARS Release |
-| `KARS_ISOLATION` | `enhanced` | KARS Isolation Level |
+| `KARS_RELEASE` | `v0.1.25` | 固定 kars Release |
+| `KARS_ISOLATION` | `enhanced` | kars Isolation Level |
 | `KARS_MESH_TRUST` | `anonymous` | 初始 Mesh Trust Mode |
 | `GITHUB_COPILOT_MODEL` | `gpt-5.6-sol` | 指定模型 |
 | `DEPLOY_AKS` | `false` | 真实 Azure 创建开关 |
@@ -68,10 +68,10 @@ cp config/aks.env.example config/aks.env
 - Reviewer 的 Inference Budget 更小。
 - 两个角色都保留 BYO v1 Contract、Strict Egress、Enhanced Isolation、
   Read-only Root Filesystem 与 GPT-5.6-Sol。
-- Live KARS API Server 使用 `kubectl apply --dry-run=server` 接受全部六个
+- Live kars API Server 使用 `kubectl apply --dry-run=server` 接受全部六个
   Resource。
-- KARS `0.1.25` 针对目标 Azure 参数完成 `kars up --dry-run`。
-- 真实部署必须明确启用，并提供上游 KARS Source Checkout，否则会被拒绝。
+- kars `0.1.25` 针对目标 Azure 参数完成 `kars up --dry-run`。
+- 真实部署必须明确启用，并提供上游 kars Source Checkout，否则会被拒绝。
 - Promotion Record 关联 Source Git Commit、
   [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05)
   Image Digest、
@@ -92,7 +92,7 @@ Resource group: <your-resource-group>
 AKS cluster:    <your-aks-cluster>
 Location:       <your-azure-region>
 Model:          gpt-5.6-sol
-KARS release:   v0.1.25
+kars release:   v0.1.25
 Azure created:  no
 ```
 
@@ -131,7 +131,7 @@ Authority 交给 Reviewer。
 
 ## AKS Day-0 与 Day-1 决策
 
-计划把基础设施创建交给当前 KARS `up` Workflow。Dry-run 报告它会处理 AKS、ACR、
+计划把基础设施创建交给当前 kars `up` Workflow。Dry-run 报告它会处理 AKS、ACR、
 Key Vault、Model Infrastructure、Azure Monitor、Workload Identity、Firewall、
 Helm 和初始 Sandbox。
 
@@ -146,13 +146,13 @@ Helm 和初始 Sandbox。
   Procedure。
 
 生产环境默认建议 Azure CNI Overlay/Cilium 与 Workload Identity，除非环境有明确
-记录的原因选择其他 Day-0 Design。必须检查 KARS 实际创建的 Cluster，不能把 CLI
+记录的原因选择其他 Day-0 Design。必须检查 kars 实际创建的 Cluster，不能把 CLI
 Plan 当作每个 Network Setting 已经验证。
 
 ## 真实 Azure Deployment
 
 先评审 `.evidence/<run>/aks-plan.json`、渲染后的 Manifest、Quota 与 Cost。
-真实部署使用 Azure CLI，而不是非 Dry-run `kars up`，因为 KARS `0.1.25` 会在
+真实部署使用 Azure CLI，而不是非 Dry-run `kars up`，因为 kars `0.1.25` 会在
 请求的 Cluster Name 后追加 `-aks`。
 
 ```bash
@@ -164,8 +164,8 @@ make deploy
 ```
 
 `make deploy` 会创建 `AKS_NAME` 指定名称的 Cluster，以及配置的 ACR 与 Log Analytics
-Workspace；导入 KARS `v0.1.25`；通过 ACR Tasks 和
-`--platform linux/amd64` 构建 BYO Image；按 Digest 固定 Image；安装 KARS 与
+Workspace；导入 kars `v0.1.25`；通过 ACR Tasks 和
+`--platform linux/amd64` 构建 BYO Image；按 Digest 固定 Image；安装 kars 与
 AGT；并应用经过评审的 Builder/Reviewer Resource。如果 `DEPLOY_AKS` 不严格
 等于 `true`，脚本会拒绝部署。
 
@@ -177,7 +177,7 @@ Repository 和 Evidence 不保存 Subscription ID、Credential 或 Secret Value�
 - `system` Pool 使用一个 `Standard_D2as_v5` Node，`clawpool` 使用一个
   `Standard_D4as_v5` Node；两者均报告 `amd64`。
 - Azure CNI Overlay、Cilium、OIDC Issuer 与 Workload Identity 已启用。
-- KARS Controller、AGT Registry/Relay、OpenClaw Intake、Builder 与 Reviewer
+- kars Controller、AGT Registry/Relay、OpenClaw Intake、Builder 与 Reviewer
   均为 Running。
 - Builder 与 Reviewer 使用相同的、按 Digest 固定的 Linux amd64 Image。
 - 真实 Router 调用通过 `gpt-5.6-sol` 返回
@@ -186,7 +186,7 @@ Repository 和 Evidence 不保存 Subscription ID、Credential 或 Secret Value�
 
 ## Mesh 与 A2A 范围
 
-已安装的 KARS CLI 提供 `mesh`、`pair` 与 `a2a` 命令，当前上游 KARS 也记录
+已安装的 kars CLI 提供 `mesh`、`pair` 与 `a2a` 命令，当前上游 kars 也记录
 Cluster Federation 和 A2A Ingress。本实验使用 `registryMode: local` 和确定性的
 Reviewed Handoff Envelope，不会声称已经执行 Cross-cluster Pairing、Public A2A
 Ingress、Entra Mesh Trust 或 Encrypted Relay Delivery。
@@ -217,14 +217,14 @@ Ingress、Entra Mesh Trust 或 Encrypted Relay Delivery。
 
 完整运行已经在 macOS arm64 验证。继承的脚本支持 macOS amd64 和 Linux amd64。
 Windows amd64 请在 Ubuntu WSL2 内运行，并启用 Docker Desktop WSL Integration；
-Azure CLI、kubectl、Helm、Node.js 22 和 KARS CLI 也应安装在 WSL2 内。
+Azure CLI、kubectl、Helm、Node.js 22 和 kars CLI 也应安装在 WSL2 内。
 
 ## 参考
 
-- [Azure/KARS Getting Started](https://github.com/Azure/kars/blob/main/docs/getting-started.md)
-- [Azure/KARS Enterprise Self-hosted Blueprint](https://github.com/Azure/kars/blob/main/docs/blueprints/03-enterprise-self-hosted.md)
-- [Azure/KARS Cross-org Federation Blueprint](https://github.com/Azure/kars/blob/main/docs/blueprints/05-cross-org-federation.md)
-- [Azure/KARS CRD Reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
+- [Azure/kars Getting Started](https://github.com/Azure/kars/blob/main/docs/getting-started.md)
+- [Azure/kars Enterprise Self-hosted Blueprint](https://github.com/Azure/kars/blob/main/docs/blueprints/03-enterprise-self-hosted.md)
+- [Azure/kars Cross-org Federation Blueprint](https://github.com/Azure/kars/blob/main/docs/blueprints/05-cross-org-federation.md)
+- [Azure/kars CRD Reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
 - [Microsoft Agent Framework GitHub Copilot Samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
 - [Azure CNI Overlay](https://learn.microsoft.com/azure/aks/azure-cni-overlay)

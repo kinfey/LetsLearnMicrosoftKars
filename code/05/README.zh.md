@@ -1,4 +1,4 @@
-# KARS Runtime 与 BYO 实验
+# kars Runtime 与 BYO 实验
 
 [English](README.md) | [简体中文](README.zh.md)
 
@@ -14,13 +14,13 @@ Microsoft Agent Framework GitHubCopilotAgent
     -> GitHub Copilot GPT-5.6-Sol
 
 路径 B：Cluster 内生产候选
-KARS KarsSandbox/runtime.kind=BYO
-    -> 127.0.0.1:8443 KARS Inference Router
+kars KarsSandbox/runtime.kind=BYO
+    -> 127.0.0.1:8443 kars Inference Router
     -> GitHub Copilot GPT-5.6-Sol
 ```
 
 两条路径有意不共享凭据。路径 A 使用 Host Copilot CLI Session；路径 B 的 Agent
-容器没有 GitHub 或 Copilot Provider Credential，Provider 路径只属于 KARS Router。
+容器没有 GitHub 或 Copilot Provider Credential，Provider 路径只属于 kars Router。
 
 ## 为什么需要两条路径
 
@@ -42,21 +42,21 @@ KARS KarsSandbox/runtime.kind=BYO
 - Host Agent 只有一个 Custom Tool；Permission Handler 只批准一次
   `inspect_forge_contract`，其他权限全部拒绝。
 - 模型回显只能由工具返回的随机 Run Nonce，证明工具确实执行。
-- Live KARS CRD 接受 MAF Python Shape，并拒绝 `language: dotnet`。
-- Live KARS CRD 拒绝没有 `contractVersion` 的 BYO。
+- Live kars CRD 接受 MAF Python Shape，并拒绝 `language: dotnet`。
+- Live kars CRD 拒绝没有 `contractVersion` 的 BYO。
 - BYO Image 声明 `org.kars.runtime.contract=v1`，并以 UID 1000 运行。
-- KARS 注入 `KARS_MODEL=gpt-5.6-sol`、`KARS_RUNTIME_KIND=BYO` 和 Contract
+- kars 注入 `KARS_MODEL=gpt-5.6-sol`、`KARS_RUNTIME_KIND=BYO` 和 Contract
   Version `v1`。
 - BYO Agent Environment 中没有 GitHub/Copilot Token 或 Key 名称。
 - BYO 直接访问 Internet 会 Timeout。
-- 同一个 BYO Agent 通过 Localhost KARS Router 成功调用 GPT-5.6-Sol。
+- 同一个 BYO Agent 通过 Localhost kars Router 成功调用 GPT-5.6-Sol。
 - Router Loaded InferencePolicy Digest 与 Compiled Digest 一致。
-- BYO Pod 保留 KARS Security Shell：Agent UID 1000、Router UID 1001、只读
+- BYO Pod 保留 kars Security Shell：Agent UID 1000、Router UID 1001、只读
   Root Filesystem、Drop Capability 与 Egress Guard。
 
 ## BYO Image 布局
 
-KARS 会在 `/sandbox` 挂载一次性 `emptyDir`。如果把 Image 中的应用代码放在
+kars 会在 `/sandbox` 挂载一次性 `emptyDir`。如果把 Image 中的应用代码放在
 `/sandbox`，代码会被这个 Mount 覆盖。本实验把不可变代码放在 `/app`，只把
 `/sandbox` 和 `/tmp` 用作可写 Runtime State：
 
@@ -93,7 +93,7 @@ Host Virtual Environment 与 Container Image 都通过 Microsoft Package Feed Pr
 - Docker Desktop、kind、kubectl、jq、curl、Python 3.11+ 和 Node.js 22。
 - GitHub Copilot CLI 已安装并完成认证。
 - Copilot Plan 可以使用 GPT-5.6-Sol。
-- KARS Provider 已配置为 `github-copilot`。
+- kars Provider 已配置为 `github-copilot`。
 
 检查 Provider：
 
@@ -126,8 +126,8 @@ Evidence: .../code/05/.evidence/<UTC timestamp>
 ```bash
 make unit      # 与 Framework 无关的状态机测试
 make copilot   # Host GitHubCopilotAgent 与 GPT-5.6-Sol 调用
-make deploy    # 构建、验证并部署 KARS BYO Image
-make inspect   # 收集脱敏 KARS 与 Pod 证据
+make deploy    # 构建、验证并部署 kars BYO Image
+make inspect   # 收集脱敏 kars 与 Pod 证据
 ./scripts/port-forward.sh  # 在另一个 Terminal 中保持运行
 make runtime              # 测试转发后的 BYO Endpoint
 make clean     # 删除 code/05 Sandbox 和 InferencePolicy
@@ -163,8 +163,8 @@ make clean     # 删除 code/05 Sandbox 和 InferencePolicy
 
 ## 参考
 
-- [Azure/KARS Runtime Catalog](https://github.com/Azure/kars/blob/main/docs/runtimes.md)
-- [Azure/KARS Runtime Contract](https://github.com/Azure/kars/blob/main/docs/runtimes/CONTRACT.md)
-- [Azure/KARS BYO Quickstart](https://github.com/Azure/kars/tree/main/examples/byo-quickstart)
+- [Azure/kars Runtime Catalog](https://github.com/Azure/kars/blob/main/docs/runtimes.md)
+- [Azure/kars Runtime Contract](https://github.com/Azure/kars/blob/main/docs/runtimes/CONTRACT.md)
+- [Azure/kars BYO Quickstart](https://github.com/Azure/kars/tree/main/examples/byo-quickstart)
 - [Microsoft Agent Framework GitHub Copilot Samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw Samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)

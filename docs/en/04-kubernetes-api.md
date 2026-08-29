@@ -19,7 +19,7 @@ The shared platform needs a reviewable API contract:
 
 - Git stores the intended workload and authority.
 - Kubernetes validates the object shape.
-- KARS reconciles the requested state.
+- kars reconciles the requested state.
 - `status.conditions` explains whether the request succeeded.
 - `metadata.generation` and `status.observedGeneration` show whether the
   controller has processed the latest change.
@@ -28,7 +28,7 @@ The [`code/03`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/
 lab exercises this complete lifecycle against the running
 `kars-dev` cluster.
 
-## Use the exact KARS API identity
+## Use the exact kars API identity
 
 Kubernetes API names are case-sensitive. The installed CRD is:
 
@@ -52,7 +52,7 @@ The experiment saves all three outputs outside the cluster as evidence.
 
 ## Separate workload from inference authority
 
-The smallest deployable KARS agent is:
+The smallest deployable kars agent is:
 
 1. A sibling `InferencePolicy`.
 2. A `KarsSandbox` whose required `spec.inferenceRef.name` points to that
@@ -186,7 +186,7 @@ The verified run produced:
 generation=1 observedGeneration=1 phase=Running
 ```
 
-It also confirmed that KARS attached:
+It also confirmed that kars attached:
 
 ```text
 kars.azure.com/namespace-cleanup
@@ -323,11 +323,11 @@ https://packagefeedproxy.microsoft.io/pypi/simple/
 https://packagefeedproxy.microsoft.io/nuget/v3/index.json
 ```
 
-The upstream KARS and OpenClaw source files are restored on exit.
+The upstream kars and OpenClaw source files are restored on exit.
 
 ## Add resources only for requirements
 
-The installed KARS API exposes these relevant resource kinds:
+The installed kars API exposes these relevant resource kinds:
 
 | Requirement | Resource Kind |
 | --- | --- |
@@ -344,7 +344,7 @@ The installed KARS API exposes these relevant resource kinds:
 
 Do not create every CRD for completeness. Each object must answer a real
 product or operational requirement and must be checked against the maturity of
-the installed KARS revision.
+the installed kars revision.
 
 ## Definition of done
 
@@ -357,7 +357,7 @@ same experiment without relying on a developer's shell history.
 
 ## Official references
 
-- [KARS CRD reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
-- [KARS basic agent example](https://github.com/Azure/kars/tree/main/examples/basic-agent)
-- [KARS architecture](https://github.com/Azure/kars/blob/main/docs/architecture.md)
-- [KARS source repository](https://github.com/Azure/kars)
+- [kars CRD reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
+- [kars basic agent example](https://github.com/Azure/kars/tree/main/examples/basic-agent)
+- [kars architecture](https://github.com/Azure/kars/blob/main/docs/architecture.md)
+- [kars source repository](https://github.com/Azure/kars)

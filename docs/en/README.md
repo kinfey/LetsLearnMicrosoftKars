@@ -1,4 +1,4 @@
-# Let's Learn Microsoft KARS
+# Let's Learn Microsoft kars
 
 This nine-chapter course follows **ByteCraft AI**, a four-person startup racing
 to launch Forge, an issue-to-pull-request development Agent, without gambling
@@ -11,12 +11,12 @@ The team deliberately uses two frameworks:
 - **Microsoft Agent Framework (MAF) Python** when the workflow must become
   explicit, testable application code.
 
-KARS keeps the sandbox, router, policy, audit, and network controls consistent
+kars keeps the sandbox, router, policy, audit, and network controls consistent
 while the application framework changes.
 
-## How KARS works
+## How kars works
 
-KARS treats each Agent as a governed Kubernetes workload. The Agent does not
+kars treats each Agent as a governed Kubernetes workload. The Agent does not
 own an independent external network path or production Azure credential.
 Instead, a sidecar Router evaluates each outbound action before forwarding it.
 
@@ -25,7 +25,7 @@ Developer / CI
       |
       | applies karsSandbox + policy CRDs
       v
-Kubernetes API <------> KARS Controller
+Kubernetes API <------> kars Controller
                             |
                             | reconciles
                             v
@@ -52,7 +52,7 @@ Task / source -->| Agent runtime, UID 1000              |
 | Component | What it does | What it does not do |
 | --- | --- | --- |
 | `karsSandbox` | Declares one Agent runtime, isolation, resources, and policy references | Does not itself decide whether a request is allowed |
-| KARS Controller | Watches CRDs and creates namespaces, pods, configuration, identity resources, and NetworkPolicies | Is not in the model/tool request data path |
+| kars Controller | Watches CRDs and creates namespaces, pods, configuration, identity resources, and NetworkPolicies | Is not in the model/tool request data path |
 | Agent container | Runs OpenClaw, MAF Python, or another supported runtime as UID 1000 | Should not hold production provider credentials or direct egress |
 | Egress Guard | Installs rules that force the Agent toward the local Router | Is a safety net, not the semantic policy engine |
 | Inference Router | Enforces inference, tool, token-budget, identity, egress, and audit decisions | Does not decide whether generated code is correct |
