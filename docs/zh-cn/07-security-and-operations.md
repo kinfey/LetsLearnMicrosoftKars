@@ -252,3 +252,21 @@ Audit Integrity 已检查且没有与 Persistence 混淆，Workload 使用新 Po
 - [SRE Runbook](https://github.com/Azure/kars/blob/main/docs/runbooks/sre.md)
 - [Microsoft Agent Framework GitHub Copilot Samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
+## Sandbox Escape 检查点：调查隐蔽通道
+
+Incident Response 必须区分 HTTPS、DNS、Metadata Service、Local Daemon 与 Exec
+尝试。`code/06` 会把每一种 Denied Channel 写入 Hash-linked Audit Chain，并拒绝
+没有 Incident ID 的 Break-glass Record。
+
+KARS 为不同 Runtime 提供共同的 Control 与 Evidence Plane：Controller Condition、
+Router Denial、Policy Budget、Admission Decision 与 Workload Recovery 可以作为同一
+事件序列进行调查。
+
+```bash
+cd code/06
+make unit
+make test
+```
+
+这样可以避免在实际尝试了其他 Egress Channel 或 Operator Bypass 时，只留下无法证明
+的“网络已经阻止”结论。

@@ -281,3 +281,20 @@ WSL2 内。
 - [kars Examples](https://github.com/Azure/kars/tree/main/examples)
 - [Microsoft Agent Framework GitHub Copilot Samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
+## 最终 Sandbox Escape 门禁
+
+应用项目汇总完整递进链。`code/08` 会明确拒绝 Self-modified Authority、Symlink
+Escape、Host Trust Handoff 与 DNS Egress 场景。成功的 Release Handoff 同时包含
+Patch、Test 与 Artifact Manifest Digest，并且仍停止在 Human Approval。
+
+最终的 KARS 优势是 Release Safety 不会嵌入某一个 Agent Implementation。项目可以
+替换 Builder Runtime，同时保留相同的外部 Policy、Credential、Egress、Audit、
+Suspend 与 Rollback Contract。
+
+```bash
+cd code/08
+make test
+make validate
+```
+
+发布门禁现在同时要求业务行为正确和 Containment 完整。只有测试通过不能作为发布证据。

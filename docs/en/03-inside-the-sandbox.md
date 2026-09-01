@@ -54,6 +54,47 @@ karsSandbox: forge
     └── inference-router  UID 1001
 ```
 
+### Agent container technical anatomy
+
+The `openclaw` container is intentionally treated as the least-trusted
+container in the Pod. The KARS Controller derives it from the
+`KarsSandbox.spec.runtime` and `spec.sandbox` contract rather than asking the
+application to hard-code its own security settings.
+
+| Kubernetes/runtime detail | Forge configuration | Result inside the Agent container |
+| --- | --- | --- |
+| `runAsNonRoot` / runtime UID | `true` / UID `1000` | The Agent cannot depend on root ownership |
+| `readOnlyRootFilesystem` | `true` | Image layers, binaries, and system configuration are not writable |
+| `allowPrivilegeEscalation` | `false` | Setuid or process transitions cannot add privilege |
+| Linux capabilities | Drop `ALL` | No ambient network, mount, or process-management capability |
+| Writable paths | `/sandbox`, `/tmp` | State and caches have explicit disposal boundaries |
+| Volumes | No `hostPath` or Docker socket | The Agent cannot reach the developer home or container daemon |
+| Service account | `automountServiceAccountToken: false` | No implicit Kubernetes API bearer token appears in the filesystem |
+| Provider environment | No GitHub/Copilot token reference | Prompt-injected code cannot read the model credential from `env` |
+| Repository access | No checkout mounted in this Pod | Reads and writes cross the Router to the bounded workspace MCP service |
+| Network namespace | Shared with Router; UID-aware egress controls | Loopback is available, independent external egress is not |
+| Operator access | Exec Admission Policy | Normal `pods/exec` and attach paths into the Agent runtime are denied |
+
+The container still has meaningful capability: it can run OpenClaw, keep
+conversation state in approved writable paths, call `127.0.0.1:8443`, and ask
+for governed tools. Sandboxing does not mean an empty process. It means every
+side effect beyond that runtime envelope crosses a separately enforced
+boundary.
+
+### What kars provides and what the platform still owns
+
+KARS provides the runtime adapter, Controller reconciliation, Router sidecar,
+UID separation, sandbox security context, Egress Guard integration,
+NetworkPolicy intent, policy references, Conditions, and exec admission
+boundary. The platform team still owns the correctness of images, MCP
+implementations, Secret selection, allowed endpoints, writable data, and any
+external system that consumes Agent-produced artifacts.
+
+This division is the practical advantage for ByteCraft: security controls are
+not reimplemented inside OpenClaw, but KARS also does not pretend that an unsafe
+tool server or incorrectly mounted Secret becomes safe merely because it runs
+next to a Router.
+
 ### `egress-guard`
 
 The init container installs network rules so the Agent UID can reach the router
@@ -278,3 +319,19 @@ exported evidence survives workspace cleanup.
 - [karsSandbox CRD reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md#karssandbox--the-agent)
 - [Runtime contract](https://github.com/Azure/kars/blob/main/docs/runtimes.md)
 - [Security model](https://github.com/Azure/kars/blob/main/docs/security.md)
+## Sandbox-escape checkpoint: remove ambient authority
+
+The first containment checkpoint is structural. Forge may write only to
+`/sandbox` and `/tmp`; it receives no host mount, Docker socket, provider
+credential, or ambient Kubernetes service-account token. Normal exec into the
+Agent runtime is denied, while break-glass is explicit and audited.
+
+Run the corresponding checks in [`code/02`](../../code/02):
+
+```bash
+make test
+```
+
+This stage does not assume every prompt injection will be recognized. It
+removes the process-level primitives needed to turn a bad decision into host or
+cluster control.

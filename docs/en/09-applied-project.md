@@ -288,3 +288,23 @@ Kubernetes, and kars CLIs installed in WSL2.
 - [kars examples](https://github.com/Azure/kars/tree/main/examples)
 - [Microsoft Agent Framework GitHub Copilot samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
+## Final sandbox-escape gate
+
+The applied project combines the complete progression. `code/08` explicitly
+denies self-modified authority, symlink escape, host trust handoff, and DNS
+egress scenarios. A successful release handoff contains patch, test, and
+artifact-manifest digests and still stops for human approval.
+
+The final KARS advantage is that release safety is not embedded in one Agent
+implementation. The project can replace the Builder runtime while retaining
+the same external policy, credential, egress, audit, suspension, and rollback
+contract.
+
+```bash
+cd code/08
+make test
+make validate
+```
+
+The release gate now requires correct behavior and intact containment. Passing
+tests alone is not release evidence.

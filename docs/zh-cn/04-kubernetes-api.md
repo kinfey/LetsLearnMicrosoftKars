@@ -345,3 +345,21 @@ https://packagefeedproxy.microsoft.io/nuget/v3/index.json
 - [kars Basic Agent 示例](https://github.com/Azure/kars/tree/main/examples/basic-agent)
 - [kars 架构](https://github.com/Azure/kars/blob/main/docs/architecture.md)
 - [kars 源码仓库](https://github.com/Azure/kars)
+## Sandbox Escape 检查点：权限是有 Owner 的 API Field
+
+第二个检查点防止 Workload 改写自身权限。`code/03` 使用 Server-side Apply
+Ownership，证明 `agent-self-modification` Manager 不能替换已经评审的
+`inferenceRef`。随后通过 Generation、`observedGeneration`、Finalizer 与 Condition
+确认评审后的 Contract 是否真正完成 Reconcile。
+
+KARS 在本步骤中的价值是让权限声明化且可观察。普通 Agent Container 也可以拥有配置
+文件，但它本身不会提供 Controller 来恢复经过评审的状态，也不会解释 Workload 为何
+处于 `Running` 或 `Degraded`。
+
+```bash
+cd code/03
+make test
+```
+
+模型选择、Policy Reference、预算与 Runtime Setting 属于平台 API State，不是 Agent
+可以编辑的配置文件。

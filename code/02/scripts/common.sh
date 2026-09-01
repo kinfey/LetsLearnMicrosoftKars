@@ -9,6 +9,7 @@ RUN_ID="${RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)}"
 EVIDENCE_DIR="${EVIDENCE_DIR:-${EVIDENCE_ROOT}/${RUN_ID}}"
 
 source "${CODE01_ROOT}/scripts/platform-env.sh"
+KARS_KUBE_CONTEXT="${KARS_KUBE_CONTEXT:-kind-kars-dev}"
 
 export npm_config_registry="https://packagefeedproxy.microsoft.io/npm/"
 export pnpm_config_registry="https://packagefeedproxy.microsoft.io/npm/"
@@ -29,6 +30,10 @@ require_command() {
 for command in kubectl jq curl; do
   require_command "${command}"
 done
+
+kubectl() {
+  command kubectl --context "${KARS_KUBE_CONTEXT}" "$@"
+}
 
 mkdir -p "${EVIDENCE_DIR}"
 

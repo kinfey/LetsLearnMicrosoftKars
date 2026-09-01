@@ -5,6 +5,7 @@ import json
 import threading
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
+from pathlib import PurePosixPath
 from typing import Any
 
 
@@ -22,9 +23,29 @@ class Handoff:
     revision: str
     patch_digest: str
     test_evidence_digest: str
+    artifact_manifest_digest: str
     producer: str = "maf-builder"
     consumer: str = "independent-reviewer"
     model: str = "gpt-5.6-sol"
+
+    def __post_init__(self) -> None:
+        for name in (
+            "revision",
+            "patch_digest",
+            "test_evidence_digest",
+            "artifact_manifest_digest",
+        ):
+            value = getattr(self, name)
+            if not value.startswith("sha256:") or len(value) != 71:
+                raise ControlViolation(403, "handoff_digest", f"{name} must be SHA-256 pinned")
+            try:
+                int(value[7:], 16)
+            except ValueError as exc:
+                raise ControlViolation(
+                    403,
+                    "handoff_digest",
+                    f"{name} must be SHA-256 pinned",
+                ) from exc
 
     def digest(self) -> str:
         payload = json.dumps(
@@ -118,3 +139,15 @@ class TaskLedger:
 
 def digest_text(value: str) -> str:
     return f"sha256:{hashlib.sha256(value.encode()).hexdigest()}"
+
+
+def validate_artifact_path(path: str, *, is_symlink: bool = False) -> str:
+    candidate = PurePosixPath(path.replace("\\", "/"))
+    if candidate.is_absolute() or ".." in candidate.parts:
+        raise ControlViolation(403, "artifact_path", "artifact path escapes the approved source scope")
+    if is_symlink:
+        raise ControlViolation(403, "artifact_symlink", "symbolic-link artifacts are not accepted")
+    normalized = candidate.as_posix()
+    if not normalized.startswith("src/"):
+        raise ControlViolation(403, "artifact_scope", "only source artifacts may enter the handoff")
+    return normalized

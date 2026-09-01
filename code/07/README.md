@@ -236,3 +236,20 @@ the kars CLI installed inside WSL2.
 - [Microsoft Agent Framework GitHub Copilot samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
 - [Azure CNI Overlay](https://learn.microsoft.com/azure/aks/azure-cni-overlay)
+## Sandbox-escape progression: review the artifact, not the workspace
+
+The Builder-to-Reviewer handoff now carries an
+`artifact_manifest_digest` in addition to patch and test-evidence digests.
+Review authorization fails when any of the three is unpinned. GitOps validation
+also requires default-deny egress, no arbitrary endpoint, exactly the
+disposable writable paths, and no shell, exec, Docker, or settings capability
+in either role.
+
+The KARS advantage is that the Builder and Reviewer receive separate
+Controller-managed sandboxes and policies. Separation of duties is enforced by
+platform resources, not by asking one multi-role Agent to remember which hat it
+is wearing.
+
+Run `make unit` and `make validate`. The Reviewer receives a digest-pinned
+envelope, never the Builder's mutable workspace, preventing a trust-handoff
+artifact from gaining authority during promotion.

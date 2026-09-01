@@ -168,3 +168,17 @@ make clean     # 删除 code/05 Sandbox 和 InferencePolicy
 - [Azure/kars BYO Quickstart](https://github.com/Azure/kars/tree/main/examples/byo-quickstart)
 - [Microsoft Agent Framework GitHub Copilot Samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw Samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
+## Sandbox Escape 递进：固定 Runtime Artifact
+
+前面章节约束了仓库修改和 Tool Call，本阶段继续约束宿主机交给 Runtime 的 Artifact。
+`validate_runtime_artifact` 只接受位于不可变 `/app` 下、带 Digest、且不是 Symlink
+的文件；可写 `/sandbox` 配置、路径穿越、Symlink 与 `latest` 等未固定标签全部
+Fail Closed。
+
+本阶段的 KARS 优势是在不同 Runtime 外保持稳定的 Security Shell：OpenClaw、
+Host-side Framework Canary 与 BYO Container 可以使用不同应用代码，但继续复用
+Router、Policy、Identity 与 Network Boundary。
+
+运行 `make unit`。Workflow 在执行补丁前新增
+`VERIFY_IMMUTABLE_RUNTIME_ARTIFACT`，避免 Host-to-Runtime Handoff 静默演变为
+Sandbox Escape。

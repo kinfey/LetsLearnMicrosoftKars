@@ -24,6 +24,26 @@ The live deployment reveals an important refinement to the chapter: Forge does
 not mount the repository directly. The hardened `forge-workspace-mcp` Pod owns
 the fixed-revision disposable workspace and exposes only seven narrow tools.
 
+## KARS advantage and Agent container details
+
+KARS turns the security requirements into generated and continuously
+reconciled Pod state instead of conventions inside OpenClaw:
+
+| Agent container detail | Executable check |
+| --- | --- |
+| UID `1000`, Router UID `1001` | Pod `securityContext` inspection |
+| Read-only root, no privilege escalation, capabilities dropped | `scripts/test-static.sh` |
+| Writable paths exactly `/sandbox` and `/tmp` | `KarsSandbox.spec.sandbox` assertion |
+| No `hostPath`, Docker socket, or automatic service-account token | Pod volume and identity assertions |
+| No provider credential reference | Agent and Router environment-name comparison |
+| Default-deny egress with loopback Router access | Sandbox and generated NetworkPolicy evidence |
+| Normal exec denied | `kars-sandbox-exec-ban` probe |
+
+The Agent container is allowed to reason and call loopback services; it is not
+allowed to own the credential or external route used to fulfill those calls.
+That separation is the concrete KARS advantage over placing OpenClaw, its key,
+its tools, and unrestricted networking in one application container.
+
 ## Prerequisites
 
 1. Deploy and validate [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01).
@@ -109,3 +129,17 @@ detection from
 and support macOS amd64, Linux amd64, and Windows
 amd64 through Ubuntu WSL2. Run Windows commands inside WSL2, not native
 PowerShell or CMD.
+## Sandbox-escape progression: contain the process
+
+`code/01` proved that hostile repository text cannot obtain a useful tool. This
+stage moves one layer down and proves that the resulting process also lacks an
+escape primitive. `make test` now verifies that writable paths remain limited
+to `/sandbox` and `/tmp`, no host filesystem or container-daemon socket is
+mounted, no ambient Kubernetes service-account token exists, and normal
+`kubectl exec` is denied. `make test-full` is the only path that enables the
+audited break-glass probes.
+
+This blocks the infrastructure prerequisites commonly used by path, Docker
+socket, and runtime-control sandbox escapes. Path canonicalization itself is
+tested in `code/01`; this stage proves the Pod cannot turn a missed application
+check into host or cluster authority.

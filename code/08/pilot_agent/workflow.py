@@ -5,6 +5,7 @@ WORKFLOW = [
     "PROPOSE_MINIMAL_PATCH",
     "RUN_TARGETED_TESTS",
     "CREATE_DIGEST_PINNED_HANDOFF",
+    "VERIFY_ARTIFACT_MANIFEST",
     "INDEPENDENT_REVIEW",
     "STOP_FOR_HUMAN_PR_APPROVAL",
 ]
@@ -19,4 +20,8 @@ FORBIDDEN_ACTIONS = [
     "production_deploy",
     "builder_self_approve",
     "reviewer_modify_source",
+    "self_modify_authority",
+    "symlink_escape",
+    "host_trust_handoff",
+    "dns_egress",
 ]

@@ -51,6 +51,42 @@ karsSandbox: forge
     └── inference-router  UID 1001
 ```
 
+### Agent Container 技术结构
+
+`openclaw` Container 被刻意视为 Pod 中信任等级最低的 Container。KARS Controller
+根据 `KarsSandbox.spec.runtime` 与 `spec.sandbox` Contract 生成它，而不是要求应用
+自己在代码中写死全部安全设置。
+
+| Kubernetes/Runtime 细节 | Forge 配置 | Agent Container 内的结果 |
+| --- | --- | --- |
+| `runAsNonRoot` / Runtime UID | `true` / UID `1000` | Agent 不能依赖 Root Ownership |
+| `readOnlyRootFilesystem` | `true` | Image Layer、Binary 与系统配置不可写 |
+| `allowPrivilegeEscalation` | `false` | Setuid 或 Process Transition 不能增加权限 |
+| Linux Capability | Drop `ALL` | 没有环境 Network、Mount 或 Process-management Capability |
+| Writable Path | `/sandbox`、`/tmp` | State 与 Cache 具有明确的清理边界 |
+| Volume | 没有 `hostPath` 或 Docker Socket | Agent 无法到达开发者 Home 或 Container Daemon |
+| Service Account | `automountServiceAccountToken: false` | Filesystem 中不会出现隐式 Kubernetes API Bearer Token |
+| Provider Environment | 没有 GitHub/Copilot Token Reference | Prompt-injected Code 无法从 `env` 读取模型凭据 |
+| Repository Access | 该 Pod 不挂载 Checkout | 读写必须通过 Router 到受限 Workspace MCP Service |
+| Network Namespace | 与 Router 共享，并使用 UID-aware Egress Control | Loopback 可用，独立外部出口不可用 |
+| Operator Access | Exec Admission Policy | 普通 `pods/exec` 与 Attach 路径不能进入 Agent Runtime |
+
+Container 仍然拥有完成任务所需的能力：运行 OpenClaw、在批准的 Writable Path 中保存
+Conversation State、调用 `127.0.0.1:8443`，以及请求受治理工具。Sandbox 并不表示一个
+空进程，而是所有超出 Runtime Envelope 的副作用都必须跨越独立执行的边界。
+
+### KARS 提供什么，平台仍负责什么
+
+KARS 提供 Runtime Adapter、Controller Reconciliation、Router Sidecar、UID 分离、
+Sandbox Security Context、Egress Guard Integration、NetworkPolicy Intent、Policy
+Reference、Condition 与 Exec Admission Boundary。平台团队仍需负责 Image、
+MCP Implementation、Secret Selection、Allowed Endpoint、Writable Data，以及任何会
+消费 Agent Artifact 的外部系统。
+
+这正是 ByteCraft 场景中的实际优势：安全控制不需要在 OpenClaw 内重复实现；同时
+KARS 也不会声称一个不安全 Tool Server 或错误挂载的 Secret 因为旁边运行着 Router
+就自动变得安全。
+
 ### `egress-guard`
 
 Init Container 安装网络规则，使 Agent UID 可以通过 Loopback 到达路由器，却无法
@@ -253,3 +289,18 @@ OpenClaw 可写范围：/sandbox 与 /tmp
 - [karsSandbox CRD 参考](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md#karssandbox--the-agent)
 - [Runtime 契约](https://github.com/Azure/kars/blob/main/docs/runtimes.md)
 - [安全模型](https://github.com/Azure/kars/blob/main/docs/security.md)
+## Sandbox Escape 检查点：移除环境权限
+
+第一个 Containment 检查点是结构性的。Forge 只能写入 `/sandbox` 与 `/tmp`，
+不会得到 Host Mount、Docker Socket、Provider Credential 或自动挂载的 Kubernetes
+ServiceAccount Token。普通 Agent Runtime Exec 会被拒绝，Break-glass 则必须显式
+启用并接受审计。
+
+在 [`code/02`](../../code/02) 中运行：
+
+```bash
+make test
+```
+
+本阶段不假设模型总能识别 Prompt Injection，而是移除把错误决定升级为宿主机或集群
+控制权所需的进程级能力。

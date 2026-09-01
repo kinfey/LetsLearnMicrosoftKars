@@ -361,3 +361,23 @@ same experiment without relying on a developer's shell history.
 - [kars basic agent example](https://github.com/Azure/kars/tree/main/examples/basic-agent)
 - [kars architecture](https://github.com/Azure/kars/blob/main/docs/architecture.md)
 - [kars source repository](https://github.com/Azure/kars)
+## Sandbox-escape checkpoint: authority is an owned API field
+
+The next checkpoint prevents the workload from rewriting its own authority.
+`code/03` uses Server-side Apply ownership and demonstrates that an
+`agent-self-modification` manager cannot replace the reviewed `inferenceRef`.
+Generation, `observedGeneration`, finalizers, and Conditions then show whether
+the reviewed contract was reconciled.
+
+KARS adds value here by making authority declarative and observable. A generic
+Agent container may have configuration files, but it does not by itself
+provide a Controller that restores reviewed state and reports why the workload
+is `Running` or `Degraded`.
+
+```bash
+cd code/03
+make test
+```
+
+Model selection, policy references, budgets, and runtime settings are platform
+API state, not files the Agent may edit.

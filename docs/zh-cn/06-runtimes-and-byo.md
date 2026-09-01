@@ -263,3 +263,19 @@ NuGet  https://packagefeedproxy.microsoft.io/nuget/v3/index.json
 - [Azure/kars BYO Quickstart](https://github.com/Azure/kars/tree/main/examples/byo-quickstart)
 - [Microsoft Agent Framework GitHub Copilot Samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
+## Sandbox Escape 检查点：固定 Host-to-Runtime Handoff
+
+Agent Image 在集群外构建时，Artifact 本身就是新的信任边界。`code/05` 只接受位于
+不可变 `/app` 下、不是 Symlink 且具有 SHA-256 Digest 的 Runtime Code。可写
+`/sandbox` 配置和 Floating Label 会 Fail Closed。
+
+KARS 在变化的 Application Artifact 外提供稳定边界：Runtime Adapter 可以改变，
+Inference Routing、Credential Placement、Network Restriction 与 Governance 仍由
+平台持有。
+
+```bash
+cd code/05
+make unit
+```
+
+Runtime 必须执行经过评审的 Artifact，而不是只信任一个同名路径。

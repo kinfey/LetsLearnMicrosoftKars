@@ -24,7 +24,7 @@ inferenceRouter:
 
 meshPeer:
   enabled: true
-  clusterName: aks-kars-demo
+  clusterName: your-aks-cluster
 
 monitoring:
   enabled: true

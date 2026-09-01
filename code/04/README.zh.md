@@ -112,3 +112,16 @@ make clean
 [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)，
 同时支持 macOS amd64、
 Linux amd64，以及通过 Ubuntu WSL2 运行的 Windows amd64。
+## Sandbox Escape 递进：工具参数仍是不可信输入
+
+`code/03` 保护平台契约，本阶段保护每一次跨越工具边界的请求。Live MCP 测试现在会
+读取扩展后的恶意 README，并尝试写入 VS Code、Agent、Git Hook 与 Package 配置
+路径。所有攻击动作都必须返回 Tool Error，而批准的 `src/` Patch 与
+`format-user` 测试仍应成功。
+
+本阶段的 KARS 优势是：即使 OpenClaw 或其他 Runtime 决定请求某项能力，Router 与
+`ToolPolicy` 仍可独立拒绝。Tool Authority 不依赖某个 Framework 的 Prompt 或
+Approval UI。
+
+因此 `make test` 不只验证 Tool Name，也验证参数。Allowlist 中的编辑工具并不代表
+“可以编辑任何位置”，仓库数据也不能借此创建 Trust Handoff Artifact。

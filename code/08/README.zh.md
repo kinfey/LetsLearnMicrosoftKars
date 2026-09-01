@@ -54,3 +54,16 @@ InferencePolicy Compiled/Loaded Digest 已收敛。`KarsEval` 声明可以解析
 但上游 `v0.1.25` Runner Job 因生成的 Pod 缺少 Restricted Security Context 而
 被 AKS Restricted Pod Security 阻止。失败 Job 已暂停，没有降低 Namespace
 Security。
+## 完整 Sandbox Escape 发布门禁
+
+最终阶段汇总前面所有控制。Release API 会明确拒绝
+`self_modify_authority`、`symlink_escape`、`host_trust_handoff` 与
+`dns_egress` 场景。成功路径只接受规范化的 `src/` Artifact、拒绝 Symlink，并把
+Artifact Manifest Digest 加入 Builder-to-Reviewer Handoff。
+
+完整场景中的 KARS 优势是一致性：从本地 Validation 到 AKS Release，同一套声明式
+Runtime、Inference、Tool、Network、Identity、Suspend 与 Audit 边界持续生效。
+
+运行 `make test` 执行本地门禁，运行 `make validate` 检查 Render 后的 KARS
+Contract。测试通过并不等于可以发布；Authority、Artifact、Egress、角色分离、
+Audit、Suspend 与 Rollback 边界必须同时保持完整。

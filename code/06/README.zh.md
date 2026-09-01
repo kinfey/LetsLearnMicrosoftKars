@@ -169,3 +169,16 @@ Windows amd64 请在 Ubuntu WSL2 中运行，并启用 Docker Desktop WSL Integr
 - [kars SRE Runbook](https://github.com/Azure/kars/blob/main/docs/runbooks/sre.md)
 - [Microsoft Agent Framework GitHub Copilot Samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw Samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
+## Sandbox Escape 递进：调查每一种出口通道
+
+即使 HTTP 请求没有成功，Containment Failure 仍然属于安全事件。
+`boundary_denial` 会把 HTTPS、DNS、Metadata Service、Local Daemon 与 Exec 尝试
+写入防篡改 Audit Chain。任何 Break-glass Event 如果没有 Incident ID 都是无效的。
+
+本阶段的 KARS 优势是可以在平台层关联 Runtime Denial、Controller State、Router
+Decision、Budget 与 Recovery，而不是从每种 Agent Framework 的不兼容日志中重新
+拼接事件。
+
+运行 `make unit` 查看确定性的 Channel/Audit 测试，再运行 `make test` 检查真实
+Exec Admission 与 Direct Egress 边界。运维结论不能只写“网络被阻止”，而必须说明
+尝试了哪个 Channel、由哪一层拒绝。

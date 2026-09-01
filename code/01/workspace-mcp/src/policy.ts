@@ -1,4 +1,5 @@
 import path from "node:path";
+import { realpath } from "node:fs/promises";
 
 const PATCHABLE_PREFIXES = ["src/"];
 const READABLE_PREFIXES = ["src/", "test/", "README.md", "package.json"];
@@ -66,4 +67,13 @@ export function resolveInside(root: string, relativePath: string): string {
     throw new Error("resolved path escaped the workspace");
   }
   return resolvedPath;
+}
+
+export async function resolveExistingInside(root: string, relativePath: string): Promise<string> {
+  const resolvedPath = resolveInside(root, relativePath);
+  const [realRoot, realPath] = await Promise.all([realpath(root), realpath(resolvedPath)]);
+  if (realPath !== realRoot && !realPath.startsWith(`${realRoot}${path.sep}`)) {
+    throw new Error("resolved path escaped the workspace through a symbolic link");
+  }
+  return realPath;
 }

@@ -31,6 +31,42 @@ reads hostile content decide where data goes."
 That observation becomes the architecture requirement for the rest of this
 book.
 
+## What recent sandbox-escape disclosures add
+
+This is not a hypothetical risk. Public coding-agent disclosures from 2025 and
+2026 show that saying "the agent runs in a sandbox" is not sufficient:
+
+- [CVE-2025-53773](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-53773)
+  demonstrated prompt injection changing workspace VS Code configuration to
+  auto-approve tools and reach command execution. The agent could modify
+  configuration that defined its own authority.
+- The Cloud Security Alliance's July 2026
+  [AI Coding Agent Sandbox Escapes](https://labs.cloudsecurityalliance.org/research/csa-research-note-ai-coding-agent-sandbox-escapes-20260722-c/)
+  review explains that several agents never directly broke the sandbox kernel.
+  They wrote hooks, tasks, virtual-environment interpreters, Git configuration,
+  or Docker control-plane inputs that a trusted component outside the sandbox
+  later executed. This is a **trust handoff** failure.
+- Unit 42's
+  [AgentCore Code Interpreter research](https://unit42.paloaltonetworks.com/bypass-of-aws-sandbox-network-isolation-mode/)
+  found that an environment described as network-isolated still supported a
+  DNS-tunneling data channel. Blocking HTTP is not equivalent to eliminating
+  every egress path.
+
+These cases represent distinct failure classes:
+
+| Failure class | Typical path | Forge requirement |
+| --- | --- | --- |
+| Self-modified authority | Write editor, agent, or MCP configuration to enable approval or add tools | The agent cannot write configuration that defines its authority |
+| Filesystem escape | Traversal or a symlink resolving outside the workspace | Validate both lexical and resolved real paths |
+| Trust handoff | Write a hook, task, interpreter, or artifact automatically executed by the host | Agent output is never implicitly executed by the host |
+| Covert egress | Use DNS, metadata, a proxy, or a local daemon around HTTP restrictions | Default-deny all egress and open only explicit, auditable paths |
+
+In this book, a sandbox therefore cannot mean only a working directory or a
+shell approval dialog. The boundary must cover the agent process, the artifacts
+it can write, every host component that consumes those artifacts, and all
+network and identity side channels. The `code/01` security experiment converts
+these disclosed attack patterns into harmless regression tests.
+
 ## Turn the incident into requirements
 
 The team writes five questions on a whiteboard:
@@ -65,6 +101,28 @@ around a stronger invariant:
 Forge will run in a `karsSandbox`. A dedicated router will broker inference,
 tool access, identity, budgets, egress decisions, and audit events. Kubernetes
 isolation and NetworkPolicy make that router the intended external path.
+
+## The kars advantage in the Forge scenario
+
+A regular container can isolate a process, but ByteCraft would still have to
+design and maintain the model proxy, credential placement, tool authorization,
+egress enforcement, budget checks, runtime adapters, reconciliation, and audit
+format as separate application features. kars turns those concerns into one
+declarative workload contract:
+
+| Forge requirement | Plain application/container approach | kars advantage |
+| --- | --- | --- |
+| Keep provider credentials away from hostile repository content | Put the key in the application environment and rely on code discipline | Keep the credential on the Router path; the Agent calls loopback |
+| Allow one patch workflow without arbitrary shell authority | Build a custom permission system into every Agent | Apply `ToolPolicy` and a narrow `McpServer` independently of model instructions |
+| Prevent direct exfiltration | Add application-level URL checks | Combine Router decisions, Egress Guard, and Kubernetes NetworkPolicy |
+| Limit inference cost | Add counters to each framework integration | Apply one `InferencePolicy` budget across supported runtimes |
+| Recover and explain failures | Write runtime-specific restart and logging logic | Reconcile desired state through the Controller and expose Conditions plus Router audit evidence |
+| Change OpenClaw to MAF or BYO | Rebuild the security design for the new framework | Preserve the same policy, identity, network, and evidence boundary around different runtime adapters |
+
+The advantage is therefore not that kars makes the model incapable of a bad
+decision. It separates the model's decision from the authority required to
+produce a side effect, and keeps that separation consistent as Forge moves
+from a laptop prototype to AKS.
 
 ## Follow one request
 
@@ -181,3 +239,6 @@ control.
 - [Architecture](https://github.com/Azure/kars/blob/main/docs/architecture.md)
 - [Security model](https://github.com/Azure/kars/blob/main/docs/security.md)
 - [Feature maturity](https://github.com/Azure/kars/blob/main/docs/maturity.md)
+- [CVE-2025-53773: prompt injection, configuration self-modification, and command execution](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-53773)
+- [CSA: AI Coding Agent Sandbox Escapes and trust handoff](https://labs.cloudsecurityalliance.org/research/csa-research-note-ai-coding-agent-sandbox-escapes-20260722-c/)
+- [Unit 42: bypassing agent sandbox network isolation with DNS tunneling](https://unit42.paloaltonetworks.com/bypass-of-aws-sandbox-network-isolation-mode/)

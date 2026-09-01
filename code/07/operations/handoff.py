@@ -23,6 +23,7 @@ class HandoffEnvelope:
     issue_id: str
     patch_digest: str
     test_evidence_digest: str
+    artifact_manifest_digest: str
     producer: Role
     intended_consumer: Role
     model: str = "gpt-5.6-sol"
@@ -52,6 +53,8 @@ def authorize(role: Role, action: Action, envelope: HandoffEnvelope) -> bool:
     if not is_sha256_digest(envelope.patch_digest):
         return False
     if not is_sha256_digest(envelope.test_evidence_digest):
+        return False
+    if not is_sha256_digest(envelope.artifact_manifest_digest):
         return False
 
     if role is Role.BUILDER:

@@ -228,3 +228,17 @@ Azure CLI、kubectl、Helm、Node.js 22 和 kars CLI 也应安装在 WSL2 内。
 - [Microsoft Agent Framework GitHub Copilot Samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
 - [Azure CNI Overlay](https://learn.microsoft.com/azure/aks/azure-cni-overlay)
+## Sandbox Escape 递进：评审 Artifact，而不是继承 Workspace
+
+Builder-to-Reviewer Handoff 现在除 Patch 与 Test Evidence Digest 外，还携带
+`artifact_manifest_digest`。三者任何一个未固定，Review Authorization 都会失败。
+GitOps Validation 还要求 Default-deny Egress、没有任意 Endpoint、可写路径严格等于
+临时目录，并且两个角色都不能拥有 Shell、Exec、Docker 或 Settings Capability。
+
+本阶段的 KARS 优势是 Builder 与 Reviewer 获得相互独立、由 Controller 管理的
+Sandbox 和 Policy。职责分离由平台资源执行，而不是要求同一个多角色 Agent 记住
+自己当前“戴着哪顶帽子”。
+
+运行 `make unit` 与 `make validate`。Reviewer 只接收 Digest-pinned Envelope，
+不会继承 Builder 的可变 Workspace，从而防止 Trust Handoff Artifact 在 Promotion
+过程中获得权限。

@@ -176,3 +176,19 @@ also supports macOS amd64, Linux amd64, and Windows amd64 through Ubuntu WSL2.
 - [Azure/kars BYO quickstart](https://github.com/Azure/kars/tree/main/examples/byo-quickstart)
 - [Microsoft Agent Framework GitHub Copilot samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
+## Sandbox-escape progression: pin the runtime artifact
+
+Earlier stages bound repository edits and tool calls. The runtime boundary must
+also reject a host-produced artifact that changes meaning after review.
+`validate_runtime_artifact` accepts only digest-pinned, non-symlink files under
+immutable `/app`; mutable `/sandbox` configuration, traversal, symlinks, and
+unpinned labels such as `latest` fail closed.
+
+The KARS advantage is a stable security shell around different runtimes:
+OpenClaw, host-side framework canaries, and BYO containers can use different
+application code while retaining the Router, policy, identity, and network
+boundary.
+
+Run `make unit`. The workflow now includes
+`VERIFY_IMMUTABLE_RUNTIME_ARTIFACT` before patch execution. This prevents the
+host-to-runtime handoff from silently becoming a sandbox escape.

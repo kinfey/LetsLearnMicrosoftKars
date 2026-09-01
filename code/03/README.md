@@ -114,3 +114,20 @@ The validated environment is macOS arm64. Platform detection is inherited from
 [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01),
 including macOS amd64, Linux amd64, and Windows amd64 through Ubuntu
 WSL2.
+## Sandbox-escape progression: authority cannot rewrite itself
+
+After `code/02` removes ambient host and cluster access, this stage treats the
+Kubernetes resource specification as an authority boundary. The lifecycle test
+attempts to change `inferenceRef` with a separate
+`agent-self-modification` Server-side Apply field manager. Kubernetes must
+reject the change as a managed-field conflict before the reviewed manifest is
+reconciled.
+
+The KARS advantage here is that model, budget, runtime, and policy references
+are Controller-reconciled API state with observable Conditions. They are not
+mutable settings owned by the Agent framework.
+
+Run `make test` and inspect
+`.evidence/<run>/self-modified-authority.txt`. A workload becoming writable is
+not sufficient to change its model, policy reference, budget, or controller
+contract.

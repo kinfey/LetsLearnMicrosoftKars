@@ -55,6 +55,27 @@ grep -q 'perRequestTokens' "${EVIDENCE_DIR}/contract-v1-to-v2.diff" \
   || fail "V1 to V2 diff does not show the inference budget change"
 pass "kubectl diff exposes the pending authority and instruction changes"
 
+set +e
+cat <<'EOF' | kubectl apply --server-side \
+  --field-manager=agent-self-modification -f - \
+  >"${EVIDENCE_DIR}/self-modified-authority.txt" 2>&1
+apiVersion: kars.azure.com/v1alpha1
+kind: KarsSandbox
+metadata:
+  name: forge-contract
+  namespace: kars-system
+spec:
+  inferenceRef:
+    name: intentionally-missing-policy
+EOF
+self_modify_rc=$?
+set -e
+[[ ${self_modify_rc} -ne 0 ]] \
+  || fail "An unreviewed field manager changed the Sandbox authority"
+grep -qi 'conflict' "${EVIDENCE_DIR}/self-modified-authority.txt" \
+  || fail "Self-modification failed for an unexpected reason"
+pass "Server-side field ownership rejects an Agent-style authority self-modification"
+
 kubectl apply --server-side --field-manager="${FIELD_MANAGER}" -f "${v2}" >/dev/null
 wait_for_sandbox forge-contract Running
 kubectl -n kars-system get karssandbox forge-contract -o json \

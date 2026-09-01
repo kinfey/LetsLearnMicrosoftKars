@@ -278,3 +278,22 @@ violation.
 - [Microsoft Agent Framework GitHub Copilot samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
 - [Azure CNI Overlay](https://learn.microsoft.com/azure/aks/azure-cni-overlay)
+## Sandbox-escape checkpoint: hand off digests, not mutable workspaces
+
+The AKS promotion stage adds an artifact-manifest digest to the patch and test
+digests. `code/07` denies review of an unpinned envelope and validates that
+Builder and Reviewer have strict egress, disposable writable paths, and no
+shell, Docker, exec, or settings capability.
+
+KARS makes each role a separate governed workload. The advantage over one
+multi-role Agent is that identity, tools, budgets, egress, and lifecycle can be
+different for Builder and Reviewer and verified from Kubernetes state.
+
+```bash
+cd code/07
+make unit
+make validate
+```
+
+The Reviewer verifies an immutable claim without inheriting the Builder's
+workspace or its possible hooks and configuration.

@@ -113,3 +113,18 @@ Owner；紧急 Patch 必须重新同步回经过评审的 Manifest。
 [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)，
 同时支持 macOS amd64、
 Linux amd64，以及通过 Ubuntu WSL2 运行的 Windows amd64。
+## Sandbox Escape 递进：权限配置不能自我改写
+
+`code/02` 移除了宿主机与集群的环境权限后，本阶段把 Kubernetes Resource Spec
+本身视为权限边界。Lifecycle 测试会使用独立的
+`agent-self-modification` Server-side Apply Field Manager 尝试修改
+`inferenceRef`。Kubernetes 必须先以 Managed-field Conflict 拒绝该操作，再由经过
+评审的 Manifest 完成 Reconcile。
+
+本阶段的 KARS 优势是：模型、预算、Runtime 与 Policy Reference 都是由 Controller
+Reconcile、具有可观察 Condition 的 API State，而不是 Agent Framework 自己拥有的
+可写配置。
+
+运行 `make test` 并检查
+`.evidence/<run>/self-modified-authority.txt`。即使 Workload 内某个目录可写，也不能
+据此修改模型、Policy Reference、预算或 Controller Contract。

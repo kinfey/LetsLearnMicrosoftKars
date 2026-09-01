@@ -200,3 +200,19 @@ Controller 与 Router Log，以及准确 Patch Diff 保存到
 - [Azure/kars MCP Guide](https://github.com/Azure/kars/blob/main/docs/mcp.md)
 - [Azure/kars CRD Reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
 - [Azure/kars Security Model](https://github.com/Azure/kars/blob/main/docs/security.md)
+## Sandbox Escape 检查点：Allowlist 必须覆盖参数
+
+编辑工具仅仅出现在 Allowlist 中并不代表安全。`code/04` 的 Live MCP 实验会尝试
+写入 Editor Setting、Agent/MCP 配置、Git Hook、CI 与 Package Metadata。Tool
+Implementation 必须拒绝所有目标，同时保留批准的 `src/` Patch 路径。
+
+KARS 把这项 Authorization 保留在 Agent Runtime 外部。即使模型、Prompt 或 Agent
+Framework 改变，同一个 Router 与 `ToolPolicy` Decision 仍然有效。
+
+```bash
+cd code/04
+make test
+```
+
+这会关闭公开 Coding Agent Sandbox Escape 中反复出现的 Self-configuration 与
+Trust Handoff 路径。

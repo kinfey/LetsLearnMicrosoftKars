@@ -34,6 +34,34 @@ policy, tests, and evidence under
 - Run real GitHub Copilot **GPT-5.6-Sol** inference through both OpenClaw/BYO
   and first-class MAF runtime paths.
 
+## Key kars characteristics
+
+kars is a Kubernetes reference stack for running AI Agents with authority
+separated from the Agent application. Its main characteristics are:
+
+| Characteristic | How it works | Value in the Forge scenario |
+| --- | --- | --- |
+| Declarative Agent workloads | `KarsSandbox` describes runtime, isolation, resources, governance, network policy, and lifecycle | Forge is reviewed and reproduced as Kubernetes desired state instead of an ad hoc process |
+| Mediated inference | A local Inference Router receives Agent requests before calling the model provider | OpenClaw or MAF can use a model without receiving the production provider credential |
+| Runtime-independent governance | OpenClaw, Microsoft Agent Framework, BYO images, and other adapters use the same external policy boundary | Changing Agent frameworks does not require rebuilding the complete security model |
+| Policy-controlled models and budgets | `InferencePolicy` selects providers/deployments and applies per-request and daily token limits | A prompt loop cannot silently change models or consume an unlimited inference budget |
+| Governed tools and MCP | `ToolPolicy` and `McpServer` restrict tool names, target Sandboxes, approvals, rate limits, and capabilities | Repository content cannot turn a bounded patch tool into arbitrary shell or release authority |
+| Credential and identity separation | Provider credentials or workload identity remain on the Router/platform path | Prompt-injected Agent code cannot read reusable GitHub, Copilot, or Azure credentials from its environment |
+| Defense-in-depth sandboxing | Non-root runtime, read-only root filesystem, explicit writable paths, UID separation, Egress Guard, NetworkPolicy, and exec admission | A bad Agent decision lacks common host, filesystem, cluster, and direct-network escape primitives |
+| Reconciliation and status | The Controller converts desired state into Pods and reports Conditions and observed generations | Deleted or drifted workloads return to reviewed state, while failures become visible as `Degraded` rather than hidden application errors |
+| Audit and operational controls | Router decisions, policy digests, evidence export, suspension, repair limits, break-glass, and rollback provide operational boundaries | Security teams can explain denied actions, stop a runaway workflow, and recover without granting the Agent permanent operator access |
+| Multi-Agent separation | Builder, Reviewer, or specialist Agents can have separate Sandboxes, tools, budgets, identities, and trust requirements | Separation of duties is enforced by platform resources rather than role instructions inside one Agent prompt |
+
+The central design principle is:
+
+> The Agent may decide what it wants to do, but it does not independently own
+> the credentials, network path, tools, or policy required to perform that
+> action.
+
+kars does not make an unsafe image, MCP server, or Agent-generated artifact
+automatically safe. Platform teams must still review those components and use
+the maturity guidance appropriate for an alpha reference implementation.
+
 ## Architecture
 
 ```text
@@ -68,17 +96,17 @@ application evolves from OpenClaw to MAF Python.
 
 ## Learning path and executable labs
 
-| Chapter | Outcome | Executable lab |
-| --- | --- | --- |
-| [1. Why kars](https://kinfey.github.io/LetsLearnMicrosoftKars/en/01-why-kars/) | Bound the product and threat model before implementation | Architecture and delivery contract |
-| [2. Local quickstart](https://kinfey.github.io/LetsLearnMicrosoftKars/en/02-local-quickstart/) | Build the first OpenClaw Issue-to-Patch workflow | [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01) |
-| [3. Inside the Sandbox](https://kinfey.github.io/LetsLearnMicrosoftKars/en/03-inside-the-sandbox/) | Inspect UID, filesystem, network, and credential boundaries | [`code/02`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/02) |
-| [4. Kubernetes API](https://kinfey.github.io/LetsLearnMicrosoftKars/en/04-kubernetes-api/) | Make Sandbox and policy state reproducible through CRDs | [`code/03`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/03) |
-| [5. Policies and tools](https://kinfey.github.io/LetsLearnMicrosoftKars/en/05-policies-and-tools/) | Enforce token, tool, MCP, dependency, and egress policy | [`code/04`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/04) |
-| [6. Runtimes and BYO](https://kinfey.github.io/LetsLearnMicrosoftKars/en/06-runtimes-and-byo/) | Compare a host-side MAF canary with a kars BYO runtime | [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05) |
-| [7. Security and operations](https://kinfey.github.io/LetsLearnMicrosoftKars/en/07-security-and-operations/) | Test repair limits, admission controls, audit, and recovery | [`code/06`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/06) |
-| [8. AKS and multi-agent](https://kinfey.github.io/LetsLearnMicrosoftKars/en/08-aks-and-multi-agent/) | Separate Builder and Reviewer and promote to AKS | [`code/07`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/07) |
-| [9. Applied project](https://kinfey.github.io/LetsLearnMicrosoftKars/en/09-applied-project/) | Run an OpenClaw-first, first-class MAF release pilot | [`code/08`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/08) |
+| Chapter | Outcome | Sandbox-escape checkpoint | Executable lab |
+| --- | --- | --- | --- |
+| [1. Why kars](https://kinfey.github.io/LetsLearnMicrosoftKars/en/01-why-kars/) | Bound the product and threat model before implementation | Identify self-configuration, symlink, trust-handoff, and covert-egress risks | Architecture and delivery contract |
+| [2. Local quickstart](https://kinfey.github.io/LetsLearnMicrosoftKars/en/02-local-quickstart/) | Build the first OpenClaw Issue-to-Patch workflow | Reject hostile repository actions with layered controls | [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01) |
+| [3. Inside the Sandbox](https://kinfey.github.io/LetsLearnMicrosoftKars/en/03-inside-the-sandbox/) | Inspect UID, filesystem, network, and credential boundaries | Remove ambient host, daemon, and cluster authority | [`code/02`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/02) |
+| [4. Kubernetes API](https://kinfey.github.io/LetsLearnMicrosoftKars/en/04-kubernetes-api/) | Make Sandbox and policy state reproducible through CRDs | Prevent the workload from rewriting its authority | [`code/03`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/03) |
+| [5. Policies and tools](https://kinfey.github.io/LetsLearnMicrosoftKars/en/05-policies-and-tools/) | Enforce token, tool, MCP, dependency, and egress policy | Validate tool arguments and security-sensitive paths | [`code/04`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/04) |
+| [6. Runtimes and BYO](https://kinfey.github.io/LetsLearnMicrosoftKars/en/06-runtimes-and-byo/) | Compare a host-side MAF canary with a kars BYO runtime | Pin immutable runtime artifacts | [`code/05`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/05) |
+| [7. Security and operations](https://kinfey.github.io/LetsLearnMicrosoftKars/en/07-security-and-operations/) | Test repair limits, admission controls, audit, and recovery | Audit DNS, metadata, daemon, exec, and HTTPS channels | [`code/06`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/06) |
+| [8. AKS and multi-agent](https://kinfey.github.io/LetsLearnMicrosoftKars/en/08-aks-and-multi-agent/) | Separate Builder and Reviewer and promote to AKS | Hand off digest-pinned artifacts, not mutable workspaces | [`code/07`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/07) |
+| [9. Applied project](https://kinfey.github.io/LetsLearnMicrosoftKars/en/09-applied-project/) | Run an OpenClaw-first, first-class MAF release pilot | Enforce the complete release containment gate | [`code/08`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/08) |
 
 ## Start here
 

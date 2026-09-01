@@ -15,9 +15,9 @@ if [[ -f "${LAB_ROOT}/config/azure.env" ]]; then
   set +a
 fi
 
-AZURE_RESOURCE_GROUP="${AZURE_RESOURCE_GROUP:-rg-kinfey}"
-AKS_NAME="${AKS_NAME:-aks-kars-demo}"
-KARS_ACR_NAME="${KARS_ACR_NAME:-akskarsdemo449845}"
+AZURE_RESOURCE_GROUP="${AZURE_RESOURCE_GROUP:-your-resource-group}"
+AKS_NAME="${AKS_NAME:-your-aks-cluster}"
+KARS_ACR_NAME="${KARS_ACR_NAME:-yourkarsregistry}"
 AZURE_LOCATION="${AZURE_LOCATION:-}"
 KARS_SANDBOX_NAME="${KARS_SANDBOX_NAME:-fabrikam-release-pilot}"
 GITHUB_COPILOT_MODEL="${GITHUB_COPILOT_MODEL:-gpt-5.6-sol}"
@@ -27,7 +27,13 @@ TASK_CONCURRENCY_LIMIT="${TASK_CONCURRENCY_LIMIT:-2}"
 DAILY_TASK_LIMIT="${DAILY_TASK_LIMIT:-20}"
 DEPLOY_AZURE="${DEPLOY_AZURE:-false}"
 ROLLBACK_IMAGE="${ROLLBACK_IMAGE:-}"
-KARS_KUBE_CONTEXT="${KARS_KUBE_CONTEXT:-${AKS_NAME}}"
+if [[ -z "${KARS_KUBE_CONTEXT:-}" ]]; then
+  if [[ "${DEPLOY_AZURE}" == "true" ]]; then
+    KARS_KUBE_CONTEXT="${AKS_NAME}"
+  else
+    KARS_KUBE_CONTEXT="kind-kars-dev"
+  fi
+fi
 
 export PIP_INDEX_URL="https://packagefeedproxy.microsoft.io/pypi/simple/"
 export npm_config_registry="https://packagefeedproxy.microsoft.io/npm/"

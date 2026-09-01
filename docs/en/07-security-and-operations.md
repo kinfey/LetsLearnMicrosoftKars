@@ -267,3 +267,21 @@ record pins the exact software and policy inputs.
 - [SRE runbook](https://github.com/Azure/kars/blob/main/docs/runbooks/sre.md)
 - [Microsoft Agent Framework GitHub Copilot samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
+## Sandbox-escape checkpoint: investigate covert channels
+
+Incident response must distinguish HTTPS, DNS, metadata-service, local-daemon,
+and exec attempts. `code/06` records each denied channel in the hash-linked
+audit chain and rejects break-glass records that have no incident ID.
+
+KARS gives Operations a common control and evidence plane across runtimes:
+Controller Conditions, Router denials, policy budgets, admission decisions,
+and workload recovery can be investigated as one sequence.
+
+```bash
+cd code/06
+make unit
+make test
+```
+
+This prevents “network blocked” from becoming an unsupported conclusion when a
+different egress channel or operator bypass was attempted.

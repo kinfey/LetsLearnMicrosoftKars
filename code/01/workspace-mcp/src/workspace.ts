@@ -9,7 +9,7 @@ import {
   MAX_DIFF_BYTES,
   MAX_FILE_BYTES,
   MAX_REPLACEMENT_BYTES,
-  resolveInside,
+  resolveExistingInside,
 } from "./policy.js";
 
 const execFileAsync = promisify(execFile);
@@ -82,6 +82,8 @@ export class ForgeWorkspace {
       patchablePaths: ["src/"],
       prohibitedActions: [
         "modify CI",
+        "modify agent, editor, MCP, hook, or runtime configuration",
+        "create symbolic links or host-executed artifacts",
         "run arbitrary commands",
         "access another repository",
         "create credentials",
@@ -93,7 +95,7 @@ export class ForgeWorkspace {
 
   async read(relativePath: string): Promise<string> {
     const safePath = assertReadablePath(relativePath);
-    const absolutePath = resolveInside(this.root, safePath);
+    const absolutePath = await resolveExistingInside(this.root, safePath);
     const fileStat = await stat(absolutePath);
     if (!fileStat.isFile()) {
       throw new Error(`${safePath} is not a file`);
@@ -138,7 +140,7 @@ export class ForgeWorkspace {
       throw new Error("replacement text exceeds 4096 bytes");
     }
 
-    const absolutePath = resolveInside(this.root, safePath);
+    const absolutePath = await resolveExistingInside(this.root, safePath);
     const current = await this.read(safePath);
     const occurrences = current.split(expected).length - 1;
     if (occurrences !== 1) {

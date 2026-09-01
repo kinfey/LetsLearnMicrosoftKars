@@ -60,3 +60,19 @@ converged. The `KarsEval` declaration resolves its corpus, but the upstream
 `v0.1.25` Runner Job is blocked by AKS restricted Pod Security because its
 generated Pod lacks the required restricted security context. The Job is
 suspended; the namespace policy is not weakened.
+## Full sandbox-escape release gate
+
+This final stage combines the earlier controls. The release API explicitly
+denies `self_modify_authority`, `symlink_escape`, `host_trust_handoff`, and
+`dns_egress` scenarios. The successful path accepts only a normalized
+`src/` artifact, rejects symlinks, and adds its manifest digest to the
+Builder-to-Reviewer handoff.
+
+The KARS advantage in the completed scenario is consistency: the same
+declarative runtime, inference, tool, network, identity, suspension, and audit
+boundaries remain in force from local validation through AKS release.
+
+Run `make test` for the local gate and `make validate` for the rendered KARS
+contract. A release is not ready merely because tests pass: authority,
+artifact, egress, role separation, audit, suspension, and rollback boundaries
+must remain intact.

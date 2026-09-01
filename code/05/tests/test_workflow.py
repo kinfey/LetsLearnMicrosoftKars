@@ -8,6 +8,7 @@ from host_agent.workflow import (
     WORKFLOW,
     WorkflowState,
     contract_for,
+    validate_runtime_artifact,
 )
 
 
@@ -23,6 +24,19 @@ class WorkflowTests(unittest.TestCase):
     def test_unknown_issue_fails_closed(self) -> None:
         with self.assertRaisesRegex(ValueError, "outside the approved scope"):
             contract_for("UNAPPROVED-1")
+
+    def test_runtime_artifact_is_immutable_and_digest_pinned(self) -> None:
+        digest = "sha256:" + "a" * 64
+        self.assertEqual(
+            str(validate_runtime_artifact("/app/forge/agent.py", digest)),
+            "/app/forge/agent.py",
+        )
+        with self.assertRaisesRegex(ValueError, "immutable /app"):
+            validate_runtime_artifact("/sandbox/settings.json", digest)
+        with self.assertRaisesRegex(ValueError, "symbolic links"):
+            validate_runtime_artifact("/app/forge/agent.py", digest, is_symlink=True)
+        with self.assertRaisesRegex(ValueError, "digest pinned"):
+            validate_runtime_artifact("/app/forge/agent.py", "latest")
 
 
 if __name__ == "__main__":

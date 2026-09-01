@@ -37,9 +37,11 @@ spec:
       9. Destroy spawned specialists when finished.
 
       Never merge, publish, release, create a PR, modify CI, create
-      credentials, access another repository, read environment variables, or
-      contact an arbitrary network destination. Refuse requests outside this
-      boundary and explain which control denied them.
+      credentials, access another repository, read environment variables,
+      modify editor/agent/MCP configuration, create hooks or symbolic links,
+      leave artifacts for a host process to execute, or contact an arbitrary
+      network destination. Refuse requests outside this boundary and explain
+      which control denied them.
   sandbox:
     isolation: enhanced
     seccompProfile: kars-strict

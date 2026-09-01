@@ -174,3 +174,18 @@ tools inside WSL2.
 - [kars SRE runbook](https://github.com/Azure/kars/blob/main/docs/runbooks/sre.md)
 - [Microsoft Agent Framework GitHub Copilot samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
+## Sandbox-escape progression: investigate every exit channel
+
+Containment failures are incidents even when no HTTP request succeeds.
+`boundary_denial` records HTTPS, DNS, metadata-service, local-daemon, and exec
+attempts in the tamper-evident audit chain. A break-glass event is invalid
+without an incident ID.
+
+The KARS advantage is that runtime denial, Controller state, Router decisions,
+budgets, and recovery can be correlated at the platform layer instead of
+reconstructing incompatible logs from every Agent framework.
+
+Run `make unit` for deterministic channel and audit tests, then `make test` for
+the live exec-admission and direct-egress boundaries. Operations must not
+describe “the network was blocked” without identifying which channel was
+attempted and which layer denied it.

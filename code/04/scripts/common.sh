@@ -11,6 +11,7 @@ MCP_PORT="${MCP_PORT:-18931}"
 MCP_URL="http://127.0.0.1:${MCP_PORT}/mcp"
 
 source "${CODE01_ROOT}/scripts/platform-env.sh"
+KARS_KUBE_CONTEXT="${KARS_KUBE_CONTEXT:-kind-kars-dev}"
 
 export npm_config_registry="https://packagefeedproxy.microsoft.io/npm/"
 export pnpm_config_registry="https://packagefeedproxy.microsoft.io/npm/"
@@ -27,6 +28,10 @@ for command in kubectl jq curl sed; do
     exit 1
   fi
 done
+
+kubectl() {
+  command kubectl --context "${KARS_KUBE_CONTEXT}" "$@"
+}
 
 mkdir -p "${EVIDENCE_DIR}"
 

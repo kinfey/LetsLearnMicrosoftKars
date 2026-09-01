@@ -121,3 +121,18 @@ The validated environment is macOS arm64. Platform detection is inherited from
 [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01),
 including macOS amd64, Linux amd64, and Windows amd64 through Ubuntu
 WSL2.
+## Sandbox-escape progression: tool arguments stay untrusted
+
+`code/03` protects the platform contract. This stage protects every request
+crossing the tool boundary. The live MCP test now reads the expanded hostile
+README and then attempts writes to VS Code, agent, Git-hook, and package
+configuration paths. All attempts must return tool errors, while the approved
+`src/` patch and `format-user` test continue to work.
+
+The KARS advantage is that the Router and `ToolPolicy` can deny a capability
+even if OpenClaw or another runtime decides to request it. Tool authority is
+not coupled to one framework's prompt or approval UI.
+
+`make test` therefore covers both the tool name and its arguments. An
+allowlisted edit tool is not treated as universally safe, and repository data
+cannot use it to create a trust-handoff artifact.

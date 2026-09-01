@@ -4,6 +4,7 @@ import hashlib
 import json
 from collections.abc import Iterable
 from dataclasses import dataclass
+from enum import StrEnum
 
 
 @dataclass(frozen=True)
@@ -11,6 +12,33 @@ class AuditRecord:
     payload: dict[str, object]
     previous_hash: str
     record_hash: str
+
+
+class BoundaryChannel(StrEnum):
+    HTTPS = "https"
+    DNS = "dns"
+    METADATA = "metadata"
+    LOCAL_DAEMON = "local_daemon"
+    EXEC = "exec"
+
+
+def boundary_denial(
+    channel: BoundaryChannel,
+    target: str,
+    *,
+    break_glass: bool = False,
+    incident_id: str | None = None,
+) -> dict[str, object]:
+    if break_glass and not incident_id:
+        raise ValueError("break-glass boundary access requires an incident ID")
+    return {
+        "action": "sandbox_boundary",
+        "decision": "deny",
+        "channel": channel.value,
+        "target": target,
+        "breakGlass": break_glass,
+        "incidentId": incident_id,
+    }
 
 
 def digest(previous_hash: str, payload: dict[str, object]) -> str:

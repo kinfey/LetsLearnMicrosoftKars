@@ -30,10 +30,28 @@ jq -e '.spec.containers[] | select(.name == "openclaw")
   <<<"${pod_json}" >/dev/null || fail "OpenClaw security context is not hardened"
 pass "OpenClaw has a read-only root filesystem, no privilege escalation, and no capabilities"
 
+[[ "$(kubectl -n kars-system get karssandbox forge \
+  -o jsonpath='{.spec.sandbox.writablePaths[*]}')" == "/sandbox /tmp" ]] \
+  || fail "Forge writable paths expanded beyond /sandbox and /tmp"
+pass "Forge writable paths are limited to disposable sandbox and temporary storage"
+
 if jq -e '.spec.volumes[]? | select(has("hostPath"))' <<<"${pod_json}" >/dev/null; then
   fail "Forge Pod contains a hostPath volume"
 fi
 pass "Forge Pod does not mount the developer host filesystem"
+
+if jq -e '
+  [.spec.volumes[]? |
+    select(.hostPath.path == "/var/run/docker.sock" or .name == "docker-socket")] |
+  length > 0
+' <<<"${pod_json}" >/dev/null; then
+  fail "Forge Pod exposes a Docker daemon control socket"
+fi
+pass "Forge cannot escape through a mounted container-daemon socket"
+
+[[ "$(jq -r '.spec.automountServiceAccountToken // false' <<<"${pod_json}")" == "false" ]] \
+  || fail "Forge Pod automatically mounts a Kubernetes service-account token"
+pass "Forge has no ambient Kubernetes API credential"
 
 if jq -e '.spec.containers[] | select(.name == "openclaw") | .env[]?.name
   | select(test("(^|_)(COPILOT|GITHUB).*(TOKEN|KEY)|^(GH_TOKEN|GITHUB_TOKEN)$"))' \

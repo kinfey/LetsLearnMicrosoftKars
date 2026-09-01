@@ -41,8 +41,14 @@ for role, sandbox in roles.items():
         fail(f"{role} governance must be enabled")
     if spec["networkPolicy"]["egressMode"] != "Strict":
         fail(f"{role} egress must be Strict")
+    if spec["networkPolicy"]["defaultDeny"] is not True:
+        fail(f"{role} network policy must default deny")
+    if spec["networkPolicy"]["allowedEndpoints"]:
+        fail(f"{role} must not have an arbitrary egress endpoint")
     if spec["sandbox"]["readOnlyRootFilesystem"] is not True:
         fail(f"{role} root filesystem must be read-only")
+    if spec["sandbox"]["writablePaths"] != ["/sandbox", "/tmp"]:
+        fail(f"{role} writable paths must remain disposable")
     if ":latest" in spec["runtime"]["byo"]["image"]:
         fail(f"{role} image must not use latest")
 
@@ -74,5 +80,8 @@ if "workspace_apply_patch" in reviewer_profile:
     fail("Reviewer must not have source patch capability")
 if "review_submit_decision" not in reviewer_profile:
     fail("Reviewer must have review decision capability")
+for profile in (builder_profile, reviewer_profile):
+    if any(token in profile for token in ("shell", "exec", "docker", "settings")):
+        fail("GitOps tool profiles must not expose host-execution or self-configuration actions")
 
-print("PASS: GitOps roles, budgets, model, runtime, and tools are separated")
+print("PASS: GitOps roles, artifact boundaries, budgets, model, runtime, and tools are separated")

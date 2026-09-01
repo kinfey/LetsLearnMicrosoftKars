@@ -27,6 +27,37 @@ Forge 也许不会在对话中直接说出模型服务的 Secret，但其 Shell 
 
 这个判断成为本书后续所有章节的架构前提。
 
+## 近期 Sandbox Escape 新闻带来的新要求
+
+这并非假想风险。2025 至 2026 年公开披露的多起 Coding Agent 漏洞表明，
+“Agent 在 Sandbox 内运行”本身并不足够：
+
+- [CVE-2025-53773](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-53773)
+  展示了 Prompt Injection 如何通过修改 Workspace 内的 VS Code 配置开启工具自动
+  批准，随后形成命令执行。根因是 Agent 可以修改决定自身权限的配置。
+- Cloud Security Alliance 在 2026 年 7 月总结的
+  [AI Coding Agent Sandbox Escapes](https://labs.cloudsecurityalliance.org/research/csa-research-note-ai-coding-agent-sandbox-escapes-20260722-c/)
+  指出，多起事件并未直接突破 Sandbox 内核。Agent 仍在“盒子”里，却写入 Hook、
+  Task、虚拟环境解释器、Git 配置或 Docker 控制面输入，随后由 Sandbox 外的可信
+  组件执行。这类问题被称为 **Trust Handoff**。
+- Unit 42 对
+  [AgentCore Code Interpreter](https://unit42.paloaltonetworks.com/bypass-of-aws-sandbox-network-isolation-mode/)
+  的研究发现，标称隔离的执行环境仍可通过 DNS Tunneling 建立数据通道。这说明
+  “禁止 HTTP”不等于“没有任何出站路径”。
+
+这些案例代表三类不同失败：
+
+| 失败类型 | 典型路径 | Forge 必须满足的要求 |
+| --- | --- | --- |
+| 自修改权限 | 写入 Editor、Agent 或 MCP 配置，打开自动批准或新增工具 | Agent 不能写入定义自身权限的配置 |
+| 文件系统逃逸 | 路径穿越或 Symlink 指向 Workspace 外部 | 同时验证词法路径和解析后的真实路径 |
+| Trust Handoff | 写入 Hook、Task、解释器或其他宿主会自动执行的 Artifact | Agent 输出不能被宿主隐式执行 |
+| 隐蔽出站 | 利用 DNS、Metadata、代理或本地 Daemon 绕过 HTTP 限制 | 默认拒绝所有出站，只开放明确、可审计路径 |
+
+因此，本书中的“Sandbox”不能只表示一个工作目录或一次 Shell Approval。边界必须覆盖
+Agent 进程、它能写入的 Artifact、会消费这些 Artifact 的宿主组件，以及所有网络和
+身份侧通道。`code/01` 的安全实验会把这些新闻中的攻击模式转换为无害的回归测试。
+
 ## 把事故转化为需求
 
 团队在白板上写下五个问题：
@@ -59,6 +90,24 @@ kars（Agent Reference Stack for Kubernetes）提供了一种围绕更强原则�
 Forge 将运行在 `karsSandbox` 中。专属路由器负责代理推理、工具访问、身份、
 预算、出口决定和审计事件。Kubernetes 隔离与 NetworkPolicy 使路由器成为预期
 的外部通道。
+
+## Forge 场景中 KARS 的具体优势
+
+普通 Container 可以隔离进程，但 ByteCraft 仍需把模型代理、凭据放置、Tool
+Authorization、Egress Enforcement、预算、Runtime Adapter、Reconciliation 与 Audit
+Format 分别实现为应用功能。KARS 把这些要求收敛为一个声明式 Workload Contract：
+
+| Forge 要求 | 普通应用/Container 做法 | KARS 的优势 |
+| --- | --- | --- |
+| 让读取恶意仓库内容的进程拿不到 Provider Credential | 把 Key 放进应用环境，再依赖代码规范 | Credential 留在 Router 路径；Agent 只调用 Loopback |
+| 只允许补丁流程，不授予任意 Shell | 每个 Agent Framework 单独实现权限系统 | 用 `ToolPolicy` 与窄接口 `McpServer` 独立于模型 Prompt 执行控制 |
+| 防止直接外传 | 在应用中加入 URL 检查 | 组合 Router Decision、Egress Guard 与 Kubernetes NetworkPolicy |
+| 限制推理成本 | 在每个 Framework Integration 中重复实现计数器 | 用一个 `InferencePolicy` 管理不同 Runtime 的预算 |
+| 恢复并解释失败 | 编写 Runtime 专属的重启和日志逻辑 | Controller Reconcile Desired State，并提供 Condition 与 Router Audit Evidence |
+| 从 OpenClaw 切换到 MAF 或 BYO | 为新 Framework 重做安全设计 | 不同 Runtime Adapter 继续使用相同 Policy、Identity、Network 与 Evidence 边界 |
+
+因此，KARS 的优势并不是让模型“永远不会做错决定”，而是把模型决定与产生副作用所需
+的权限分离，并在 Forge 从笔记本原型推进到 AKS 时保持这条分离不变。
 
 ## 跟踪一次请求
 
@@ -167,3 +216,6 @@ kars 是开源 alpha 参考实现，不是 Microsoft 托管服务。其 API 为
 - [架构](https://github.com/Azure/kars/blob/main/docs/architecture.md)
 - [安全模型](https://github.com/Azure/kars/blob/main/docs/security.md)
 - [功能成熟度](https://github.com/Azure/kars/blob/main/docs/maturity.md)
+- [CVE-2025-53773：Prompt Injection 导致配置自修改与命令执行](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-53773)
+- [CSA：AI Coding Agent Sandbox Escapes 与 Trust Handoff](https://labs.cloudsecurityalliance.org/research/csa-research-note-ai-coding-agent-sandbox-escapes-20260722-c/)
+- [Unit 42：通过 DNS Tunneling 绕过 Agent Sandbox 网络隔离](https://unit42.paloaltonetworks.com/bypass-of-aws-sandbox-network-isolation-mode/)

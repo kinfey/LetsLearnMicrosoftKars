@@ -26,6 +26,25 @@ Forge 部署的
 `forge-workspace-mcp` Pod 管理固定 Revision 的一次性 Workspace，并且只暴露七个
 窄接口工具。
 
+## KARS 优势与 Agent Container 技术细节
+
+KARS 把安全要求转换为自动生成、持续 Reconcile 的 Pod State，而不是 OpenClaw 内部
+的开发约定：
+
+| Agent Container 细节 | 可执行检查 |
+| --- | --- |
+| Agent UID `1000`、Router UID `1001` | 检查 Pod `securityContext` |
+| Read-only Root、禁止提权、Drop Capability | `scripts/test-static.sh` |
+| Writable Path 严格等于 `/sandbox` 与 `/tmp` | 断言 `KarsSandbox.spec.sandbox` |
+| 没有 `hostPath`、Docker Socket 或自动 ServiceAccount Token | Pod Volume 与 Identity 检查 |
+| 没有 Provider Credential Reference | 对比 Agent 与 Router Environment Name |
+| Default-deny Egress，同时允许 Loopback Router | Sandbox 与生成的 NetworkPolicy Evidence |
+| 普通 Exec 被拒绝 | `kars-sandbox-exec-ban` Probe |
+
+Agent Container 可以进行推理并调用 Loopback Service，但不能持有完成这些调用所需的
+Credential 或外部 Route。这就是 KARS 相比把 OpenClaw、Key、Tool 与无限制网络放在
+同一个应用 Container 中的具体优势。
+
 ## 前置条件
 
 1. 部署并验证 [`code/01`](https://github.com/kinfey/LetsLearnMicrosoftKars/tree/main/code/01)。
@@ -105,3 +124,13 @@ make clean
 的平台检测，同时支持 macOS
 amd64、Linux amd64，以及通过 Ubuntu WSL2 运行的 Windows amd64。Windows 用户应在
 WSL2 内运行命令，而不是直接使用原生 PowerShell 或 CMD。
+## Sandbox Escape 递进：先约束进程
+
+`code/01` 已证明恶意仓库文本无法获得有用工具。本阶段下沉一层，证明即使 Agent
+进程做出错误决定，也缺少逃逸所需的基础能力。`make test` 现在检查可写路径只包含
+`/sandbox` 与 `/tmp`、没有 Host Filesystem 或容器 Daemon Socket、没有自动挂载的
+Kubernetes ServiceAccount Token，并且普通 `kubectl exec` 会被拒绝。只有
+`make test-full` 才会启用经过审计的 Break-glass 探测。
+
+这会阻断常见的路径、Docker Socket 与 Runtime Control 逃逸前提。路径真实解析由
+`code/01` 验证，本章则证明应用层即使漏掉一次检查，也不能直接获得宿主机或集群权限。

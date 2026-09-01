@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
+
 for sandbox in forge-contract forge-cross-namespace forge-invalid-provider; do
   kubectl -n kars-system delete karssandbox "${sandbox}" \
     --ignore-not-found --wait=true >/dev/null

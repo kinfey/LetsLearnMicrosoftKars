@@ -212,3 +212,21 @@ runtime behavior agree.
 - [Azure/kars MCP guide](https://github.com/Azure/kars/blob/main/docs/mcp.md)
 - [Azure/kars CRD reference](https://github.com/Azure/kars/blob/main/docs/api/crd-reference.md)
 - [Azure/kars security model](https://github.com/Azure/kars/blob/main/docs/security.md)
+## Sandbox-escape checkpoint: allowlist arguments, not only tool names
+
+An edit tool is not safe merely because its name is allowlisted. The
+`code/04` live MCP experiment attempts to write editor settings, Agent/MCP
+configuration, Git hooks, CI, and package metadata. The tool implementation
+rejects every target while preserving the approved `src/` patch path.
+
+KARS keeps this authorization outside the Agent runtime. The same Router and
+`ToolPolicy` decision remains effective when the model, prompt, or Agent
+framework changes.
+
+```bash
+cd code/04
+make test
+```
+
+This closes the self-configuration and trust-handoff paths that have appeared
+in public coding-agent sandbox escapes.

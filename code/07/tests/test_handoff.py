@@ -15,6 +15,7 @@ class HandoffTests(unittest.TestCase):
             issue_id="FORMAT-482",
             patch_digest=SHA_A,
             test_evidence_digest=SHA_B,
+            artifact_manifest_digest=SHA_A,
             producer=Role.BUILDER,
             intended_consumer=Role.REVIEWER,
         )
@@ -45,6 +46,7 @@ class HandoffTests(unittest.TestCase):
             issue_id="FORMAT-482",
             patch_digest=SHA_A,
             test_evidence_digest=SHA_B,
+            artifact_manifest_digest=SHA_A,
             producer=Role.REVIEWER,
             intended_consumer=Role.REVIEWER,
         )
@@ -57,6 +59,7 @@ class HandoffTests(unittest.TestCase):
             issue_id="FORMAT-482",
             patch_digest="latest",
             test_evidence_digest=SHA_B,
+            artifact_manifest_digest=SHA_A,
             producer=Role.BUILDER,
             intended_consumer=Role.REVIEWER,
             model="gpt-5-mini",
@@ -64,6 +67,17 @@ class HandoffTests(unittest.TestCase):
         self.assertFalse(
             authorize(Role.REVIEWER, Action.REVIEW_PATCH, invalid)
         )
+
+    def test_unpinned_artifact_manifest_is_denied(self) -> None:
+        invalid = HandoffEnvelope(
+            issue_id="FORMAT-482",
+            patch_digest=SHA_A,
+            test_evidence_digest=SHA_B,
+            artifact_manifest_digest="workspace-latest",
+            producer=Role.BUILDER,
+            intended_consumer=Role.REVIEWER,
+        )
+        self.assertFalse(authorize(Role.REVIEWER, Action.APPROVE_RELEASE, invalid))
 
     def test_envelope_digest_is_deterministic(self) -> None:
         self.assertEqual(self.envelope.digest(), self.envelope.digest())

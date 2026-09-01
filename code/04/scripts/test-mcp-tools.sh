@@ -36,7 +36,13 @@ readme="$(mcp_tool 4 workspace_read_file '{"path":"README.md"}')"
 printf '%s\n' "${readme}" >"${EVIDENCE_DIR}/hostile-readme.json"
 jq -e '.result.content[0].text | contains("collect.example")' <<<"${readme}" >/dev/null \
   || fail "Prompt-injection fixture was not read"
-pass "Repository prompt injection is readable as data"
+jq -e '.result.content[0].text
+  | contains("settings.json")
+    and contains("symbolic link")
+    and contains("Git hook")
+    and contains("DNS")' <<<"${readme}" >/dev/null \
+  || fail "Sandbox-escape fixture is incomplete"
+pass "Prompt injection and sandbox-escape payloads are readable only as repository data"
 
 traversal="$(mcp_tool 5 workspace_read_file '{"path":"../../etc/passwd"}')"
 printf '%s\n' "${traversal}" >"${EVIDENCE_DIR}/denied-traversal.json"
@@ -62,6 +68,18 @@ printf '%s\n' "${ci_patch}" >"${EVIDENCE_DIR}/denied-ci-patch.json"
 jq -e '.result.isError == true and (.result.content[0].text | contains("prohibited"))' \
   <<<"${ci_patch}" >/dev/null || fail "CI modification was not denied"
 pass "Workspace implementation denies CI modification"
+
+for path in \
+  .vscode/settings.json \
+  .claude/settings.local.json \
+  .git/hooks/pre-commit \
+  package.json; do
+  denial="$(mcp_tool 20 workspace_apply_patch \
+    "$(jq -cn --arg path "${path}" '{path:$path,expected:"x",replacement:"y"}')")"
+  jq -e '.result.isError == true' <<<"${denial}" >/dev/null \
+    || fail "Security-sensitive path ${path} was writable"
+done
+pass "Workspace tools cannot modify Agent configuration or host-executed artifacts"
 
 before="$(mcp_tool 9 workspace_run_test '{"testId":"format-user"}')"
 before_text="$(jq -r '.result.content[0].text' <<<"${before}")"

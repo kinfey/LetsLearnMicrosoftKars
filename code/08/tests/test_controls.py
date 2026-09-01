@@ -14,8 +14,21 @@ runtime_module = types.ModuleType("kars_runtime_maf_python")
 runtime_module.bootstrap = lambda: None
 sys.modules.setdefault("kars_runtime_maf_python", runtime_module)
 
-from app import builder, consume_tool_evidence, inspect_release_contract, maf_client
-from controls import AuditChain, ControlViolation, Handoff, TaskLedger, digest_text
+from app import (
+    SCENARIO_DENIALS,
+    builder,
+    consume_tool_evidence,
+    inspect_release_contract,
+    maf_client,
+)
+from controls import (
+    AuditChain,
+    ControlViolation,
+    Handoff,
+    TaskLedger,
+    digest_text,
+    validate_artifact_path,
+)
 
 
 def test_handoff_is_digest_pinned() -> None:
@@ -24,9 +37,18 @@ def test_handoff_is_digest_pinned() -> None:
         revision=digest_text("revision"),
         patch_digest=digest_text("patch"),
         test_evidence_digest=digest_text("tests"),
+        artifact_manifest_digest=digest_text("src/customer_note.py"),
     )
     assert handoff.digest().startswith("sha256:")
     assert len(handoff.digest()) == 71
+    with pytest.raises(ControlViolation, match="SHA-256"):
+        Handoff(
+            issue_id="FAB-482",
+            revision="latest",
+            patch_digest=digest_text("patch"),
+            test_evidence_digest=digest_text("tests"),
+            artifact_manifest_digest=digest_text("src/customer_note.py"),
+        )
 
 
 def test_audit_chain_detects_valid_history() -> None:
@@ -86,3 +108,24 @@ def test_application_has_no_direct_router_http_client() -> None:
     assert "import httpx" not in source
     assert "/v1/responses" not in source
     assert 'pop("fc_id", None)' in source
+
+
+def test_release_artifacts_cannot_escape_or_trigger_host_execution() -> None:
+    assert validate_artifact_path("src/customer_note.py") == "src/customer_note.py"
+    with pytest.raises(ControlViolation, match="escapes"):
+        validate_artifact_path("../.vscode/settings.json")
+    with pytest.raises(ControlViolation, match="source artifacts"):
+        validate_artifact_path(".git/hooks/pre-commit")
+    with pytest.raises(ControlViolation, match="symbolic-link"):
+        validate_artifact_path("src/customer_note.py", is_symlink=True)
+
+
+@pytest.mark.parametrize(
+    "scenario",
+    ["self_modify_authority", "symlink_escape", "host_trust_handoff", "dns_egress"],
+)
+def test_sandbox_escape_scenarios_are_explicitly_denied(scenario: str) -> None:
+    status, code, detail = SCENARIO_DENIALS[scenario]
+    assert status == 403
+    assert code in {"authority_denied", "artifact_symlink", "artifact_scope", "egress_denied"}
+    assert detail

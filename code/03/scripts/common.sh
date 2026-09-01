@@ -11,6 +11,7 @@ EVIDENCE_DIR="${EVIDENCE_DIR:-${EVIDENCE_ROOT}/${RUN_ID}}"
 FIELD_MANAGER="code03-lab"
 
 source "${CODE01_ROOT}/scripts/platform-env.sh"
+KARS_KUBE_CONTEXT="${KARS_KUBE_CONTEXT:-kind-kars-dev}"
 
 export npm_config_registry="https://packagefeedproxy.microsoft.io/npm/"
 export pnpm_config_registry="https://packagefeedproxy.microsoft.io/npm/"
@@ -27,6 +28,10 @@ for command in kubectl jq sed curl; do
     exit 1
   fi
 done
+
+kubectl() {
+  command kubectl --context "${KARS_KUBE_CONTEXT}" "$@"
+}
 
 mkdir -p "${GENERATED_DIR}" "${EVIDENCE_DIR}"
 

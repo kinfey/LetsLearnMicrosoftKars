@@ -18,10 +18,10 @@ if [[ -f "${LAB_ROOT}/config/aks.env" ]]; then
   set +a
 fi
 
-AZURE_RESOURCE_GROUP="${AZURE_RESOURCE_GROUP:-rg-kinfey}"
-AKS_NAME="${AKS_NAME:-aks-kars-demo}"
-KARS_ACR_NAME="${KARS_ACR_NAME:-akskarsdemo449845}"
-LOG_ANALYTICS_WORKSPACE="${LOG_ANALYTICS_WORKSPACE:-log-aks-kars-demo}"
+AZURE_RESOURCE_GROUP="${AZURE_RESOURCE_GROUP:-your-resource-group}"
+AKS_NAME="${AKS_NAME:-your-aks-cluster}"
+KARS_ACR_NAME="${KARS_ACR_NAME:-yourkarsregistry}"
+LOG_ANALYTICS_WORKSPACE="${LOG_ANALYTICS_WORKSPACE:-your-log-analytics-workspace}"
 AZURE_LOCATION="${AZURE_LOCATION:-}"
 KARS_SANDBOX_NAME="${KARS_SANDBOX_NAME:-forge-intake}"
 KARS_RELEASE="${KARS_RELEASE:-v0.1.25}"

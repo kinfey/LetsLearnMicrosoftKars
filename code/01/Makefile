@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: build-kars install test build-image deploy status demo validate destroy
+.PHONY: build-kars install test build-image deploy status demo security-demo validate destroy
 
 build-kars:
 	./scripts/build-kars-latest.sh
@@ -25,6 +25,9 @@ status:
 
 demo:
 	./scripts/demo.sh
+
+security-demo:
+	./scripts/security-demo.sh
 
 validate:
 	./scripts/validate.sh

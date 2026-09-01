@@ -274,3 +274,21 @@ values.
 - [Azure/kars BYO quickstart](https://github.com/Azure/kars/tree/main/examples/byo-quickstart)
 - [Microsoft Agent Framework GitHub Copilot samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
+## Sandbox-escape checkpoint: pin the host-to-runtime handoff
+
+When an Agent image is built outside the cluster, its artifact is another trust
+boundary. `code/05` accepts runtime code only when it is under immutable
+`/app`, is not a symlink, and has a SHA-256 digest. Mutable `/sandbox`
+configuration and floating labels fail closed.
+
+KARS provides the stable boundary around that changing application artifact:
+the runtime adapter can change while inference routing, credential placement,
+network restrictions, and governance remain platform-owned.
+
+```bash
+cd code/05
+make unit
+```
+
+The runtime must execute the reviewed artifact, not merely a path with the same
+name.

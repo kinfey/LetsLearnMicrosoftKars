@@ -268,3 +268,20 @@ Post-deployment Test 证明一条允许 Workflow 与一条被拒绝的 Authority
 - [Microsoft Agent Framework GitHub Copilot Samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/providers/github_copilot)
 - [Microsoft Agent Framework Build Your Own Claw](https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/harness/build_your_own_claw)
 - [Azure CNI Overlay](https://learn.microsoft.com/azure/aks/azure-cni-overlay)
+## Sandbox Escape 检查点：传递 Digest，而不是可变 Workspace
+
+AKS Promotion 阶段在 Patch 与 Test Digest 之外增加 Artifact Manifest Digest。
+`code/07` 会拒绝未固定的 Envelope，并验证 Builder 与 Reviewer 都使用 Strict
+Egress、临时可写路径，且没有 Shell、Docker、Exec 或 Settings Capability。
+
+KARS 把每个角色变成独立的 Governed Workload。相比一个 Multi-role Agent，它允许
+Builder 与 Reviewer 使用不同 Identity、Tool、Budget、Egress 与 Lifecycle，并可从
+Kubernetes State 验证。
+
+```bash
+cd code/07
+make unit
+make validate
+```
+
+Reviewer 验证的是不可变声明，不会继承 Builder Workspace 中潜在的 Hook 与配置。

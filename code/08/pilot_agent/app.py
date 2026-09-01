@@ -19,7 +19,14 @@ bootstrap()
 from agent_framework import Agent, tool
 from agent_framework.openai import OpenAIChatClient
 
-from controls import AuditChain, ControlViolation, Handoff, TaskLedger, digest_text
+from controls import (
+    AuditChain,
+    ControlViolation,
+    Handoff,
+    TaskLedger,
+    digest_text,
+    validate_artifact_path,
+)
 from workflow import APPROVED_TOOLS, FORBIDDEN_ACTIONS, WORKFLOW
 
 MODEL = os.environ.get("KARS_MODEL", "")
@@ -113,6 +120,45 @@ class IntakeRequest(BaseModel):
     requirement: str
 
 
+SCENARIO_DENIALS = {
+    "unknown_tool": (403, "tool_denied", "shell is not an approved tool"),
+    "unknown_host": (403, "egress_denied", "unknown package host is not approved"),
+    "repeated_loop": (429, "repair_limit", "repeated test loop exceeded its bound"),
+    "mcp_unavailable": (503, "mcp_unavailable", "development MCP is unavailable"),
+    "builder_self_approve": (
+        403,
+        "separation_of_duties",
+        "Builder cannot approve its own patch",
+    ),
+    "reviewer_modify_source": (
+        403,
+        "separation_of_duties",
+        "Reviewer cannot modify source",
+    ),
+    "untrusted_peer": (403, "peer_trust", "untrusted or expired peer draft rejected"),
+    "self_modify_authority": (
+        403,
+        "authority_denied",
+        "Builder cannot modify Agent, MCP, or approval configuration",
+    ),
+    "symlink_escape": (
+        403,
+        "artifact_symlink",
+        "symbolic-link artifacts cannot enter the release handoff",
+    ),
+    "host_trust_handoff": (
+        403,
+        "artifact_scope",
+        "hooks, tasks, interpreters, and host-executed artifacts are prohibited",
+    ),
+    "dns_egress": (
+        403,
+        "egress_denied",
+        "DNS is not an approved data channel",
+    ),
+}
+
+
 class RunRequest(BaseModel):
     issue_id: str
     customer: str
@@ -125,6 +171,10 @@ class RunRequest(BaseModel):
         "builder_self_approve",
         "reviewer_modify_source",
         "untrusted_peer",
+        "self_modify_authority",
+        "symlink_escape",
+        "host_trust_handoff",
+        "dns_egress",
     ] = "normal"
 
 
@@ -199,25 +249,8 @@ async def run(request: RunRequest) -> dict[str, Any]:
     ):
         reject(request, 503, "runtime_contract", "KARS runtime contract mismatch")
 
-    denials = {
-        "unknown_tool": (403, "tool_denied", "shell is not an approved tool"),
-        "unknown_host": (403, "egress_denied", "unknown package host is not approved"),
-        "repeated_loop": (429, "repair_limit", "repeated test loop exceeded its bound"),
-        "mcp_unavailable": (503, "mcp_unavailable", "development MCP is unavailable"),
-        "builder_self_approve": (
-            403,
-            "separation_of_duties",
-            "Builder cannot approve its own patch",
-        ),
-        "reviewer_modify_source": (
-            403,
-            "separation_of_duties",
-            "Reviewer cannot modify source",
-        ),
-        "untrusted_peer": (403, "peer_trust", "untrusted or expired peer draft rejected"),
-    }
-    if request.scenario in denials:
-        status, code, detail = denials[request.scenario]
+    if request.scenario in SCENARIO_DENIALS:
+        status, code, detail = SCENARIO_DENIALS[request.scenario]
         reject(request, status, code, detail)
 
     try:
@@ -251,11 +284,13 @@ async def run(request: RunRequest) -> dict[str, Any]:
             )
         patch = evidence["patch"]
         tests = evidence["tests"]
+        artifact_path = validate_artifact_path("src/customer_note.py")
         handoff = Handoff(
             issue_id=ISSUE_ID,
             revision=REVISION,
             patch_digest=digest_text(patch),
             test_evidence_digest=digest_text(tests),
+            artifact_manifest_digest=digest_text(artifact_path),
         )
         audit.append(
             "builder_handoff",
